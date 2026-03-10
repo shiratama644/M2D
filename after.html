@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modrinth Mod Manager</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        /* --- Color Variables & Theming --- */
+        :root {
+            /* Light Theme */
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #bae6fd 100%);
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-bg-hover: rgba(255, 255, 255, 0.6);
+            --glass-bg-solid: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            
+            --primary-color: rgba(34, 197, 94, 0.8);
+            --primary-hover: rgba(22, 163, 74, 0.9);
+            --accent-color: #3b82f6;
+            
+            --danger-color: rgba(239, 68, 68, 0.8);
+            --danger-hover: rgba(220, 38, 38, 0.9);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0891b2 100%);
+            --glass-bg: rgba(15, 23, 42, 0.5);
+            --glass-bg-hover: rgba(30, 41, 59, 0.7);
+            --glass-bg-solid: rgba(15, 23, 42, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            
+            --primary-color: rgba(16, 185, 129, 0.7);
+            --primary-hover: rgba(5, 150, 105, 0.9);
+            --accent-color: #38bdf8;
+            
+            --danger-color: rgba(248, 113, 113, 0.7);
+            --danger-hover: rgba(239, 68, 68, 0.9);
+        }
+
+        /* --- Base Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-image: var(--bg-gradient);
+            background-attachment: fixed;
+            background-size: cover;
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            padding-bottom: 8rem;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.5s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+        body.modal-open { overflow: hidden; }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        button { 
+            cursor: pointer; border: none; background: none; 
+            font-family: inherit; outline: none; color: var(--text-main); 
+        }
+        input, select { font-family: inherit; }
+        .hidden { display: none !important; }
+
+        /* --- Utilities --- */
+        .text-center { text-align: center; }
+        .text-gray-400, .text-gray-500 { color: var(--text-muted) !important; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+        .mt-10 { margin-top: 2.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .opacity-50 { opacity: 0.5; }
+        .flex-col-center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .h-48 { height: 12rem; }
+
+        .w-10 { width: 2.5rem; } .h-10 { height: 2.5rem; }
+        .w-6 { width: 1.5rem; } .h-6 { height: 1.5rem; }
+        .w-5 { width: 1.25rem; } .h-5 { height: 1.25rem; }
+        .w-4 { width: 1rem; } .h-4 { height: 1rem; }
+        .w-3 { width: 0.75rem; } .h-3 { height: 0.75rem; }
+
+        /* --- Glass Panels --- */
+        .header {
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem;
+            position: sticky; top: 0; z-index: 40;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--glass-shadow);
+        }
+        .header h1 { font-size: 1.125rem; font-weight: bold; }
+        .icon-btn { padding: 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s; }
+        .icon-btn:hover { background-color: var(--glass-bg-hover); }
+
+        /* --- Side Menu --- */
+        .overlay {
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.4);
+            z-index: 50; backdrop-filter: blur(4px); transition: opacity 0.3s;
+        }
+        .side-menu {
+            position: fixed; top: 0; left: 0; height: 100%; width: 20rem;
+            background: var(--glass-bg-solid); backdrop-filter: blur(24px);
+            border-right: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+            z-index: 50; transform: translateX(-100%); transition: transform 0.3s;
+            display: flex; flex-direction: column;
+        }
+        .side-menu.open { transform: translateX(0); }
+        .side-menu-header { padding: 1rem; border-bottom: 1px solid var(--glass-border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .side-menu-content { padding: 1rem; flex: 1; overflow-y: auto; }
+
+        .save-profile-box { margin-bottom: 1.5rem; padding: 0.75rem; border-radius: 0.75rem; background: var(--glass-bg); border: 1px solid var(--glass-border); }
+        .save-profile-box label { font-size: 0.75rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 0.5rem; }
+        .input-group { display: flex; gap: 0.5rem; }
+
+        /* --- Inputs & Buttons --- */
+        .input-base, .input-large {
+            flex: 1; width: 100%; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border); color: var(--text-main);
+            border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; outline: none; transition: all 0.2s;
+        }
+        [data-theme="dark"] .input-base,[data-theme="dark"] .input-large { background: rgba(0, 0, 0, 0.2); }
+        .input-large { height: 2.75rem; }
+        .input-base:focus, .input-large:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+
+        .btn-primary, .btn-search, .btn-download {
+            background: var(--primary-color); color: white; border: 1px solid var(--glass-border);
+            border-radius: 0.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; padding: 0 1rem;
+        }
+        .btn-primary:hover, .btn-search:hover, .btn-download:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-primary:active { transform: scale(0.95); }
+
+        /* --- Custom Select --- */
+        .custom-select-wrapper { position: relative; width: 100%; }
+        .custom-select-display { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .custom-select-display i { transition: transform 0.3s; }
+        .custom-select-wrapper.open .custom-select-display i { transform: rotate(180deg); }
+        .custom-select-options {
+            position: absolute; top: calc(100% + 0.5rem); left: 0; width: 100%;
+            background: var(--glass-bg-solid); backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border); border-radius: 0.5rem; box-shadow: var(--glass-shadow);
+            z-index: 100; overflow: hidden; transform-origin: top; animation: dropdownOpen 0.2s forwards;
+        }
+        @keyframes dropdownOpen { from { opacity: 0; transform: scaleY(0.9) translateY(-5px); } to { opacity: 1; transform: scaleY(1) translateY(0); } }
+        .custom-select-option { padding: 0.75rem 1rem; cursor: pointer; color: var(--text-main); transition: background 0.2s; font-size: 0.875rem; }
+        .custom-select-option:hover { background: var(--glass-bg-hover); }
+        .custom-select-option.selected { background: rgba(59, 130, 246, 0.2); font-weight: bold; color: var(--accent-color); }
+
+        /* --- Profile List --- */
+        .profile-msg { font-size: 0.75rem; color: var(--primary-color); margin-top: 0.25rem; height: 1rem; }
+        .profile-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; margin-top: 1.5rem; }
+        .profile-list-header h3 { font-weight: bold; font-size: 0.875rem; }
+        .btn-text-icon { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: bold; color: var(--accent-color); padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+        .btn-text-icon:hover { background-color: var(--glass-bg-hover); }
+        .profile-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .profile-card { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .profile-info { overflow: hidden; }
+        .profile-name { font-weight: bold; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-date { font-size: 0.75rem; color: var(--text-muted); }
+        .profile-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .btn-icon-small { padding: 0.375rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; border: 1px solid transparent; }
+        .btn-icon-small.blue { color: var(--accent-color); }
+        .btn-icon-small.gray { color: var(--text-main); }
+        .btn-icon-small.red { color: var(--danger-color); }
+        .btn-icon-small:hover { background-color: var(--glass-bg-hover); border-color: var(--glass-border); }
+
+        /* --- Search Area --- */
+        .search-section {
+            padding: 1rem; margin: 1rem; border-radius: 1rem;
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; z-index: 20;
+        }
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .filter-item label { font-size: 0.75rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 0.25rem; }
+        .search-bar { display: flex; gap: 0.5rem; }
+        .search-input { flex: 1; }
+
+        /* --- Mod List --- */
+        .main-content { padding: 0 1rem 1rem 1rem; min-height: 50vh; }
+        .mod-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .mod-card {
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 0.75rem; border-radius: 1rem; border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow); display: flex; align-items: center; gap: 0.75rem;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .mod-card:hover { background: var(--glass-bg-hover); transform: translateY(-2px); }
+        .mod-card.selected { border-color: var(--accent-color); background: rgba(59, 130, 246, 0.1); }
+        .mod-checkbox-wrapper { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2rem; }
+        .mod-checkbox { width: 1.25rem; height: 1.25rem; accent-color: var(--accent-color); border-radius: 0.25rem; cursor: pointer; }
+        .mod-icon { width: 3.5rem; height: 3.5rem; border-radius: 0.75rem; background-color: rgba(0,0,0,0.1); object-fit: cover; flex-shrink: 0; border: 1px solid var(--glass-border); }
+        .mod-info { flex: 1; min-width: 0; }
+        .mod-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .mod-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.375rem; font-weight: 500; }
+        .mod-meta span { display: flex; align-items: center; gap: 0.25rem; }
+
+        /* --- Action Bar --- */
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--glass-bg-solid); backdrop-filter: blur(24px);
+            border-top: 1px solid var(--glass-border); padding: 1rem; box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
+            z-index: 30; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-bar.visible { transform: translateY(0); }
+        .action-bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem; }
+        .selected-count-btn { display: flex; align-items: center; gap: 0.5rem; }
+        .selected-badge { background: var(--primary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--glass-border); }
+        .view-list-text { font-size: 0.75rem; color: var(--text-muted); text-decoration: underline; text-decoration-style: dotted; }
+        .btn-clear { font-size: 0.75rem; color: var(--text-muted); transition: color 0.2s; }
+        .btn-clear:hover { color: var(--danger-color); }
+        .action-buttons { display: flex; gap: 0.75rem; }
+        .btn-action { border-radius: 0.75rem; font-weight: bold; font-size: 0.875rem; height: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
+        .btn-check { flex: 1; background: var(--glass-bg-hover); border: 1px solid var(--glass-border); color: var(--text-main); }
+        .btn-check:hover { background: var(--glass-bg-solid); }
+        .btn-download { flex: 2; }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 60;
+            display: flex; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(8px);
+        }
+        .modal-container {
+            background: var(--glass-bg-solid); backdrop-filter: blur(24px); border: 1px solid var(--glass-border);
+            border-radius: 1rem; box-shadow: var(--glass-shadow); width: 100%; max-width: 24rem;
+            display: flex; flex-direction: column; overflow: hidden; max-height: 85vh;
+        }
+        .modal-container.large { max-width: 32rem; }
+        .modal-header { padding: 1rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .modal-title { font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .btn-close-modal { padding: 0.25rem; border-radius: 0.25rem; transition: background-color 0.2s; }
+        .btn-close-modal:hover { background-color: var(--glass-bg-hover); }
+        .modal-body { padding: 1rem; flex: 1; overflow-y: auto; }
+        .modal-footer { padding: 0.75rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: flex-end; gap: 0.5rem; flex-shrink: 0; }
+        .btn-secondary { padding: 0.5rem 1rem; background: var(--glass-bg-hover); border: 1px solid var(--glass-border); border-radius: 0.5rem; font-weight: bold; font-size: 0.875rem; transition: all 0.2s; }
+        .btn-secondary:hover { background: var(--glass-bg-solid); }
+
+        /* Toggle Switch */
+        .toggle-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+        .toggle-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+        .toggle-bg { width: 2.75rem; height: 1.5rem; background-color: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 9999px; transition: background-color 0.2s; position: relative; }
+        .toggle-knob { position: absolute; top: 0.125rem; left: 0.125rem; background-color: white; border-radius: 50%; height: 1.125rem; width: 1.125rem; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-input:checked + .toggle-bg { background-color: var(--primary-color); }
+        .toggle-input:checked + .toggle-bg .toggle-knob { transform: translateX(1.25rem); }
+
+        /* Dependency Modal Tabs */
+        .tabs { display: flex; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+        .tab-btn { flex: 1; padding: 0.75rem 0; text-align: center; border-bottom: 2px solid transparent; color: var(--text-muted); font-size: 0.875rem; font-weight: bold; transition: all 0.2s; }
+        .tab-btn:hover { background: var(--glass-bg-hover); color: var(--text-main); }
+        .tab-btn.active-required { border-color: var(--danger-color); color: var(--danger-color); }
+        .tab-btn.active-optional { border-color: var(--accent-color); color: var(--accent-color); }
+        .tab-btn.active-conflict { border-color: #facc15; color: #facc15; }
+
+        .dep-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .dep-item { background: var(--glass-bg); padding: 0.75rem; border-radius: 0.75rem; border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 0.75rem; }
+        .dep-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background-color: rgba(0,0,0,0.1); object-fit: cover; flex-shrink: 0; }
+        .dep-info { flex: 1; min-width: 0; }
+        .dep-source { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.125rem; }
+        .dep-source span { font-weight: bold; color: var(--text-main); }
+        .dep-target { font-size: 0.875rem; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .btn-small { font-size: 0.75rem; padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-weight: bold; border: 1px solid var(--glass-border); transition: all 0.2s; backdrop-filter: blur(4px); }
+        .btn-small.green { background: var(--primary-color); color: white; }
+        .btn-small.green:hover { background: var(--primary-hover); }
+        .btn-small.red-outline { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3); }
+        .btn-small.red-outline:hover { background: rgba(239, 68, 68, 0.2); }
+        .btn-small.disabled { background: rgba(0,0,0,0.1); color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+
+        /* Selected Mods List */
+        .selected-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .selected-item { display: flex; align-items: center; gap: 0.75rem; background: var(--glass-bg); padding: 0.5rem; border-radius: 0.75rem; border: 1px solid var(--glass-border); }
+        .selected-item-icon { width: 2rem; height: 2rem; border-radius: 0.375rem; background-color: rgba(0,0,0,0.1); object-fit: cover; flex-shrink: 0; }
+        .selected-item-title { font-size: 0.875rem; font-weight: bold; color: var(--text-main); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- Loading & Progress --- */
+        .loading-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 1rem; }
+        .spinner { width: 3rem; height: 3rem; border: 4px solid rgba(255, 255, 255, 0.2); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; font-weight: bold; font-size: 1.125rem; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: center; }
+        
+        .progress-container { display: flex; flex-direction: column; align-items: center; width: 16rem; max-width: 100%; }
+        .progress-track { width: 100%; background: rgba(0,0,0,0.3); border-radius: 9999px; height: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .progress-bar { background: var(--accent-color); height: 100%; border-radius: 9999px; transition: width 0.3s; box-shadow: 0 0 8px var(--accent-color); width: 0%; }
+        .progress-stats { display: flex; justify-content: space-between; width: 100%; font-size: 0.75rem; color: rgba(255,255,255,0.8); font-family: monospace; }
+
+        /* --- Debug Panel --- */
+        .debug-fab { position: fixed; z-index: 100; background: var(--glass-bg-solid); backdrop-filter: blur(10px); color: var(--text-main); border-radius: 50%; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); cursor: move; touch-action: none; bottom: 80px; right: 20px; transition: transform 0.2s; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; }
+        .debug-fab:active { transform: scale(0.95); }
+        .debug-panel { position: fixed; z-index: 90; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); color: #4ade80; border-top: 1px solid var(--glass-border); width: 100%; height: 33.333vh; bottom: 0; left: 0; display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5); transform: translateY(100%); transition: transform 0.3s; }
+        .debug-panel.open { transform: translateY(0); }
+        .debug-header { background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; font-size: 0.75rem; border-bottom: 1px solid var(--glass-border); cursor: pointer; flex-shrink: 0; color: white; }
+        .debug-title { font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .debug-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .debug-logs { flex: 1; overflow-y: auto; padding: 0.5rem; font-size: 0.625rem; font-family: monospace; white-space: pre-wrap; display: flex; flex-direction: column; gap: 0.25rem; }
+        .log-entry { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25rem; }
+        .log-log { color: #cbd5e1; } .log-error { color: #f87171; } .log-warn { color: #facc15; } .log-info { color: #7dd3fc; }
+
+        /* --- Scrollbar & Animations --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        .loader-sentinel { height: 5rem; display: flex; align-items: center; justify-content: center; margin-top: 1rem; opacity: 0; transition: opacity 0.3s; }
+        .loader-dots { position: relative; width: 5rem; height: 1.25rem; }
+        .loader-dots div { position: absolute; top: 0; width: 0.75rem; height: 0.75rem; border-radius: 50%; background-color: var(--primary-color); animation-timing-function: cubic-bezier(0, 1, 1, 0); }
+        .loader-dots div:nth-child(1) { left: 0.5rem; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 0.5rem; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 2rem; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 3.5rem; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(1.5rem, 0); } }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <header class="header">
+        <button onclick="App.toggleMenu()" class="icon-btn">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <h1>Mod Manager</h1>
+        <button onclick="App.Settings.openModal()" class="icon-btn">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <div id="sideMenuOverlay" onclick="App.toggleMenu()" class="overlay hidden"></div>
+    <div id="sideMenu" class="side-menu">
+        <div class="side-menu-header">
+            <span><i data-lucide="folder-heart" class="w-5 h-5"></i> My Profiles</span>
+            <button onclick="App.toggleMenu()" class="icon-btn"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="side-menu-content">
+            <div class="save-profile-box">
+                <label>Save Current Selection</label>
+                <div class="input-group">
+                    <input type="text" id="profileNameInput" placeholder="Name (ex: RPG Pack)" class="input-base">
+                    <button onclick="App.Profile.save()" class="btn-primary">Save</button>
+                </div>
+                <p id="profileMsg" class="profile-msg"></p>
+            </div>
+            <div class="profile-list-header">
+                <h3>Saved Profiles</h3>
+                <div style="display: flex; gap: 0.25rem;">
+                    <button onclick="document.getElementById('importZipInput').click()" class="btn-text-icon" title="Scan ZIP for Mods">
+                        <i data-lucide="file-archive" class="w-3 h-3"></i> ZIP
+                    </button>
+                    <button onclick="document.getElementById('importInput').click()" class="btn-text-icon" title="Import TXT">
+                        <i data-lucide="import" class="w-3 h-3"></i> TXT
+                    </button>
+                </div>
+                <input type="file" id="importInput" accept=".txt" class="hidden" onchange="App.Profile.importFile(this)">
+                <input type="file" id="importZipInput" accept=".zip" class="hidden" onchange="App.Profile.importZip(this)">
+            </div>
+            <div id="profileList" class="profile-list"></div>
+        </div>
+    </div>
+
+    <section class="search-section">
+        <div class="filter-grid">
+            <div class="filter-item">
+                <label>Loader</label>
+                <div class="custom-select-wrapper" id="loaderSelectWrapper">
+                    <div class="custom-select-display input-large" onclick="App.CustomSelect.toggle(event)">
+                        <span id="loaderSelectDisplay">Fabric</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
+                    <div class="custom-select-options hidden" id="loaderSelectOptions">
+                        <div class="custom-select-option" data-value="" onclick="App.CustomSelect.select(this)">Any</div>
+                        <div class="custom-select-option selected" data-value="fabric" onclick="App.CustomSelect.select(this)">Fabric</div>
+                        <div class="custom-select-option" data-value="forge" onclick="App.CustomSelect.select(this)">Forge</div>
+                        <div class="custom-select-option" data-value="neoforge" onclick="App.CustomSelect.select(this)">NeoForge</div>
+                        <div class="custom-select-option" data-value="quilt" onclick="App.CustomSelect.select(this)">Quilt</div>
+                    </div>
+                    <input type="hidden" id="loaderSelect" value="fabric">
+                </div>
+            </div>
+            <div class="filter-item">
+                <label>Version</label>
+                <input type="text" id="versionInput" value="1.21.1" placeholder="ex: 1.21.1" class="input-large">
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search mods..." class="input-large search-input">
+            <button onclick="App.Search.init()" class="btn-search">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div id="results" class="mod-list"></div>
+        <div id="sentinel" class="loader-sentinel">
+            <div class="loader-dots"><div></div><div></div><div></div><div></div></div>
+        </div>
+    </main>
+
+    <div id="actionBar" class="action-bar">
+        <div class="action-bar-top">
+            <button onclick="App.Selection.openModal()" class="selected-count-btn">
+                <span class="selected-badge"><span id="barCount">0</span> Selected</span>
+                <span class="view-list-text">View List</span>
+            </button>
+            <button onclick="App.Selection.clear()" class="btn-clear">Clear All</button>
+        </div>
+        <div class="action-buttons">
+            <button onclick="App.Dependency.check()" class="btn-action btn-check">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Check
+            </button>
+            <button onclick="App.Download.execute()" class="btn-action btn-download">
+                <i data-lucide="download" class="w-4 h-4"></i> Download
+            </button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="settings-2" class="w-5 h-5"></i> Settings</h3>
+                <button onclick="App.Modal.close('settingsModal')" class="btn-close-modal"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+                    <div>
+                        <span style="font-size:0.875rem; font-weight:bold; display:block;">Dark Mode</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Toggle dark/light theme</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle" class="toggle-input" onchange="App.Settings.toggleTheme(this.checked)">
+                        <div class="toggle-bg"><div class="toggle-knob"></div></div>
+                    </label>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:0.875rem; font-weight:bold; display:block;">Debug Mode</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Show floating developer console</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="debugToggle" class="toggle-input" onchange="App.Settings.toggleDebug(this.checked)">
+                        <div class="toggle-bg"><div class="toggle-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="App.Modal.close('settingsModal')" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="depModal" class="modal-overlay hidden">
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--accent-color)"><i data-lucide="activity" class="w-5 h-5"></i> Dependency Report</h3>
+                <button onclick="App.Modal.close('depModal')" class="btn-close-modal"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="tabs">
+                <button onclick="App.Dependency.switchTab('required')" id="tab-required" class="tab-btn">Required</button>
+                <button onclick="App.Dependency.switchTab('optional')" id="tab-optional" class="tab-btn">Optional</button>
+                <button onclick="App.Dependency.switchTab('conflict')" id="tab-conflict" class="tab-btn">Conflict</button>
+            </div>
+            <div class="modal-body" id="depContent"></div>
+            <div class="modal-footer">
+                <button onclick="App.Modal.close('depModal')" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="selectedModal" class="modal-overlay hidden">
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--primary-color)"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Selected Mods</h3>
+                <button onclick="App.Modal.close('selectedModal')" class="btn-close-modal"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="modal-body" id="selectedListContent"></div>
+            <div class="modal-footer">
+                <button onclick="App.Modal.close('selectedModal')" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p id="loadingText" class="loading-text">Processing...</p>
+        <div id="progressContainer" class="progress-container hidden">
+            <div class="progress-track">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            <div class="progress-stats">
+                <span id="progressText">0 / 0</span>
+                <span id="etaText">ETA: --s</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="debugFab" class="debug-fab hidden">
+        <i data-lucide="terminal" class="w-6 h-6" style="pointer-events:none;"></i>
+    </div>
+
+    <div id="debugConsolePanel" class="debug-panel hidden">
+        <div class="debug-header" onclick="App.Debug.toggleConsole()">
+            <span class="debug-title"><i data-lucide="terminal" class="w-3 h-3"></i> Console</span>
+            <div class="debug-actions">
+                <button onclick="App.Debug.clear(); event.stopPropagation();" title="Clear Console"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                <button><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+        <div id="debugLogs" class="debug-logs"></div>
+    </div>
+
+    <script>
+        // --- Utilities ---
+        const escapeHTML = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
+        const asyncPool = async (poolLimit, array, iteratorFn) => {
+            const ret =[];
+            const executing = new Set();
+            for (const item of array) {
+                const p = Promise.resolve().then(() => iteratorFn(item));
+                ret.push(p);
+                executing.add(p);
+                const clean = () => executing.delete(p);
+                p.then(clean).catch(clean);
+                if (executing.size >= poolLimit) {
+                    await Promise.race(executing);
+                }
+            }
+            return Promise.all(ret);
+        };
+
+        // --- Three.js Background Implementation ---
+        class ThreeBackground {
+            constructor() {
+                this.canvas = document.getElementById('bg-canvas');
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 10, 40);
+                this.camera.lookAt(0, 0, 0);
+
+                this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                this.geometry = new THREE.PlaneGeometry(150, 150, 60, 60);
+                this.geometry.rotateX(-Math.PI / 2);
+
+                this.material = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.3 
+                });
+
+                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                this.scene.add(this.mesh);
+
+                this.clock = new THREE.Clock();
+                
+                window.addEventListener('resize', () => this.onWindowResize(), false);
+                this.animate();
+            }
+
+            updateTheme(theme) {
+                if (theme === 'dark') {
+                    this.scene.fog.color.setHex(0x0f172a);
+                    this.material.color.setHex(0x00ffff);
+                    this.material.opacity = 0.3;
+                } else {
+                    this.scene.fog.color.setHex(0xe0e7ff);
+                    this.material.color.setHex(0x3b82f6);
+                    this.material.opacity = 0.2;
+                }
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const time = this.clock.getElapsedTime() * 0.5;
+                const pos = this.geometry.attributes.position;
+                
+                for (let i = 0; i < pos.count; i++) {
+                    const x = pos.getX(i);
+                    const z = pos.getZ(i);
+                    const y = Math.sin(x * 0.1 + time) * 2.5 + Math.cos(z * 0.1 + time) * 2.5 + Math.sin((x+z)*0.05 - time)*1.5;
+                    pos.setY(i, y);
+                }
+                pos.needsUpdate = true;
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        let threeBgInstance = null;
+
+        // --- Application Logic ---
+        const App = (() => {
+            const CONFIG = {
+                API_BASE: "https://api.modrinth.com/v2",
+                // ブラウザ環境からのリクエストでUser-Agentを設定するとCORSエラー（Failed to fetch）になるため空にしています
+                HEADERS: {}, 
+                STORAGE_KEY: 'mod_profiles',
+                DEBUG_KEY: 'mod_manager_debug',
+                THEME_KEY: 'mod_manager_theme',
+                CONCURRENCY_LIMIT: 15
+            };
+
+            const state = {
+                selectedMods: new Set(),
+                modDataMap: {},
+                profiles:[],
+                search: { query: "", offset: 0, limit: 12, hasMore: true, loading: false, facets:[], index: "downloads" },
+                issues: { required:[], optional:[], conflict:[] },
+                settings: { debugMode: false, theme: 'dark' }
+            };
+
+            const UI = {
+                get: id => document.getElementById(id),
+                show: id => UI.get(id).classList.remove('hidden'),
+                hide: id => UI.get(id).classList.add('hidden'),
+                toggleModal: isModal => document.body.classList.toggle('modal-open', isModal),
+                formatNum: n => new Intl.NumberFormat('en', { notation: "compact" }).format(n),
+                
+                showLoading: text => { 
+                    UI.get('loadingText').innerText = text; 
+                    UI.show('loadingOverlay'); 
+                    UI.hide('progressContainer'); 
+                },
+                updateLoading: text => { 
+                    UI.get('loadingText').innerText = text; 
+                },
+                hideLoading: () => { 
+                    UI.hide('loadingOverlay'); 
+                    UI.hide('progressContainer'); 
+                },
+                showProgress: (total) => {
+                    UI.show('progressContainer');
+                    UI.get('progressBar').style.width = '0%';
+                    UI.get('progressText').innerText = total !== undefined ? `0 / ${total}` : '';
+                    UI.get('etaText').innerText = 'ETA: Calculating...';
+                },
+                updateProgress: (current, total, startTime) => {
+                    const percent = (current / total) * 100;
+                    UI.get('progressBar').style.width = `${percent}%`;
+                    UI.get('progressText').innerText = `${current} / ${total}`;
+                    
+                    if (current > 0 && startTime) {
+                        const elapsed = (Date.now() - startTime) / 1000;
+                        const speed = current / elapsed;
+                        const remaining = total - current;
+                        const eta = Math.ceil(remaining / speed);
+                        let etaDisplay = eta > 60 ? `${Math.floor(eta / 60)}m ${eta % 60}s` : `${eta}s`;
+                        UI.get('etaText').innerText = `ETA: ${etaDisplay}`;
+                    } else if (!startTime) {
+                        UI.get('etaText').innerText = '';
+                    }
+                }
+            };
+
+            const API = {
+                async request(endpoint, params = {}) {
+                    const url = new URL(`${CONFIG.API_BASE}${endpoint}`);
+                    Object.entries(params).forEach(([k, v]) => {
+                        if (v !== undefined && v !== null && v !== '') {
+                            url.searchParams.append(k, typeof v === 'object' ? JSON.stringify(v) : v);
+                        }
+                    });
+                    
+                    const res = await fetch(url.toString(), { headers: CONFIG.HEADERS });
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+                    return res.json();
+                },
+                searchMods: (query, facets, offset, limit, index) => API.request('/search', { query, facets, offset, limit, index }),
+                getProjects: (ids) => API.request('/projects', { ids }), 
+                getVersions: (id, loader, version) => {
+                    const loaders = loader ? [loader] : undefined;
+                    const game_versions = version ? [version] : undefined;
+                    return API.request(`/project/${id}/version`, { loaders, game_versions });
+                }
+            };
+
+            const CustomSelect = {
+                toggle(e) {
+                    if (e) e.stopPropagation();
+                    const wrapper = UI.get('loaderSelectWrapper');
+                    const options = UI.get('loaderSelectOptions');
+                    wrapper.classList.toggle('open');
+                    options.classList.toggle('hidden');
+                },
+                close() {
+                    const wrapper = UI.get('loaderSelectWrapper');
+                    const options = UI.get('loaderSelectOptions');
+                    if (wrapper) wrapper.classList.remove('open');
+                    if (options) options.classList.add('hidden');
+                },
+                select(el) {
+                    const value = el.dataset.value;
+                    const text = el.innerText;
+                    
+                    UI.get('loaderSelectDisplay').innerText = text;
+                    UI.get('loaderSelect').value = value;
+                    
+                    document.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+                    el.classList.add('selected');
+                    
+                    this.close();
+                    Search.init();
+                }
+            };
+
+            const Debug = {
+                initialized: false, originalConsole: null, isOpen: false,
+                init() {
+                    UI.get('debugFab').classList.remove('hidden');
+                    if (this.initialized) return;
+                    this.initialized = true;
+                    this.originalConsole = { log: console.log, error: console.error, warn: console.warn, info: console.info };
+
+                    const addLog = (level, ...args) => {
+                        this.originalConsole[level](...args);
+                        if (!state.settings.debugMode) return;
+                        
+                        const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+                        const el = document.createElement('div');
+                        el.className = `log-entry log-${level}`;
+                        el.innerText = `[${new Date().toLocaleTimeString('ja-JP', {hour12: false})}] ${msg}`;
+                        
+                        const logsContainer = UI.get('debugLogs');
+                        logsContainer.appendChild(el);
+                        if (logsContainer.childNodes.length > 200) logsContainer.removeChild(logsContainer.firstChild);
+                        logsContainer.scrollTop = logsContainer.scrollHeight;
+                    };
+
+                    console.log = (...args) => addLog('log', ...args);
+                    console.error = (...args) => addLog('error', ...args);
+                    console.warn = (...args) => addLog('warn', ...args);
+                    console.info = (...args) => addLog('info', ...args);
+
+                    this.setupFab();
+                },
+                disable() {
+                    UI.get('debugFab').classList.add('hidden');
+                    if (this.isOpen) this.toggleConsole();
+                },
+                toggleConsole() {
+                    this.isOpen = !this.isOpen;
+                    const panel = UI.get('debugConsolePanel');
+                    if (this.isOpen) { 
+                        panel.classList.remove('hidden'); 
+                        setTimeout(() => panel.classList.add('open'), 10); 
+                    } else { 
+                        panel.classList.remove('open'); 
+                        setTimeout(() => panel.classList.add('hidden'), 300); 
+                    }
+                },
+                clear() { UI.get('debugLogs').innerHTML = ''; },
+                setupFab() {
+                    const fab = UI.get('debugFab');
+                    let isDragging = false, dragMoved = false, startX, startY, initialLeft, initialTop;
+
+                    const onStart = (e) => {
+                        if (e.button !== 0 && e.pointerType === 'mouse') return; 
+                        isDragging = true; dragMoved = false; startX = e.clientX; startY = e.clientY;
+                        const rect = fab.getBoundingClientRect();
+                        initialLeft = rect.left; initialTop = rect.top;
+                        fab.style.right = 'auto'; fab.style.bottom = 'auto'; 
+                        fab.style.left = initialLeft + 'px'; fab.style.top = initialTop + 'px'; 
+                        fab.style.transition = 'none';
+                        fab.setPointerCapture(e.pointerId);
+                    };
+
+                    const onMove = (e) => {
+                        if (!isDragging) return;
+                        const dx = e.clientX - startX, dy = e.clientY - startY;
+                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) dragMoved = true;
+                        if (dragMoved) {
+                            let newLeft = Math.max(0, Math.min(initialLeft + dx, window.innerWidth - fab.offsetWidth));
+                            let newTop = Math.max(0, Math.min(initialTop + dy, window.innerHeight - fab.offsetHeight));
+                            fab.style.left = newLeft + 'px'; fab.style.top = newTop + 'px';
+                        }
+                    };
+
+                    const onEnd = (e) => {
+                        if (!isDragging) return;
+                        isDragging = false; 
+                        fab.style.transition = 'transform 0.2s'; 
+                        fab.releasePointerCapture(e.pointerId);
+                        if (!dragMoved) App.Debug.toggleConsole();
+                    };
+
+                    fab.addEventListener('pointerdown', onStart); 
+                    fab.addEventListener('pointermove', onMove);
+                    fab.addEventListener('pointerup', onEnd); 
+                    fab.addEventListener('pointercancel', onEnd);
+                    fab.addEventListener('dragstart', e => e.preventDefault());
+                }
+            };
+
+            const Settings = {
+                init() {
+                    const debugSaved = localStorage.getItem(CONFIG.DEBUG_KEY);
+                    if (debugSaved === 'true') {
+                        state.settings.debugMode = true;
+                        UI.get('debugToggle').checked = true;
+                        Debug.init();
+                    }
+                    
+                    const themeSaved = localStorage.getItem(CONFIG.THEME_KEY) || 'dark';
+                    this.toggleTheme(themeSaved === 'dark');
+                    UI.get('themeToggle').checked = themeSaved === 'dark';
+                },
+                openModal() { 
+                    UI.show('settingsModal'); 
+                    UI.toggleModal(true); 
+                },
+                toggleDebug(isEnabled) {
+                    state.settings.debugMode = isEnabled;
+                    localStorage.setItem(CONFIG.DEBUG_KEY, isEnabled);
+                    isEnabled ? Debug.init() : Debug.disable();
+                },
+                toggleTheme(isDark) {
+                    const theme = isDark ? 'dark' : 'light';
+                    state.settings.theme = theme;
+                    document.body.setAttribute('data-theme', theme);
+                    localStorage.setItem(CONFIG.THEME_KEY, theme);
+                    if (threeBgInstance) threeBgInstance.updateTheme(theme);
+                }
+            };
+
+            const Profile = {
+                init() {
+                    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+                    if (saved) state.profiles = JSON.parse(saved);
+                    this.render();
+                },
+                save() {
+                    const name = UI.get('profileNameInput').value.trim();
+                    if (!name || state.selectedMods.size === 0) return alert("Invalid name or no mods selected.");
+                    
+                    state.profiles.push({ name, mods: Array.from(state.selectedMods), date: new Date().toLocaleDateString() });
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.profiles));
+                    
+                    UI.get('profileNameInput').value = '';
+                    UI.get('profileMsg').innerText = "Saved!";
+                    setTimeout(() => UI.get('profileMsg').innerText = "", 2000);
+                    this.render();
+                },
+                load(index) {
+                    if (!confirm("Load profile? Current selection will be cleared.")) return;
+                    state.selectedMods = new Set(state.profiles[index].mods);
+                    Selection.updateUI(); 
+                    App.toggleMenu();
+                },
+                delete(index) {
+                    if (!confirm("Delete this profile?")) return;
+                    state.profiles.splice(index, 1);
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.profiles));
+                    this.render();
+                },
+                export(index) {
+                    const profile = state.profiles[index];
+                    if (!profile) return;
+                    const encodedName = encodeURIComponent(profile.name);
+                    const rawString = `MMPROF1:${encodedName}:${profile.mods.join(',')}`;
+                    const blob = new Blob([btoa(rawString)], { type: "text/plain" });
+                    saveAs(blob, `${profile.name.replace(/\s+/g, '_')}_profile.txt`);
+                },
+                importFile(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parts = atob(e.target.result.trim()).split(':');
+                            if (parts.length < 3 || parts[0] !== 'MMPROF1') throw new Error("Invalid Signature");
+                            
+                            const profile = { 
+                                name: decodeURIComponent(parts[1]) + " (Imported)", 
+                                mods: parts[2] ? parts[2].split(',') :[], 
+                                date: new Date().toLocaleDateString() 
+                            };
+                            
+                            state.profiles.push(profile);
+                            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.profiles));
+                            this.render(); 
+                            alert(`Imported "${profile.name}" successfully!`);
+                        } catch (err) { 
+                            alert("Failed to load profile."); 
+                        }
+                        input.value = '';
+                    };
+                    reader.readAsText(file);
+                },
+                async importZip(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+
+                    if (!window.crypto || !window.crypto.subtle) {
+                        alert("Cryptography API is not supported in this environment. Please run the application via HTTPS or localhost.");
+                        input.value = '';
+                        return;
+                    }
+                    
+                    UI.showLoading("Reading ZIP...");
+                    try {
+                        const zip = new JSZip();
+                        const loadedZip = await zip.loadAsync(file);
+                        
+                        const entries = Object.values(loadedZip.files).filter(e => !e.dir && e.name.endsWith('.jar'));
+                        
+                        if (entries.length === 0) {
+                            alert("No .jar files found in the ZIP.");
+                            UI.hideLoading();
+                            input.value = '';
+                            return;
+                        }
+
+                        UI.showProgress(entries.length);
+                        let processed = 0;
+                        const startTime = Date.now();
+                        
+                        const hashes = await asyncPool(CONFIG.CONCURRENCY_LIMIT, entries, async (zipEntry) => {
+                            try {
+                                const arrayBuffer = await zipEntry.async("arraybuffer");
+                                const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
+                                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                            } catch (e) {
+                                console.error(`Failed to hash ${zipEntry.name}`, e);
+                                return null;
+                            } finally {
+                                processed++;
+                                UI.updateProgress(processed, entries.length, startTime);
+                                UI.updateLoading(`Calculating hashes... (${processed}/${entries.length})`);
+                            }
+                        });
+                        
+                        const validHashes = hashes.filter(Boolean);
+                        
+                        UI.updateLoading("Identifying mods...");
+                        
+                        const projectIds = new Set();
+                        let fetchProcessed = 0;
+                        const fetchStartTime = Date.now();
+                        
+                        // API照会の進捗を表示するためにプログレスバーを再設定
+                        UI.showProgress(validHashes.length);
+                        
+                        // POSTリクエストはCORSのプリフライト(OPTIONS)で弾かれるため、
+                        // GETリクエストで個別にハッシュを照会する方式に変更
+                        await asyncPool(CONFIG.CONCURRENCY_LIMIT, validHashes, async (hash) => {
+                            try {
+                                const res = await fetch(`${CONFIG.API_BASE}/version_file/${hash}?algorithm=sha1`, {
+                                    method: 'GET',
+                                    headers: CONFIG.HEADERS
+                                });
+                                
+                                if (res.ok) {
+                                    const version = await res.json();
+                                    if (version.project_id) projectIds.add(version.project_id);
+                                } else if (res.status !== 404) {
+                                    // 404 (Not Found) はModrinthに存在しないModなので無視し、それ以外を記録
+                                    console.warn(`Failed to fetch info for hash ${hash} (Status: ${res.status})`);
+                                }
+                            } catch (e) {
+                                console.error(`Network error for hash ${hash}`, e);
+                            } finally {
+                                fetchProcessed++;
+                                UI.updateProgress(fetchProcessed, validHashes.length, fetchStartTime);
+                                UI.updateLoading(`Identifying mods... (${fetchProcessed}/${validHashes.length})`);
+                            }
+                        });
+                        
+                        if (projectIds.size === 0) {
+                            alert("Could not identify any mods from Modrinth in this ZIP.");
+                        } else {
+                            const profileName = file.name.replace(/\.[^/.]+$/, ""); 
+                            const profile = { 
+                                name: profileName, 
+                                mods: Array.from(projectIds), 
+                                date: new Date().toLocaleDateString() 
+                            };
+                            
+                            state.profiles.push(profile);
+                            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.profiles));
+                            this.render();
+                            alert(`Identified ${projectIds.size} mods and saved as profile "${profileName}"!`);
+                        }
+                        
+                    } catch (err) {
+                        console.error(err);
+                        alert("Failed to process ZIP file. Please check the console for details.");
+                    } finally {
+                        UI.hideLoading();
+                        input.value = '';
+                    }
+                },
+                render() {
+                    const list = UI.get('profileList');
+                    if (state.profiles.length === 0) {
+                        list.innerHTML = '<div class="text-center text-gray-400 py-4" style="font-size:0.75rem;">No profiles saved yet.</div>';
+                        return;
+                    }
+                    list.innerHTML = state.profiles.map((p, i) => `
+                        <div class="profile-card">
+                            <div class="profile-info">
+                                <div class="profile-name">${escapeHTML(p.name)}</div>
+                                <div class="profile-date">${p.mods.length} mods • ${escapeHTML(p.date)}</div>
+                            </div>
+                            <div class="profile-actions">
+                                <button onclick="App.Profile.load(${i})" class="btn-icon-small blue"><i data-lucide="upload" class="w-4 h-4"></i></button>
+                                <button onclick="App.Profile.export(${i})" class="btn-icon-small gray"><i data-lucide="share-2" class="w-4 h-4"></i></button>
+                                <button onclick="App.Profile.delete(${i})" class="btn-icon-small red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>`).join('');
+                    lucide.createIcons();
+                }
+            };
+
+            const Search = {
+                init() {
+                    const query = UI.get('searchInput').value;
+                    const loader = UI.get('loaderSelect').value;
+                    const version = UI.get('versionInput').value;
+                    const index = query.trim() === "" ? "downloads" : "relevance";
+                    
+                    state.search = { query, offset: 0, limit: 12, hasMore: true, loading: false, facets: [["project_type:mod"]], index };
+                    
+                    if (loader) state.search.facets.push([`categories:${loader}`]);
+                    if (version) state.search.facets.push([`versions:${version}`]);
+
+                    UI.get('results').innerHTML = ''; 
+                    this.loadMore();
+                },
+                async loadMore() {
+                    const s = state.search;
+                    if (s.loading || !s.hasMore) return;
+                    
+                    s.loading = true; 
+                    UI.get('sentinel').style.opacity = '1';
+
+                    try {
+                        const data = await API.searchMods(s.query, s.facets, s.offset, s.limit, s.index);
+                        if (!data.hits || data.hits.length === 0) {
+                            s.hasMore = false;
+                            if (s.offset === 0) {
+                                UI.get('results').innerHTML = '<div class="text-center text-gray-500 mt-10">No mods found.</div>';
+                            }
+                        } else {
+                            const resultsEl = UI.get('results');
+                            data.hits.forEach(mod => { 
+                                state.modDataMap[mod.project_id] = mod; 
+                                resultsEl.appendChild(this.createCard(mod)); 
+                            });
+                            s.offset += s.limit; 
+                            if (data.hits.length < s.limit) s.hasMore = false;
+                        }
+                    } catch (err) { 
+                        s.hasMore = false; 
+                        console.error("Search error", err);
+                    } finally { 
+                        s.loading = false; 
+                        if (!s.hasMore) UI.get('sentinel').style.opacity = '0'; 
+                        lucide.createIcons(); 
+                    }
+                },
+                createCard(mod) {
+                    const isSelected = state.selectedMods.has(mod.project_id);
+                    const el = document.createElement('div');
+                    el.className = `mod-card ${isSelected ? 'selected' : ''}`;
+                    el.dataset.id = mod.project_id;
+                    
+                    el.onclick = (e) => { 
+                        if (e.target.type !== 'checkbox' && e.target.tagName !== 'BUTTON') {
+                            Selection.toggle(mod.project_id); 
+                        }
+                    };
+
+                    const iconUrl = mod.icon_url ? escapeHTML(mod.icon_url) : 'https://cdn.modrinth.com/assets/unknown_server.png';
+                    
+                    el.innerHTML = `
+                        <div class="mod-checkbox-wrapper">
+                            <input type="checkbox" class="mod-checkbox" ${isSelected ? 'checked' : ''} onchange="App.Selection.toggle('${escapeHTML(mod.project_id)}')">
+                        </div>
+                        <img src="${iconUrl}" loading="lazy" class="mod-icon" alt="icon">
+                        <div class="mod-info">
+                            <h3 class="mod-title">${escapeHTML(mod.title)}</h3>
+                            <div class="mod-meta">
+                                <span><i data-lucide="user" class="w-3 h-3"></i> ${escapeHTML(mod.author)}</span>
+                                <span><i data-lucide="download" class="w-3 h-3"></i> ${UI.formatNum(mod.downloads)}</span>
+                            </div>
+                        </div>`;
+                    return el;
+                }
+            };
+
+            const Selection = {
+                toggle(id) { 
+                    state.selectedMods.has(id) ? state.selectedMods.delete(id) : state.selectedMods.add(id); 
+                    this.updateUI(); 
+                },
+                clear() { 
+                    state.selectedMods.clear(); 
+                    this.updateUI(); 
+                },
+                remove(id) { 
+                    state.selectedMods.delete(id); 
+                    this.renderList(); 
+                    this.updateUI(); 
+                },
+                updateUI() {
+                    const count = state.selectedMods.size;
+                    UI.get('barCount').innerText = count;
+                    
+                    if (count > 0) {
+                        UI.get('actionBar').classList.add('visible');
+                    } else {
+                        UI.get('actionBar').classList.remove('visible');
+                    }
+                    
+                    document.querySelectorAll('.mod-card').forEach(card => {
+                        const isSelected = state.selectedMods.has(card.dataset.id);
+                        card.classList.toggle('selected', isSelected);
+                        const checkbox = card.querySelector('.mod-checkbox');
+                        if (checkbox) checkbox.checked = isSelected;
+                    });
+                },
+                async openModal() {
+                    UI.show('selectedModal'); 
+                    UI.toggleModal(true);
+                    
+                    const content = UI.get('selectedListContent');
+                    const ids = Array.from(state.selectedMods);
+                    
+                    if (ids.length === 0) {
+                        content.innerHTML = '<div class="text-center py-10 text-gray-500">No mods selected.</div>';
+                        return;
+                    }
+                    
+                    content.innerHTML = '<div class="text-center py-4 text-gray-400">Loading details...</div>';
+
+                    const missingIds = ids.filter(id => !state.modDataMap[id]);
+                    if (missingIds.length > 0) {
+                        try { 
+                            const data = await API.getProjects(missingIds); 
+                            data.forEach(p => state.modDataMap[p.id] = p); 
+                        } catch(e) { console.error(e); }
+                    }
+                    this.renderList();
+                },
+                renderList() {
+                    const content = UI.get('selectedListContent');
+                    const ids = Array.from(state.selectedMods);
+                    
+                    if (ids.length === 0) { 
+                        content.innerHTML = '<div class="text-center py-10 text-gray-500">No mods selected.</div>'; 
+                        return this.updateUI(); 
+                    }
+                    
+                    content.innerHTML = '<div class="selected-list">' + ids.map(id => {
+                        const mod = state.modDataMap[id];
+                        const title = mod ? mod.title : id;
+                        const iconUrl = mod?.icon_url ? mod.icon_url : 'https://cdn.modrinth.com/assets/unknown_server.png';
+                        
+                        return `
+                            <div class="selected-item">
+                                <img src="${escapeHTML(iconUrl)}" class="selected-item-icon" alt="icon">
+                                <span class="selected-item-title">${escapeHTML(title)}</span>
+                                <button onclick="App.Selection.remove('${escapeHTML(id)}')" class="btn-small red-outline">Remove</button>
+                            </div>`;
+                    }).join('') + '</div>';
+                }
+            };
+
+            const Dependency = {
+                async check() {
+                    if (state.selectedMods.size === 0) return;
+                    UI.showLoading("Analyzing Dependencies...");
+                    
+                    const loader = UI.get('loaderSelect').value;
+                    const version = UI.get('versionInput').value;
+                    
+                    state.issues = { required: [], optional: [], conflict:[] };
+                    const missingModIds = new Set(); 
+
+                    try {
+                        const ids = Array.from(state.selectedMods);
+                        let completed = 0; 
+                        const startTime = Date.now();
+                        UI.showProgress(ids.length);
+
+                        const results = await asyncPool(CONFIG.CONCURRENCY_LIMIT, ids, async (pid) => {
+                            const modName = state.modDataMap[pid]?.title || pid;
+                            try {
+                                const versions = await API.getVersions(pid, loader, version);
+                                return versions?.length ? { modName, dependencies: versions[0].dependencies } : null;
+                            } catch (e) {
+                                return null;
+                            } finally { 
+                                completed++; 
+                                UI.updateProgress(completed, ids.length, startTime); 
+                            }
+                        });
+                        UI.hideProgress();
+
+                        results.filter(Boolean).forEach(res => {
+                            res.dependencies.forEach(dep => {
+                                if (!dep.project_id) return;
+                                const isSelected = state.selectedMods.has(dep.project_id);
+                                
+                                if (dep.dependency_type === "required" && !isSelected) { 
+                                    state.issues.required.push({ source: res.modName, targetId: dep.project_id }); 
+                                    missingModIds.add(dep.project_id); 
+                                } else if (dep.dependency_type === "optional" && !isSelected) { 
+                                    state.issues.optional.push({ source: res.modName, targetId: dep.project_id }); 
+                                    missingModIds.add(dep.project_id); 
+                                } else if (dep.dependency_type === "incompatible" && isSelected) { 
+                                    state.issues.conflict.push({ source: res.modName, targetId: dep.project_id }); 
+                                    missingModIds.add(dep.project_id); 
+                                }
+                            });
+                        });
+
+                        if (missingModIds.size > 0) {
+                            UI.updateLoading("Resolving names...");
+                            const idsToFetch = Array.from(missingModIds).filter(id => !state.modDataMap[id]);
+                            if (idsToFetch.length > 0) { 
+                                const pData = await API.getProjects(idsToFetch); 
+                                pData.forEach(p => state.modDataMap[p.id] = p); 
+                            }
+                        }
+                        
+                        UI.hideLoading(); 
+                        this.openModal();
+                    } catch (e) { 
+                        UI.hideLoading(); 
+                        alert("Error checking dependencies."); 
+                        console.error(e);
+                    }
+                },
+                openModal() { 
+                    UI.show('depModal'); 
+                    UI.toggleModal(true); 
+                    this.switchTab('required'); 
+                },
+                switchTab(type) {
+                    ['required', 'optional', 'conflict'].forEach(t => {
+                        UI.get(`tab-${t}`).className = `tab-btn ${t === type ? 'active-' + t : ''}`;
+                    });
+                    
+                    const content = UI.get('depContent');
+                    const list = state.issues[type];
+                    
+                    if (list.length === 0) {
+                        const msgs = { required: "All good! 🎉", optional: "No optional deps.", conflict: "No conflicts! ✅" };
+                        const icon = type === 'conflict' ? 'check-circle' : 'info';
+                        content.innerHTML = `
+                            <div class="flex-col-center h-48 text-gray-500">
+                                <i data-lucide="${icon}" class="w-10 h-10 mb-2 opacity-50"></i>
+                                <p>${msgs[type]}</p>
+                            </div>`;
+                    } else {
+                        content.innerHTML = '<div class="dep-list">' + list.map(item => {
+                            const isSelected = state.selectedMods.has(item.targetId);
+                            const targetTitle = state.modDataMap[item.targetId]?.title || item.targetId;
+                            const iconUrl = state.modDataMap[item.targetId]?.icon_url || 'https://cdn.modrinth.com/assets/unknown_server.png';
+                            
+                            let actionBtn = '';
+                            if (type === 'conflict') {
+                                actionBtn = !isSelected 
+                                    ? `<button class="btn-small disabled" disabled>Removed</button>` 
+                                    : `<button onclick="App.Dependency.remove('${escapeHTML(item.targetId)}', this)" class="btn-small red-outline">Remove</button>`;
+                            } else {
+                                actionBtn = isSelected 
+                                    ? `<button class="btn-small disabled" disabled>Added</button>` 
+                                    : `<button onclick="App.Dependency.add('${escapeHTML(item.targetId)}', this)" class="btn-small green">Add</button>`;
+                            }
+
+                            return `
+                                <div class="dep-item">
+                                    <img src="${escapeHTML(iconUrl)}" class="dep-icon" alt="icon">
+                                    <div class="dep-info">
+                                        <p class="dep-source">${type === 'conflict' ? 'Conflict w/' : 'Source:'} <span>${escapeHTML(item.source)}</span></p>
+                                        <p class="dep-target">${escapeHTML(targetTitle)}</p>
+                                    </div>
+                                    <div class="dep-action">${actionBtn}</div>
+                                </div>`;
+                        }).join('') + '</div>';
+                    }
+                    lucide.createIcons();
+                },
+                add(id, btn) { 
+                    state.selectedMods.add(id); 
+                    btn.innerText = "Added"; 
+                    btn.className = "btn-small disabled"; 
+                    btn.disabled = true; 
+                    Selection.updateUI(); 
+                },
+                remove(id, btn) { 
+                    state.selectedMods.delete(id); 
+                    btn.innerText = "Removed"; 
+                    btn.className = "btn-small disabled"; 
+                    btn.disabled = true; 
+                    Selection.updateUI(); 
+                }
+            };
+
+            const Download = {
+                async execute() {
+                    if (state.selectedMods.size === 0) return;
+                    UI.showLoading("Preparing Download...");
+                    
+                    const loader = UI.get('loaderSelect').value;
+                    const version = UI.get('versionInput').value;
+                    const zip = new JSZip();
+                    const ids = Array.from(state.selectedMods);
+                    let success = 0, completed = 0; 
+                    const startTime = Date.now();
+                    
+                    UI.showProgress(ids.length);
+                    
+                    await asyncPool(CONFIG.CONCURRENCY_LIMIT, ids, async (pid) => {
+                        try {
+                            const versions = await API.getVersions(pid, loader, version);
+                            if (versions?.length && versions[0].files?.length) {
+                                const file = versions[0].files.find(f => f.primary) || versions[0].files[0];
+                                const res = await fetch(file.url);
+                                if (res.ok) { 
+                                    zip.file(file.filename, await res.blob()); 
+                                    success++; 
+                                }
+                            }
+                        } catch (e) { 
+                            console.error(`Failed to download ${pid}`, e);
+                        } finally { 
+                            completed++; 
+                            UI.updateProgress(completed, ids.length, startTime); 
+                            UI.updateLoading(`Downloading... (${Math.round((completed/ids.length)*100)}%)`); 
+                        }
+                    });
+
+                    if (success > 0) {
+                        UI.updateLoading("Compressing ZIP..."); 
+                        UI.showProgress(); 
+                        UI.get('progressText').innerText = 'Zipping...';
+                        
+                        const content = await zip.generateAsync({ type: "blob" }, (metadata) => {
+                            UI.updateLoading(`Compressing ZIP... ${Math.round(metadata.percent)}%`);
+                            UI.get('progressBar').style.width = `${metadata.percent}%`;
+                        });
+                        saveAs(content, `mods-${loader}-${version}-${Date.now()}.zip`);
+                    } else {
+                        alert("Download failed. Could not find compatible versions.");
+                    }
+                    UI.hideLoading();
+                }
+            };
+
+            // Public API
+            return {
+                init() {
+                    Settings.init();
+                    Profile.init();
+
+                    const handleEnter = (e) => { if (e.key === 'Enter') Search.init(); };
+                    let typingTimer;
+                    const debounceSearch = () => { clearTimeout(typingTimer); typingTimer = setTimeout(() => Search.init(), 1000); };
+
+                    UI.get('searchInput').addEventListener('keypress', handleEnter);
+                    UI.get('versionInput').addEventListener('keypress', handleEnter);
+                    UI.get('versionInput').addEventListener('input', debounceSearch);
+                    
+                    // Close custom dropdown when clicking outside
+                    document.addEventListener('click', (e) => {
+                        const wrapper = UI.get('loaderSelectWrapper');
+                        if (wrapper && !wrapper.contains(e.target)) {
+                            CustomSelect.close();
+                        }
+                    });
+
+                    // Infinite Scroll Observer
+                    const observer = new IntersectionObserver((entries) => {
+                        if (entries[0].isIntersecting && !state.search.loading && state.search.hasMore) {
+                            Search.loadMore();
+                        }
+                    }, { rootMargin: '200px' });
+                    observer.observe(UI.get('sentinel'));
+
+                    Search.init();
+                },
+                toggleMenu() {
+                    const menu = UI.get('sideMenu');
+                    const overlay = UI.get('sideMenuOverlay');
+                    const isClosed = !menu.classList.contains('open');
+                    
+                    menu.classList.toggle('open', isClosed); 
+                    overlay.classList.toggle('hidden', !isClosed); 
+                    UI.toggleModal(isClosed);
+                },
+                Settings, Debug, Profile, Search, Selection, Dependency, Download, CustomSelect,
+                Modal: { 
+                    close(id) { 
+                        UI.hide(id); 
+                        UI.toggleModal(false); 
+                    } 
+                }
+            };
+        })();
+
+        // Bootstrap
+        document.addEventListener('DOMContentLoaded', () => {
+            threeBgInstance = new ThreeBackground();
+            App.init();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
