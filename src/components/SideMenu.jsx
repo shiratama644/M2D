@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { X, FolderHeart, FileArchive, Import, Upload, Share2, Trash2 } from 'lucide-react';
+import { X, FolderHeart, FileArchive, Import, Upload, Share2, Trash2, Pencil, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CONCURRENCY_LIMIT, asyncPool } from '../utils/helpers';
 import { API } from '../utils/api';
@@ -13,40 +13,65 @@ export default function SideMenu() {
     selectedMods, replaceSelectedMods,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     addDebugLog,
+    showAlert, showConfirm,
   } = useApp();
 
   const [profileName, setProfileName] = useState('');
   const [profileMsg, setProfileMsg] = useState('');
+  const [renamingIndex, setRenamingIndex] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
   const importInputRef = useRef(null);
   const importZipInputRef = useRef(null);
 
   const closeMenu = () => setMenuOpen(false);
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     const name = profileName.trim();
     if (!name || selectedMods.size === 0) {
-      alert('Invalid name or no mods selected.');
+      await showAlert('Invalid name or no mods selected.');
       return;
     }
     const newProfiles = [...profiles, { name, mods: Array.from(selectedMods), date: new Date().toLocaleDateString() }];
     saveProfiles(newProfiles);
+    addDebugLog('info', `Profile saved: "${name}" (${selectedMods.size} mods)`);
     setProfileName('');
     setProfileMsg('Saved!');
     setTimeout(() => setProfileMsg(''), 2000);
   };
 
-  const loadProfile = (index) => {
-    if (!confirm('Load profile? Current selection will be cleared.')) return;
+  const loadProfile = async (index) => {
+    if (!await showConfirm('Load profile? Current selection will be cleared.')) return;
     const profile = profiles[index];
     replaceSelectedMods(profile.mods);
+    addDebugLog('info', `Profile loaded: "${profile.name}" (${profile.mods.length} mods)`);
     closeMenu();
   };
 
-  const deleteProfile = (index) => {
-    if (!confirm('Delete this profile?')) return;
+  const deleteProfile = async (index) => {
+    if (!await showConfirm('Delete this profile?')) return;
+    const profile = profiles[index];
     const newProfiles = [...profiles];
     newProfiles.splice(index, 1);
     saveProfiles(newProfiles);
+    addDebugLog('info', `Profile deleted: "${profile.name}"`);
+  };
+
+  const startRename = (index) => {
+    setRenamingIndex(index);
+    setRenameValue(profiles[index].name);
+  };
+
+  const commitRename = (index) => {
+    const newName = renameValue.trim();
+    if (!newName) {
+      setRenamingIndex(null);
+      return;
+    }
+    const oldName = profiles[index].name;
+    const newProfiles = profiles.map((p, i) => i === index ? { ...p, name: newName } : p);
+    saveProfiles(newProfiles);
+    addDebugLog('info', `Profile renamed: "${oldName}" → "${newName}"`);
+    setRenamingIndex(null);
   };
 
   const exportProfile = (index) => {
@@ -56,13 +81,14 @@ export default function SideMenu() {
     const rawString = `MMPROF1:${encodedName}:${profile.mods.join(',')}`;
     const blob = new Blob([btoa(rawString)], { type: 'text/plain' });
     saveAs(blob, `${profile.name.replace(/\s+/g, '_')}_profile.txt`);
+    addDebugLog('info', `Profile exported: "${profile.name}"`);
   };
 
   const importFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const parts = atob(ev.target.result.trim()).split(':');
         if (parts.length < 3 || parts[0] !== 'MMPROF1') throw new Error('Invalid Signature');
@@ -72,9 +98,11 @@ export default function SideMenu() {
           date: new Date().toLocaleDateString(),
         };
         saveProfiles([...profiles, profile]);
-        alert(`Imported "${profile.name}" successfully!`);
+        addDebugLog('info', `Profile imported from TXT: "${profile.name}" (${profile.mods.length} mods)`);
+        await showAlert(`Imported "${profile.name}" successfully!`);
       } catch {
-        alert('Failed to load profile.');
+        addDebugLog('error', `Failed to import profile from file: ${file.name}`);
+        await showAlert('Failed to load profile.');
       }
       e.target.value = '';
     };
@@ -86,11 +114,12 @@ export default function SideMenu() {
     if (!file) return;
 
     if (!window.crypto || !window.crypto.subtle) {
-      alert('Cryptography API is not supported in this environment.');
+      await showAlert('Cryptography API is not supported in this environment.');
       e.target.value = '';
       return;
     }
 
+    addDebugLog('info', `Scanning ZIP: ${file.name}`);
     showLoading('Reading ZIP...');
     try {
       const zip = new JSZip();
@@ -98,12 +127,14 @@ export default function SideMenu() {
       const entries = Object.values(loadedZip.files).filter(f => !f.dir && f.name.endsWith('.jar'));
 
       if (entries.length === 0) {
-        alert('No .jar files found in the ZIP.');
+        addDebugLog('warn', 'No .jar files found in ZIP.');
+        await showAlert('No .jar files found in the ZIP.');
         hideLoading();
         e.target.value = '';
         return;
       }
 
+      addDebugLog('log', `Found ${entries.length} .jar files in ZIP`);
       showProgress(entries.length);
       let processed = 0;
       const startTime = Date.now();
@@ -125,6 +156,7 @@ export default function SideMenu() {
       });
 
       const validHashes = hashes.filter(Boolean);
+      addDebugLog('log', `Hashed ${validHashes.length}/${entries.length} files`);
       updateLoading('Identifying mods...');
 
       const projectIds = new Set();
@@ -135,7 +167,12 @@ export default function SideMenu() {
       await asyncPool(CONCURRENCY_LIMIT, validHashes, async (hash) => {
         try {
           const version = await API.getVersionFile(hash);
-          if (version?.project_id) projectIds.add(version.project_id);
+          if (version?.project_id) {
+            projectIds.add(version.project_id);
+            addDebugLog('log', `Identified mod: ${version.project_id} (hash ${hash.slice(0, 8)}...)`);
+          } else {
+            addDebugLog('warn', `Hash not found on Modrinth: ${hash.slice(0, 8)}...`);
+          }
         } catch (err) {
           addDebugLog('error', `Network error for hash ${hash}: ${err}`);
         } finally {
@@ -146,7 +183,8 @@ export default function SideMenu() {
       });
 
       if (projectIds.size === 0) {
-        alert('Could not identify any mods from Modrinth in this ZIP.');
+        addDebugLog('warn', 'Could not identify any mods from Modrinth in this ZIP.');
+        await showAlert('Could not identify any mods from Modrinth in this ZIP.');
       } else {
         const profileName = file.name.replace(/\.[^/.]+$/, '');
         const profile = {
@@ -155,11 +193,12 @@ export default function SideMenu() {
           date: new Date().toLocaleDateString(),
         };
         saveProfiles([...profiles, profile]);
-        alert(`Identified ${projectIds.size} mods and saved as profile "${profileName}"!`);
+        addDebugLog('info', `ZIP import complete: identified ${projectIds.size} mods, saved as "${profileName}"`);
+        await showAlert(`Identified ${projectIds.size} mods and saved as profile "${profileName}"!`);
       }
     } catch (err) {
       addDebugLog('error', String(err));
-      alert('Failed to process ZIP file.');
+      await showAlert('Failed to process ZIP file.');
     } finally {
       hideLoading();
       e.target.value = '';
@@ -218,12 +257,34 @@ export default function SideMenu() {
               profiles.map((p, i) => (
                 <div key={i} className="profile-card">
                   <div className="profile-info">
-                    <div className="profile-name">{p.name}</div>
+                    {renamingIndex === i ? (
+                      <div className="rename-input-group">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') commitRename(i);
+                            if (e.key === 'Escape') setRenamingIndex(null);
+                          }}
+                          className="input-base rename-input"
+                        />
+                        <button onClick={() => commitRename(i)} className="btn-icon-small blue" title="Confirm Rename">
+                          <Check size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="profile-name">{p.name}</div>
+                    )}
                     <div className="profile-date">{p.mods.length} mods • {p.date}</div>
                   </div>
                   <div className="profile-actions">
                     <button onClick={() => loadProfile(i)} className="btn-icon-small blue" title="Load">
                       <Upload size={16} />
+                    </button>
+                    <button onClick={() => startRename(i)} className="btn-icon-small gray" title="Rename">
+                      <Pencil size={16} />
                     </button>
                     <button onClick={() => exportProfile(i)} className="btn-icon-small gray" title="Export">
                       <Share2 size={16} />

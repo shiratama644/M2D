@@ -4,7 +4,7 @@ import { API } from '../utils/api';
 import { useApp } from '../context/AppContext';
 
 export default function ModList({ searchParams }) {
-  const { updateModDataMap } = useApp();
+  const { updateModDataMap, addDebugLog } = useApp();
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
@@ -32,25 +32,30 @@ export default function ModList({ searchParams }) {
       const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;
-        if (offset === 0) setNoResults(true);
+        if (offset === 0) {
+          setNoResults(true);
+          addDebugLog('info', `Search returned no results for "${p.query}" (${p.loader} ${p.version})`);
+        }
       } else {
         const modMap = {};
         data.hits.forEach(mod => { modMap[mod.project_id] = mod; });
         updateModDataMap(modMap);
         setMods(prev => [...prev, ...data.hits]);
         offsetRef.current = offset + data.hits.length;
+        addDebugLog('log', `Loaded ${data.hits.length} mods (offset=${offset}, total≈${data.total_hits ?? '?'})`);
         if (data.hits.length < LIMIT) {
           hasMoreRef.current = false;
         }
       }
     } catch (err) {
+      addDebugLog('error', `Search error: ${err}`);
       console.error('Search error', err);
       hasMoreRef.current = false;
     } finally {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [searchParams, updateModDataMap]);
+  }, [searchParams, updateModDataMap, addDebugLog]);
 
   // Reset on new search params
   useEffect(() => {
