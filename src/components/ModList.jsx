@@ -3,6 +3,25 @@ import ModCard from './ModCard';
 import { API } from '../utils/api';
 import { useApp } from '../context/AppContext';
 
+function buildFacets(filters) {
+  const facets = [['project_type:mod']];
+  if (!filters) return facets;
+
+  const included = Object.entries(filters.loaders || {})
+    .filter(([, v]) => v === 'include')
+    .map(([k]) => `categories:${k}`);
+  const excluded = Object.entries(filters.loaders || {})
+    .filter(([, v]) => v === 'exclude');
+
+  if (included.length > 0) facets.push(included);
+  excluded.forEach(([k]) => facets.push([`NOT categories:${k}`]));
+
+  if (filters.version && filters.version.trim()) {
+    facets.push([`versions:${filters.version.trim()}`]);
+  }
+  return facets;
+}
+
 export default function ModList({ searchParams }) {
   const { updateModDataMap, addDebugLog } = useApp();
   const [mods, setMods] = useState([]);
@@ -23,10 +42,14 @@ export default function ModList({ searchParams }) {
     loadingRef.current = true;
     setLoading(true);
 
-    const facets = [['project_type:mod']];
-    if (p.loader) facets.push([`categories:${p.loader}`]);
-    if (p.version) facets.push([`versions:${p.version}`]);
-    const index = (p.query || '').trim() === '' ? 'downloads' : 'relevance';
+    const facets = buildFacets(p.filters);
+
+    let index;
+    if (!p.sort || p.sort === 'relevance') {
+      index = (p.query || '').trim() === '' ? 'downloads' : 'relevance';
+    } else {
+      index = p.sort;
+    }
 
     try {
       const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index);
@@ -34,7 +57,7 @@ export default function ModList({ searchParams }) {
         hasMoreRef.current = false;
         if (offset === 0) {
           setNoResults(true);
-          addDebugLog('info', `Search returned no results for "${p.query}" (${p.loader} ${p.version})`);
+          addDebugLog('info', `Search returned no results for "${p.query}"`);
         }
       } else {
         const modMap = {};

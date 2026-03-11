@@ -22,4 +22,13 @@ export const DEBUG_KEY = 'mod_manager_debug';
 export const THEME_KEY = 'mod_manager_theme';
 export const FAST_SEARCH_KEY = 'mod_manager_fast_search';
 export const LANGUAGE_KEY = 'mod_manager_language';
+export const LOADER_KEY = 'mod_manager_loader';
+export const VERSION_KEY = 'mod_manager_version';
 export const CONCURRENCY_LIMIT = 15;
+
+export const LOADER_OPTIONS = [
+  { value: 'fabric', label: 'Fabric' },
+  { value: 'forge', label: 'Forge' },
+  { value: 'neoforge', label: 'NeoForge' },
+  { value: 'quilt', label: 'Quilt' },
+];
