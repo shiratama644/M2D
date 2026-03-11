@@ -1,25 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-
-const LOADER_OPTIONS = [
-  { value: '', label: 'Any' },
-  { value: 'fabric', label: 'Fabric' },
-  { value: 'forge', label: 'Forge' },
-  { value: 'neoforge', label: 'NeoForge' },
-  { value: 'quilt', label: 'Quilt' },
-];
+import CustomSelect from './CustomSelect';
 
 export default function SearchSection({ onSearch }) {
-  const { fastSearch } = useApp();
+  const { fastSearch, t } = useApp();
   const [loader, setLoader] = useState('fabric');
   const [version, setVersion] = useState('1.21.1');
   const [query, setQuery] = useState('');
-  const [selectOpen, setSelectOpen] = useState(false);
-  const wrapperRef = useRef(null);
   const debounceRef = useRef(null);
 
-  const selectedLabel = LOADER_OPTIONS.find(o => o.value === loader)?.label || 'Any';
+  const loaderOptions = [
+    { value: '', label: t.loaders.any },
+    { value: 'fabric', label: 'Fabric' },
+    { value: 'forge', label: 'Forge' },
+    { value: 'neoforge', label: 'NeoForge' },
+    { value: 'quilt', label: 'Quilt' },
+  ];
 
   const doSearch = (q = query, l = loader, v = version) => {
     onSearch({ query: q, loader: l, version: v });
@@ -47,7 +44,6 @@ export default function SearchSection({ onSearch }) {
 
   const handleLoaderSelect = (value) => {
     setLoader(value);
-    setSelectOpen(false);
     doSearch(query, value, version);
   };
 
@@ -55,43 +51,19 @@ export default function SearchSection({ onSearch }) {
     return () => clearTimeout(debounceRef.current);
   }, []);
 
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-        setSelectOpen(false);
-      }
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
   return (
     <section className="search-section">
       <div className="filter-grid">
         <div className="filter-item">
-          <label>Loader</label>
-          <div ref={wrapperRef} className={`custom-select-wrapper ${selectOpen ? 'open' : ''}`}>
-            <div className="custom-select-display input-large" onClick={() => setSelectOpen(o => !o)}>
-              <span>{selectedLabel}</span>
-              <ChevronDown size={16} className="chevron" />
-            </div>
-            {selectOpen && (
-              <div className="custom-select-options">
-                {LOADER_OPTIONS.map(opt => (
-                  <div
-                    key={opt.value}
-                    className={`custom-select-option ${opt.value === loader ? 'selected' : ''}`}
-                    onClick={() => handleLoaderSelect(opt.value)}
-                  >
-                    {opt.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <label>{t.search.loader}</label>
+          <CustomSelect
+            options={loaderOptions}
+            value={loader}
+            onChange={handleLoaderSelect}
+          />
         </div>
         <div className="filter-item">
-          <label>Version</label>
+          <label>{t.search.version}</label>
           <input
             type="text"
             value={version}
@@ -108,7 +80,7 @@ export default function SearchSection({ onSearch }) {
           value={query}
           onChange={handleQueryChange}
           onKeyPress={!fastSearch ? handleKeyPress : undefined}
-          placeholder="Search mods..."
+          placeholder={t.search.placeholder}
           className="input-large search-input"
         />
         {!fastSearch && (

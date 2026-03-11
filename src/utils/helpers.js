@@ -21,4 +21,5 @@ export const STORAGE_KEY = 'mod_profiles';
 export const DEBUG_KEY = 'mod_manager_debug';
 export const THEME_KEY = 'mod_manager_theme';
 export const FAST_SEARCH_KEY = 'mod_manager_fast_search';
+export const LANGUAGE_KEY = 'mod_manager_language';
 export const CONCURRENCY_LIMIT = 15;
