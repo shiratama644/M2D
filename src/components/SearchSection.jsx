@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const LOADER_OPTIONS = [
   { value: '', label: 'Any' },
@@ -10,6 +11,7 @@ const LOADER_OPTIONS = [
 ];
 
 export default function SearchSection({ onSearch }) {
+  const { fastSearch } = useApp();
   const [loader, setLoader] = useState('fabric');
   const [version, setVersion] = useState('1.21.1');
   const [query, setQuery] = useState('');
@@ -27,6 +29,15 @@ export default function SearchSection({ onSearch }) {
     if (e.key === 'Enter') doSearch();
   };
 
+  const handleQueryChange = (e) => {
+    const q = e.target.value;
+    setQuery(q);
+    if (fastSearch) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => doSearch(q, loader, version), 500);
+    }
+  };
+
   const handleVersionInput = (e) => {
     const v = e.target.value;
     setVersion(v);
@@ -39,6 +50,10 @@ export default function SearchSection({ onSearch }) {
     setSelectOpen(false);
     doSearch(query, value, version);
   };
+
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current);
+  }, []);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -91,14 +106,16 @@ export default function SearchSection({ onSearch }) {
         <input
           type="text"
           value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onChange={handleQueryChange}
+          onKeyPress={!fastSearch ? handleKeyPress : undefined}
           placeholder="Search mods..."
           className="input-large search-input"
         />
-        <button onClick={() => doSearch()} className="btn-search">
-          <Search size={20} />
-        </button>
+        {!fastSearch && (
+          <button onClick={() => doSearch()} className="btn-search">
+            <Search size={20} />
+          </button>
+        )}
       </div>
     </section>
   );

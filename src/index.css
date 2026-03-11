@@ -289,6 +289,9 @@ input, select { font-family: inherit; }
 .dialog-message { font-size: 0.875rem; line-height: 1.6; color: var(--text-main); }
 .dialog-ok-btn { padding: 0.5rem 1.5rem; height: auto; }
 
+/* Settings select */
+.settings-select { width: auto; flex: 0; min-width: 7rem; height: 2.25rem; cursor: pointer; }
+
 /* Profile rename */
 .rename-input-group { display: flex; gap: 0.25rem; align-items: center; width: 100%; }
 .rename-input { padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto; min-width: 0; }

@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { STORAGE_KEY, DEBUG_KEY, THEME_KEY } from '../utils/helpers';
+import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY } from '../utils/helpers';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
   const [debugMode, setDebugMode] = useState(() => localStorage.getItem(DEBUG_KEY) === 'true');
+  const [fastSearch, setFastSearch] = useState(() => localStorage.getItem(FAST_SEARCH_KEY) === 'true');
   const [menuOpen, setMenuOpen] = useState(false);
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -52,15 +53,19 @@ export function AppProvider({ children }) {
   const [debugLogs, setDebugLogs] = useState([]);
   const debugLogsRef = useRef([]);
 
-  const toggleTheme = useCallback((isDark) => {
-    const t = isDark ? 'dark' : 'light';
-    setTheme(t);
-    localStorage.setItem(THEME_KEY, t);
+  const toggleTheme = useCallback((value) => {
+    setTheme(value);
+    localStorage.setItem(THEME_KEY, value);
   }, []);
 
   const toggleDebug = useCallback((enabled) => {
     setDebugMode(enabled);
     localStorage.setItem(DEBUG_KEY, enabled);
+  }, []);
+
+  const toggleFastSearch = useCallback((enabled) => {
+    setFastSearch(enabled);
+    localStorage.setItem(FAST_SEARCH_KEY, enabled);
   }, []);
 
   const addDebugLog = useCallback((level, msg) => {
@@ -152,6 +157,7 @@ export function AppProvider({ children }) {
   const value = {
     theme, toggleTheme,
     debugMode, toggleDebug,
+    fastSearch, toggleFastSearch,
     menuOpen, setMenuOpen,
     profiles, saveProfiles,
     selectedMods, toggleMod, clearMods, addMod, removeMod, replaceSelectedMods,
