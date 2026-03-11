@@ -1,17 +1,28 @@
 import { Settings2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import CustomSelect from './CustomSelect';
 
 export default function SettingsModal() {
-  const { settingsOpen, setSettingsOpen, theme, toggleTheme, debugMode, toggleDebug, fastSearch, toggleFastSearch } = useApp();
+  const { settingsOpen, setSettingsOpen, theme, toggleTheme, debugMode, toggleDebug, fastSearch, toggleFastSearch, language, toggleLanguage, t } = useApp();
 
   if (!settingsOpen) return null;
+
+  const themeOptions = [
+    { value: 'light', label: t.themes.light },
+    { value: 'dark', label: t.themes.dark },
+  ];
+
+  const languageOptions = [
+    { value: 'en', label: t.languages.en },
+    { value: 'ja', label: t.languages.ja },
+  ];
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSettingsOpen(false)}>
       <div className="modal-container">
         <div className="modal-header">
           <h3 className="modal-title">
-            <Settings2 size={20} /> Settings
+            <Settings2 size={20} /> {t.settings.title}
           </h3>
           <button onClick={() => setSettingsOpen(false)} className="btn-close-modal">
             <X size={20} />
@@ -20,22 +31,32 @@ export default function SettingsModal() {
         <div className="modal-body">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>Theme</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Select light or dark theme</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.theme.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.theme.description}</span>
             </div>
-            <select
-              className="input-base settings-select"
+            <CustomSelect
+              className="settings-select"
+              options={themeOptions}
               value={theme}
-              onChange={e => toggleTheme(e.target.value)}
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
+              onChange={toggleTheme}
+            />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>高速検索</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>入力後500msで自動検索（検索ボタン非表示）</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.language.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.language.description}</span>
+            </div>
+            <CustomSelect
+              className="settings-select"
+              options={languageOptions}
+              value={language}
+              onChange={toggleLanguage}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.fastSearch.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.fastSearch.description}</span>
             </div>
             <label className="toggle-switch">
               <input
@@ -49,8 +70,8 @@ export default function SettingsModal() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>Debug Mode</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Show floating developer console</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.debugMode.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.debugMode.description}</span>
             </div>
             <label className="toggle-switch">
               <input
@@ -64,7 +85,7 @@ export default function SettingsModal() {
           </div>
         </div>
         <div className="modal-footer">
-          <button onClick={() => setSettingsOpen(false)} className="btn-secondary">Close</button>
+          <button onClick={() => setSettingsOpen(false)} className="btn-secondary">{t.settings.close}</button>
         </div>
       </div>
     </div>

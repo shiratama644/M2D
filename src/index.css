@@ -290,7 +290,8 @@ input, select { font-family: inherit; }
 .dialog-ok-btn { padding: 0.5rem 1.5rem; height: auto; }
 
 /* Settings select */
-.settings-select { width: auto; flex: 0; min-width: 7rem; height: 2.25rem; cursor: pointer; }
+.settings-select { width: auto; flex: 0; min-width: 8rem; }
+.settings-select .custom-select-display { height: 2.25rem; padding: 0 0.75rem; }
 
 /* Profile rename */
 .rename-input-group { display: flex; gap: 0.25rem; align-items: center; width: 100%; }

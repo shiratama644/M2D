@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY } from '../utils/helpers';
+import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY } from '../utils/helpers';
+import translations from '../i18n/translations';
 
 const AppContext = createContext(null);
 
@@ -7,6 +8,7 @@ export function AppProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
   const [debugMode, setDebugMode] = useState(() => localStorage.getItem(DEBUG_KEY) === 'true');
   const [fastSearch, setFastSearch] = useState(() => localStorage.getItem(FAST_SEARCH_KEY) === 'true');
+  const [language, setLanguage] = useState(() => localStorage.getItem(LANGUAGE_KEY) || 'en');
   const [menuOpen, setMenuOpen] = useState(false);
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -66,6 +68,11 @@ export function AppProvider({ children }) {
   const toggleFastSearch = useCallback((enabled) => {
     setFastSearch(enabled);
     localStorage.setItem(FAST_SEARCH_KEY, enabled);
+  }, []);
+
+  const toggleLanguage = useCallback((lang) => {
+    setLanguage(lang);
+    localStorage.setItem(LANGUAGE_KEY, lang);
   }, []);
 
   const addDebugLog = useCallback((level, msg) => {
@@ -158,6 +165,8 @@ export function AppProvider({ children }) {
     theme, toggleTheme,
     debugMode, toggleDebug,
     fastSearch, toggleFastSearch,
+    language, toggleLanguage,
+    t: translations[language],
     menuOpen, setMenuOpen,
     profiles, saveProfiles,
     selectedMods, toggleMod, clearMods, addMod, removeMod, replaceSelectedMods,
