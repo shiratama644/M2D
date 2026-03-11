@@ -2,7 +2,7 @@ import { Settings2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function SettingsModal() {
-  const { settingsOpen, setSettingsOpen, theme, toggleTheme, debugMode, toggleDebug } = useApp();
+  const { settingsOpen, setSettingsOpen, theme, toggleTheme, debugMode, toggleDebug, fastSearch, toggleFastSearch } = useApp();
 
   if (!settingsOpen) return null;
 
@@ -20,15 +20,29 @@ export default function SettingsModal() {
         <div className="modal-body">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>Dark Mode</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Toggle dark/light theme</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>Theme</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Select light or dark theme</span>
+            </div>
+            <select
+              className="input-base settings-select"
+              value={theme}
+              onChange={e => toggleTheme(e.target.value)}
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div>
+              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>高速検索</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>入力後500msで自動検索（検索ボタン非表示）</span>
             </div>
             <label className="toggle-switch">
               <input
                 type="checkbox"
                 className="toggle-input"
-                checked={theme === 'dark'}
-                onChange={e => toggleTheme(e.target.checked)}
+                checked={fastSearch}
+                onChange={e => toggleFastSearch(e.target.checked)}
               />
               <div className="toggle-bg"><div className="toggle-knob"></div></div>
             </label>

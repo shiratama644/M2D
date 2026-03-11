@@ -75,9 +75,9 @@ export default function ThreeBackground() {
       materialRef.current.color.setHex(0x00ffff);
       materialRef.current.opacity = 0.3;
     } else {
-      fogRef.current.color.setHex(0xe0e7ff);
-      materialRef.current.color.setHex(0x3b82f6);
-      materialRef.current.opacity = 0.2;
+      fogRef.current.color.setHex(0xdbeafe);
+      materialRef.current.color.setHex(0x1d4ed8);
+      materialRef.current.opacity = 0.5;
     }
   }, [theme]);
 
