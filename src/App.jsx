@@ -11,6 +11,7 @@ import DependencyModal from './components/DependencyModal';
 import SelectedModal from './components/SelectedModal';
 import LoadingOverlay from './components/LoadingOverlay';
 import DebugPanel from './components/DebugPanel';
+import CustomDialog from './components/CustomDialog';
 import { API } from './utils/api';
 import { asyncPool, CONCURRENCY_LIMIT } from './utils/helpers';
 import JSZip from 'jszip';
@@ -26,6 +27,8 @@ export default function App() {
     modDataMap, updateModDataMap,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     depModalOpen, setDepModalOpen,
+    showAlert,
+    addDebugLog,
   } = useApp();
 
   const [searchParams, setSearchParams] = useState(DEFAULT_SEARCH);
@@ -48,10 +51,12 @@ export default function App() {
     setCurrentLoader(loader);
     setCurrentVersion(version);
     setSearchParams({ query, loader, version });
+    addDebugLog('info', `Search: query="${query}" loader=${loader} version=${version}`);
   };
 
   const handleCheckDeps = async () => {
     if (selectedMods.size === 0) return;
+    addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
     showLoading('Analyzing Dependencies...');
 
     const issues = { required: [], optional: [], conflict: [] };
@@ -67,8 +72,10 @@ export default function App() {
         const modName = modDataMap[pid]?.title || pid;
         try {
           const versions = await API.getVersions(pid, currentLoader, currentVersion);
+          addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
           return versions?.length ? { modName, dependencies: versions[0].dependencies } : null;
-        } catch {
+        } catch (e) {
+          addDebugLog('error', `Failed to fetch versions for ${modName}: ${e}`);
           return null;
         } finally {
           completed++;
@@ -93,10 +100,13 @@ export default function App() {
         });
       });
 
+      addDebugLog('info', `Dependency check done: required=${issues.required.length}, optional=${issues.optional.length}, conflicts=${issues.conflict.length}`);
+
       if (missingModIds.size > 0) {
         updateLoading('Resolving names...');
         const idsToFetch = Array.from(missingModIds).filter(id => !modDataMap[id]);
         if (idsToFetch.length > 0) {
+          addDebugLog('log', `Resolving ${idsToFetch.length} unknown mod names...`);
           const pData = await API.getProjects(idsToFetch);
           const map = {};
           pData.forEach(p => { map[p.id] = p; });
@@ -109,13 +119,15 @@ export default function App() {
       setDepModalOpen(true);
     } catch (e) {
       hideLoading();
-      alert('Error checking dependencies.');
+      addDebugLog('error', `Dependency check failed: ${e}`);
+      await showAlert('Error checking dependencies.');
       console.error(e);
     }
   };
 
   const handleDownload = async () => {
     if (selectedMods.size === 0) return;
+    addDebugLog('info', `Starting download for ${selectedMods.size} mods (${currentLoader} ${currentVersion})...`);
     showLoading('Preparing Download...');
 
     const zip = new JSZip();
@@ -125,6 +137,7 @@ export default function App() {
     showProgress(ids.length);
 
     await asyncPool(CONCURRENCY_LIMIT, ids, async (pid) => {
+      const modName = modDataMap[pid]?.title || pid;
       try {
         const versions = await API.getVersions(pid, currentLoader, currentVersion);
         if (versions?.length && versions[0].files?.length) {
@@ -133,9 +146,15 @@ export default function App() {
           if (res.ok) {
             zip.file(file.filename, await res.blob());
             success++;
+            addDebugLog('log', `Downloaded: ${file.filename}`);
+          } else {
+            addDebugLog('warn', `HTTP ${res.status} for ${modName} (${file.filename})`);
           }
+        } else {
+          addDebugLog('warn', `No compatible version found for ${modName}`);
         }
       } catch (e) {
+        addDebugLog('error', `Failed to download ${modName}: ${e}`);
         console.error(`Failed to download ${pid}`, e);
       } finally {
         completed++;
@@ -145,14 +164,18 @@ export default function App() {
     });
 
     if (success > 0) {
+      addDebugLog('info', `Compressing ZIP (${success}/${ids.length} mods)...`);
       updateLoading('Compressing ZIP...');
       showProgress();
       const content = await zip.generateAsync({ type: 'blob' }, (meta) => {
         updateLoading(`Compressing ZIP... ${Math.round(meta.percent)}%`);
       });
-      saveAs(content, `mods-${currentLoader}-${currentVersion}-${Date.now()}.zip`);
+      const filename = `mods-${currentLoader}-${currentVersion}-${Date.now()}.zip`;
+      saveAs(content, filename);
+      addDebugLog('info', `Download complete: ${filename}`);
     } else {
-      alert('Download failed. Could not find compatible versions.');
+      addDebugLog('error', 'Download failed: no compatible versions found.');
+      await showAlert('Download failed. Could not find compatible versions.');
     }
     hideLoading();
   };
@@ -172,6 +195,7 @@ export default function App() {
       <SelectedModal />
       <LoadingOverlay />
       <DebugPanel />
+      <CustomDialog />
     </>
   );
 }

@@ -1,10 +1,16 @@
 import { useRef, useEffect, useState } from 'react';
-import { Terminal, Trash2, ChevronDown } from 'lucide-react';
+import { Terminal, Trash2, ChevronDown, Copy } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+
+const LEVELS = ['all', 'log', 'info', 'warn', 'error'];
+const LEVEL_LABELS = { all: 'All', log: 'Log', info: 'Info', warn: 'Warn', error: 'Err' };
+const LEVEL_COLORS = { log: '#cbd5e1', info: '#7dd3fc', warn: '#facc15', error: '#f87171' };
 
 export default function DebugPanel() {
   const { debugMode, debugLogs, clearDebugLogs, addDebugLog } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [filterLevel, setFilterLevel] = useState('all');
+  const [copied, setCopied] = useState(false);
   const fabRef = useRef(null);
   const logsRef = useRef(null);
 
@@ -39,7 +45,7 @@ export default function DebugPanel() {
     if (logsRef.current) {
       logsRef.current.scrollTop = logsRef.current.scrollHeight;
     }
-  }, [debugLogs]);
+  }, [debugLogs, filterLevel]);
 
   // Draggable FAB
   useEffect(() => {
@@ -95,34 +101,80 @@ export default function DebugPanel() {
     };
   }, [debugMode]);
 
+  const copyLogs = () => {
+    const text = debugLogs.map(e => `[${e.time}] [${e.level.toUpperCase()}] ${e.msg}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
   if (!debugMode) return null;
+
+  const filteredLogs = filterLevel === 'all' ? debugLogs : debugLogs.filter(e => e.level === filterLevel);
+
+  const counts = debugLogs.reduce((acc, e) => {
+    acc[e.level] = (acc[e.level] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <>
       <div ref={fabRef} className="debug-fab">
         <Terminal size={24} style={{ pointerEvents: 'none' }} />
+        {debugLogs.length > 0 && (
+          <span className="debug-fab-badge">{debugLogs.length > 99 ? '99+' : debugLogs.length}</span>
+        )}
       </div>
       <div className={`debug-panel ${isOpen ? 'open' : ''}`}>
         <div className="debug-header" onClick={() => setIsOpen(o => !o)}>
           <span className="debug-title">
             <Terminal size={12} /> Console
+            <span className="debug-count">({filteredLogs.length}{filterLevel !== 'all' ? ` ${filterLevel}` : ''})</span>
           </span>
           <div className="debug-actions">
             <button
+              onClick={e => { e.stopPropagation(); copyLogs(); }}
+              title="Copy Logs"
+              className="debug-action-btn"
+            >
+              {copied ? <span style={{ fontSize: '0.625rem', color: '#4ade80' }}>Copied!</span> : <Copy size={14} />}
+            </button>
+            <button
               onClick={e => { e.stopPropagation(); clearDebugLogs(); }}
               title="Clear Console"
+              className="debug-action-btn"
             >
-              <Trash2 size={16} />
+              <Trash2 size={14} />
             </button>
-            <button><ChevronDown size={16} /></button>
+            <button className="debug-action-btn"><ChevronDown size={14} /></button>
           </div>
         </div>
-        <div ref={logsRef} className="debug-logs">
-          {debugLogs.map((entry, i) => (
-            <div key={i} className={`log-entry log-${entry.level}`}>
-              [{entry.time}] {entry.msg}
-            </div>
+        <div className="debug-filter-bar" onClick={e => e.stopPropagation()}>
+          {LEVELS.map(lvl => (
+            <button
+              key={lvl}
+              onClick={() => setFilterLevel(lvl)}
+              className={`debug-filter-btn ${filterLevel === lvl ? 'active' : ''}`}
+              style={filterLevel === lvl && lvl !== 'all' ? { borderColor: LEVEL_COLORS[lvl], color: LEVEL_COLORS[lvl] } : {}}
+            >
+              {LEVEL_LABELS[lvl]}
+              {lvl !== 'all' && counts[lvl] ? <span className="debug-filter-count">{counts[lvl]}</span> : null}
+            </button>
           ))}
+        </div>
+        <div ref={logsRef} className="debug-logs">
+          {filteredLogs.length === 0 ? (
+            <div className="debug-empty">No {filterLevel !== 'all' ? filterLevel : ''} logs yet.</div>
+          ) : (
+            filteredLogs.map((entry, i) => (
+              <div key={i} className={`log-entry log-${entry.level}`}>
+                <span className="log-time">{entry.time}</span>
+                <span className="log-level-badge">{entry.level.toUpperCase()}</span>
+                <span className="log-msg">{entry.msg}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </>

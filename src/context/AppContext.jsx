@@ -23,6 +23,31 @@ export function AppProvider({ children }) {
   const [depModalOpen, setDepModalOpen] = useState(false);
   const [selectedModalOpen, setSelectedModalOpen] = useState(false);
 
+  // Custom dialog
+  const [dialog, setDialog] = useState(null);
+  const dialogResolverRef = useRef(null);
+
+  const showAlert = useCallback((message) => {
+    return new Promise((resolve) => {
+      dialogResolverRef.current = resolve;
+      setDialog({ type: 'alert', message });
+    });
+  }, []);
+
+  const showConfirm = useCallback((message) => {
+    return new Promise((resolve) => {
+      dialogResolverRef.current = resolve;
+      setDialog({ type: 'confirm', message });
+    });
+  }, []);
+
+  const closeDialog = useCallback((result) => {
+    const resolver = dialogResolverRef.current;
+    dialogResolverRef.current = null;
+    setDialog(null);
+    if (resolver) resolver(result);
+  }, []);
+
   // Debug logs
   const [debugLogs, setDebugLogs] = useState([]);
   const debugLogsRef = useRef([]);
@@ -44,7 +69,7 @@ export function AppProvider({ children }) {
       msg,
       time: new Date().toLocaleTimeString('ja-JP', { hour12: false }),
     };
-    debugLogsRef.current = [...debugLogsRef.current.slice(-199), entry];
+    debugLogsRef.current = [...debugLogsRef.current.slice(-499), entry];
     setDebugLogs([...debugLogsRef.current]);
   }, []);
 
@@ -136,6 +161,7 @@ export function AppProvider({ children }) {
     depModalOpen, setDepModalOpen,
     selectedModalOpen, setSelectedModalOpen,
     debugLogs, addDebugLog, clearDebugLogs,
+    dialog, showAlert, showConfirm, closeDialog,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
