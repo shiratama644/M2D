@@ -1,9 +1,19 @@
 import { Settings2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import CustomSelect from './CustomSelect';
+import { LOADER_OPTIONS } from '../utils/helpers';
 
 export default function SettingsModal() {
-  const { settingsOpen, setSettingsOpen, theme, toggleTheme, debugMode, toggleDebug, fastSearch, toggleFastSearch, language, toggleLanguage, t } = useApp();
+  const {
+    settingsOpen, setSettingsOpen,
+    theme, toggleTheme,
+    debugMode, toggleDebug,
+    fastSearch, toggleFastSearch,
+    language, toggleLanguage,
+    modLoader, updateModLoader,
+    modVersion, updateModVersion,
+    t,
+  } = useApp();
 
   if (!settingsOpen) return null;
 
@@ -15,6 +25,11 @@ export default function SettingsModal() {
   const languageOptions = [
     { value: 'en', label: t.languages.en },
     { value: 'ja', label: t.languages.ja },
+  ];
+
+  const loaderOptions = [
+    { value: '', label: t.loaders.any },
+    ...LOADER_OPTIONS,
   ];
 
   return (
@@ -29,59 +44,98 @@ export default function SettingsModal() {
           </button>
         </div>
         <div className="modal-body">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.theme.label}</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.theme.description}</span>
-            </div>
-            <CustomSelect
-              className="settings-select"
-              options={themeOptions}
-              value={theme}
-              onChange={toggleTheme}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.language.label}</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.language.description}</span>
-            </div>
-            <CustomSelect
-              className="settings-select"
-              options={languageOptions}
-              value={language}
-              onChange={toggleLanguage}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.fastSearch.label}</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.fastSearch.description}</span>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                className="toggle-input"
-                checked={fastSearch}
-                onChange={e => toggleFastSearch(e.target.checked)}
+          {/* Mods Category */}
+          <div className="settings-category">
+            <h4 className="settings-category-title">{t.settings.categories.mods}</h4>
+            <div className="settings-row">
+              <div>
+                <span className="settings-label">{t.settings.modLoader.label}</span>
+                <span className="settings-description">{t.settings.modLoader.description}</span>
+              </div>
+              <CustomSelect
+                className="settings-select"
+                options={loaderOptions}
+                value={modLoader}
+                onChange={updateModLoader}
               />
-              <div className="toggle-bg"><div className="toggle-knob"></div></div>
-            </label>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 'bold', display: 'block' }}>{t.settings.debugMode.label}</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.settings.debugMode.description}</span>
             </div>
-            <label className="toggle-switch">
+            <div className="settings-row" style={{ marginBottom: 0 }}>
+              <div>
+                <span className="settings-label">{t.settings.modVersion.label}</span>
+                <span className="settings-description">{t.settings.modVersion.description}</span>
+              </div>
               <input
-                type="checkbox"
-                className="toggle-input"
-                checked={debugMode}
-                onChange={e => toggleDebug(e.target.checked)}
+                type="text"
+                value={modVersion}
+                onChange={e => updateModVersion(e.target.value)}
+                placeholder="ex: 1.21.1"
+                className="input-large settings-version-input"
               />
-              <div className="toggle-bg"><div className="toggle-knob"></div></div>
-            </label>
+            </div>
+          </div>
+
+          {/* General Category */}
+          <div className="settings-category">
+            <h4 className="settings-category-title">{t.settings.categories.general}</h4>
+            <div className="settings-row">
+              <div>
+                <span className="settings-label">{t.settings.theme.label}</span>
+                <span className="settings-description">{t.settings.theme.description}</span>
+              </div>
+              <CustomSelect
+                className="settings-select"
+                options={themeOptions}
+                value={theme}
+                onChange={toggleTheme}
+              />
+            </div>
+            <div className="settings-row">
+              <div>
+                <span className="settings-label">{t.settings.language.label}</span>
+                <span className="settings-description">{t.settings.language.description}</span>
+              </div>
+              <CustomSelect
+                className="settings-select"
+                options={languageOptions}
+                value={language}
+                onChange={toggleLanguage}
+              />
+            </div>
+            <div className="settings-row" style={{ marginBottom: 0 }}>
+              <div>
+                <span className="settings-label">{t.settings.fastSearch.label}</span>
+                <span className="settings-description">{t.settings.fastSearch.description}</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  className="toggle-input"
+                  checked={fastSearch}
+                  onChange={e => toggleFastSearch(e.target.checked)}
+                />
+                <div className="toggle-bg"><div className="toggle-knob"></div></div>
+              </label>
+            </div>
+          </div>
+
+          {/* Developer Mode Category */}
+          <div className="settings-category" style={{ marginBottom: 0 }}>
+            <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
+            <div className="settings-row" style={{ marginBottom: 0 }}>
+              <div>
+                <span className="settings-label">{t.settings.debugMode.label}</span>
+                <span className="settings-description">{t.settings.debugMode.description}</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  className="toggle-input"
+                  checked={debugMode}
+                  onChange={e => toggleDebug(e.target.checked)}
+                />
+                <div className="toggle-bg"><div className="toggle-knob"></div></div>
+              </label>
+            </div>
           </div>
         </div>
         <div className="modal-footer">

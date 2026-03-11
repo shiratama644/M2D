@@ -13,11 +13,18 @@ import LoadingOverlay from './components/LoadingOverlay';
 import DebugPanel from './components/DebugPanel';
 import CustomDialog from './components/CustomDialog';
 import { API } from './utils/api';
-import { asyncPool, CONCURRENCY_LIMIT } from './utils/helpers';
+import { asyncPool, CONCURRENCY_LIMIT, LOADER_OPTIONS } from './utils/helpers';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-const DEFAULT_SEARCH = { query: '', loader: 'fabric', version: '1.21.1' };
+const DEFAULT_SEARCH = {
+  query: '',
+  sort: 'relevance',
+  filters: {
+    loaders: Object.fromEntries(LOADER_OPTIONS.map(o => [o.value, null])),
+    version: '',
+  },
+};
 
 export default function App() {
   const {
@@ -29,12 +36,11 @@ export default function App() {
     depModalOpen, setDepModalOpen,
     showAlert,
     addDebugLog,
+    modLoader, modVersion,
   } = useApp();
 
   const [searchParams, setSearchParams] = useState(DEFAULT_SEARCH);
   const [depIssues, setDepIssues] = useState(null);
-  const [currentLoader, setCurrentLoader] = useState('fabric');
-  const [currentVersion, setCurrentVersion] = useState('1.21.1');
 
   // Apply theme to body
   useEffect(() => {
@@ -47,11 +53,9 @@ export default function App() {
     document.body.classList.toggle('modal-open', isOpen);
   }, [menuOpen, selectedModalOpen, depModalOpen]);
 
-  const handleSearch = ({ query, loader, version }) => {
-    setCurrentLoader(loader);
-    setCurrentVersion(version);
-    setSearchParams({ query, loader, version });
-    addDebugLog('info', `Search: query="${query}" loader=${loader} version=${version}`);
+  const handleSearch = ({ query, sort, filters }) => {
+    setSearchParams({ query, sort, filters });
+    addDebugLog('info', `Search: query="${query}" sort=${sort}`);
   };
 
   const handleCheckDeps = async () => {
@@ -71,7 +75,7 @@ export default function App() {
       const results = await asyncPool(CONCURRENCY_LIMIT, ids, async (pid) => {
         const modName = modDataMap[pid]?.title || pid;
         try {
-          const versions = await API.getVersions(pid, currentLoader, currentVersion);
+          const versions = await API.getVersions(pid, modLoader, modVersion);
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
           return versions?.length ? { modName, dependencies: versions[0].dependencies } : null;
         } catch (e) {
@@ -127,7 +131,7 @@ export default function App() {
 
   const handleDownload = async () => {
     if (selectedMods.size === 0) return;
-    addDebugLog('info', `Starting download for ${selectedMods.size} mods (${currentLoader} ${currentVersion})...`);
+    addDebugLog('info', `Starting download for ${selectedMods.size} mods (${modLoader} ${modVersion})...`);
     showLoading('Preparing Download...');
 
     const zip = new JSZip();
@@ -139,7 +143,7 @@ export default function App() {
     await asyncPool(CONCURRENCY_LIMIT, ids, async (pid) => {
       const modName = modDataMap[pid]?.title || pid;
       try {
-        const versions = await API.getVersions(pid, currentLoader, currentVersion);
+        const versions = await API.getVersions(pid, modLoader, modVersion);
         if (versions?.length && versions[0].files?.length) {
           const file = versions[0].files.find(f => f.primary) || versions[0].files[0];
           const res = await fetch(file.url);
@@ -170,7 +174,7 @@ export default function App() {
       const content = await zip.generateAsync({ type: 'blob' }, (meta) => {
         updateLoading(`Compressing ZIP... ${Math.round(meta.percent)}%`);
       });
-      const filename = `mods-${currentLoader}-${currentVersion}-${Date.now()}.zip`;
+      const filename = `mods-${modLoader}-${modVersion}-${Date.now()}.zip`;
       saveAs(content, filename);
       addDebugLog('info', `Download complete: ${filename}`);
     } else {

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY } from '../utils/helpers';
+import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY, LOADER_KEY, VERSION_KEY } from '../utils/helpers';
 import translations from '../i18n/translations';
 
 const AppContext = createContext(null);
@@ -9,6 +9,8 @@ export function AppProvider({ children }) {
   const [debugMode, setDebugMode] = useState(() => localStorage.getItem(DEBUG_KEY) === 'true');
   const [fastSearch, setFastSearch] = useState(() => localStorage.getItem(FAST_SEARCH_KEY) === 'true');
   const [language, setLanguage] = useState(() => localStorage.getItem(LANGUAGE_KEY) || 'en');
+  const [modLoader, setModLoader] = useState(() => localStorage.getItem(LOADER_KEY) || 'fabric');
+  const [modVersion, setModVersion] = useState(() => localStorage.getItem(VERSION_KEY) || '1.21.1');
   const [menuOpen, setMenuOpen] = useState(false);
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -73,6 +75,16 @@ export function AppProvider({ children }) {
   const toggleLanguage = useCallback((lang) => {
     setLanguage(lang);
     localStorage.setItem(LANGUAGE_KEY, lang);
+  }, []);
+
+  const updateModLoader = useCallback((value) => {
+    setModLoader(value);
+    localStorage.setItem(LOADER_KEY, value);
+  }, []);
+
+  const updateModVersion = useCallback((value) => {
+    setModVersion(value);
+    localStorage.setItem(VERSION_KEY, value);
   }, []);
 
   const addDebugLog = useCallback((level, msg) => {
@@ -166,6 +178,8 @@ export function AppProvider({ children }) {
     debugMode, toggleDebug,
     fastSearch, toggleFastSearch,
     language, toggleLanguage,
+    modLoader, updateModLoader,
+    modVersion, updateModVersion,
     t: translations[language],
     menuOpen, setMenuOpen,
     profiles, saveProfiles,
