@@ -2,20 +2,29 @@ import { useState, useRef, useEffect } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import FilterModal from './FilterModal';
-import { LOADER_OPTIONS } from '../utils/helpers';
+import { LOADER_OPTIONS, CATEGORY_OPTIONS } from '../utils/helpers';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map(o => [o.value, null]));
+const INITIAL_CATEGORY_STATE = Object.fromEntries(CATEGORY_OPTIONS.map(o => [o.value, null]));
+const INITIAL_ENVIRONMENT_STATE = { client_side: null, server_side: null };
 
 function hasActiveFilters(filters, sort) {
   const hasLoader = Object.values(filters.loaders).some(v => v !== null);
-  return hasLoader || filters.version.trim() !== '' || sort !== 'relevance';
+  const hasCategory = Object.values(filters.categories || {}).some(v => v !== null);
+  const hasEnv = Object.values(filters.environment || {}).some(v => v !== null);
+  return hasLoader || hasCategory || hasEnv || filters.version.trim() !== '' || sort !== 'relevance';
 }
 
 export default function SearchSection({ onSearch }) {
   const { fastSearch, t, filterModalOpen, setFilterModalOpen, modVersion, updateModVersion } = useApp();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
-  const [filters, setFilters] = useState(() => ({ loaders: INITIAL_LOADER_STATE, version: modVersion || '' }));
+  const [filters, setFilters] = useState(() => ({
+    loaders: INITIAL_LOADER_STATE,
+    categories: INITIAL_CATEGORY_STATE,
+    environment: INITIAL_ENVIRONMENT_STATE,
+    version: modVersion || '',
+  }));
   const debounceRef = useRef(null);
 
   const doSearch = (q = query, s = sort, f = filters) => {
