@@ -5,7 +5,8 @@ export default function CustomSelect({ options, value, onChange, className = '' 
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  const selectedLabel = options.find(o => o.value === value)?.label ?? options[0]?.label ?? '';
+  const selectedOption = options.find(o => o.value === value) ?? options[0];
+  const selectedLabel = selectedOption?.label ?? '';
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -20,7 +21,10 @@ export default function CustomSelect({ options, value, onChange, className = '' 
   return (
     <div ref={wrapperRef} className={`custom-select-wrapper ${open ? 'open' : ''} ${className}`}>
       <div className="custom-select-display input-large" onClick={() => setOpen(o => !o)}>
-        <span>{selectedLabel}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          {selectedOption?.icon}
+          {selectedLabel}
+        </span>
         <ChevronDown size={16} className="chevron" />
       </div>
       {open && (
@@ -31,7 +35,12 @@ export default function CustomSelect({ options, value, onChange, className = '' 
               className={`custom-select-option ${opt.value === value ? 'selected' : ''}`}
               onClick={() => { onChange(opt.value); setOpen(false); }}
             >
-              {opt.label}
+              {opt.icon ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  {opt.icon}
+                  {opt.label}
+                </span>
+              ) : opt.label}
             </div>
           ))}
         </div>

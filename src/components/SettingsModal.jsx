@@ -1,7 +1,7 @@
 import { Settings2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import CustomSelect from './CustomSelect';
-import { LOADER_OPTIONS } from '../utils/helpers';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
 
 export default function SettingsModal() {
   const {
@@ -29,7 +29,12 @@ export default function SettingsModal() {
 
   const loaderOptions = [
     { value: '', label: t.loaders.any },
-    ...LOADER_OPTIONS,
+    ...LOADER_OPTIONS.map(o => ({
+      ...o,
+      icon: LOADER_ICON_PATHS[o.value]
+        ? <img src={LOADER_ICON_PATHS[o.value]} alt={o.label} className="loader-icon-img" />
+        : undefined,
+    })),
   ];
 
   return (
