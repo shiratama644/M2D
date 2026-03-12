@@ -57,3 +57,7 @@ export const CATEGORY_OPTIONS = [
 ];
 
 export const ENVIRONMENT_OPTIONS = ['required', 'optional', 'unsupported'];
+
+export const OTHER_FILTER_OPTIONS = [
+  { value: 'open_source', labelKey: 'openSource' },
+];

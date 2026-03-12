@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import FilterModal from './FilterModal';
-import { LOADER_OPTIONS, CATEGORY_OPTIONS } from '../utils/helpers';
+import { LOADER_OPTIONS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../utils/helpers';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map(o => [o.value, null]));
 const INITIAL_CATEGORY_STATE = Object.fromEntries(CATEGORY_OPTIONS.map(o => [o.value, null]));
-const INITIAL_ENVIRONMENT_STATE = { client_side: null, server_side: null };
+const INITIAL_ENVIRONMENT_STATE = { client_side: [], server_side: [] };
+const INITIAL_OTHER_STATE = Object.fromEntries(OTHER_FILTER_OPTIONS.map(o => [o.value, null]));
 
 function hasActiveFilters(filters, sort) {
   const hasLoader = Object.values(filters.loaders).some(v => v !== null);
   const hasCategory = Object.values(filters.categories || {}).some(v => v !== null);
-  const hasEnv = Object.values(filters.environment || {}).some(v => v !== null);
-  return hasLoader || hasCategory || hasEnv || filters.version.trim() !== '' || sort !== 'relevance';
+  const hasEnv = Object.values(filters.environment || {}).some(v => Array.isArray(v) ? v.length > 0 : v !== null);
+  const hasOther = Object.values(filters.other || {}).some(v => v !== null);
+  return hasLoader || hasCategory || hasEnv || hasOther || filters.version.trim() !== '' || sort !== 'relevance';
 }
 
 export default function SearchSection({ onSearch }) {
@@ -23,6 +25,7 @@ export default function SearchSection({ onSearch }) {
     loaders: INITIAL_LOADER_STATE,
     categories: INITIAL_CATEGORY_STATE,
     environment: INITIAL_ENVIRONMENT_STATE,
+    other: INITIAL_OTHER_STATE,
     version: modVersion || '',
   }));
   const debounceRef = useRef(null);
@@ -64,7 +67,7 @@ export default function SearchSection({ onSearch }) {
           className="btn-filters"
           onClick={() => setFilterModalOpen(true)}
         >
-          <SlidersHorizontal size={16} />
+          <img src="/icons/modrinth.svg" alt="Modrinth" className="modrinth-filter-icon" />
           {t.filters.label}
           {hasActiveFilters(filters, sort) && <span className="filter-active-dot" />}
         </button>
