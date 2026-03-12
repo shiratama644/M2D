@@ -34,7 +34,7 @@ export default function ThreeBackground() {
     scene.add(mesh);
 
     const clock = new THREE.Clock();
-    let animId;
+    let animId = null;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
@@ -56,11 +56,24 @@ export default function ThreeBackground() {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
+    const onContextLost = (event) => {
+      event.preventDefault();
+      if (animId !== null) cancelAnimationFrame(animId);
+    };
+
+    const onContextRestored = () => {
+      animate();
+    };
+
+    canvas.addEventListener('webglcontextlost', onContextLost, false);
+    canvas.addEventListener('webglcontextrestored', onContextRestored, false);
     window.addEventListener('resize', onResize);
     animate();
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId !== null) cancelAnimationFrame(animId);
+      canvas.removeEventListener('webglcontextlost', onContextLost, false);
+      canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
       window.removeEventListener('resize', onResize);
       renderer.dispose();
       geometry.dispose();

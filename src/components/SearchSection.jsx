@@ -14,11 +14,10 @@ function hasActiveFilters(filters) {
 }
 
 export default function SearchSection({ onSearch }) {
-  const { fastSearch, t } = useApp();
+  const { fastSearch, t, filterModalOpen, setFilterModalOpen } = useApp();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const [filterModalOpen, setFilterModalOpen] = useState(false);
   const debounceRef = useRef(null);
 
   const sortOptions = [
