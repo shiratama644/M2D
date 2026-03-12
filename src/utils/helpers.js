@@ -39,3 +39,21 @@ export const LOADER_ICON_PATHS = {
   neoforge: '/icons/neoforge.svg',
   quilt:    '/icons/quilt.svg',
 };
+
+export const CATEGORY_OPTIONS = [
+  { value: 'optimization', labelKey: 'optimization' },
+  { value: 'technology', labelKey: 'technology' },
+  { value: 'magic', labelKey: 'magic' },
+  { value: 'adventure', labelKey: 'adventure' },
+  { value: 'decoration', labelKey: 'decoration' },
+  { value: 'equipment', labelKey: 'equipment' },
+  { value: 'mobs', labelKey: 'mobs' },
+  { value: 'library', labelKey: 'library' },
+  { value: 'utility', labelKey: 'utility' },
+  { value: 'worldgen', labelKey: 'worldgen' },
+  { value: 'food', labelKey: 'food' },
+  { value: 'storage', labelKey: 'storage' },
+  { value: 'game-mechanics', labelKey: 'gameMechanics' },
+];
+
+export const ENVIRONMENT_OPTIONS = ['required', 'optional', 'unsupported'];

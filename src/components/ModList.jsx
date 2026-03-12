@@ -16,6 +16,24 @@ function buildFacets(filters) {
   if (included.length > 0) facets.push(included);
   excluded.forEach(([k]) => facets.push([`NOT categories:${k}`]));
 
+  const includedCats = Object.entries(filters.categories || {})
+    .filter(([, v]) => v === 'include')
+    .map(([k]) => `categories:${k}`);
+  const excludedCats = Object.entries(filters.categories || {})
+    .filter(([, v]) => v === 'exclude');
+
+  if (includedCats.length > 0) facets.push(includedCats);
+  excludedCats.forEach(([k]) => facets.push([`NOT categories:${k}`]));
+
+  if (filters.environment) {
+    if (filters.environment.client_side) {
+      facets.push([`client_side:${filters.environment.client_side}`]);
+    }
+    if (filters.environment.server_side) {
+      facets.push([`server_side:${filters.environment.server_side}`]);
+    }
+  }
+
   if (filters.version && filters.version.trim()) {
     facets.push([`versions:${filters.version.trim()}`]);
   }

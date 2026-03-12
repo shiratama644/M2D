@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS } from '../utils/helpers';
 import CustomSelect from './CustomSelect';
 
 export default function FilterModal({ filters, onApply, onClose, sort }) {
@@ -10,11 +10,15 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
   const [pending, setPending] = useState({
     ...filters,
     loaders: { ...filters.loaders },
+    categories: { ...(filters.categories || {}) },
+    environment: { ...(filters.environment || { client_side: null, server_side: null }) },
   });
   const [pendingSort, setPendingSort] = useState(sort);
   const [snapshot] = useState({
     ...filters,
     loaders: { ...filters.loaders },
+    categories: { ...(filters.categories || {}) },
+    environment: { ...(filters.environment || { client_side: null, server_side: null }) },
   });
   const [snapshotSort] = useState(sort);
 
@@ -24,6 +28,13 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
     { value: 'follows',   label: t.sort.followers },
     { value: 'newest',    label: t.sort.publishedDate },
     { value: 'updated',   label: t.sort.updatedDate },
+  ];
+
+  const envOptions = [
+    { value: '', label: t.environment.any },
+    { value: 'required', label: t.environment.required },
+    { value: 'optional', label: t.environment.optional },
+    { value: 'unsupported', label: t.environment.unsupported },
   ];
 
   const toggleLoaderState = (loader, state) => {
@@ -36,8 +47,33 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
     }));
   };
 
+  const toggleCategoryState = (category, state) => {
+    setPending(prev => ({
+      ...prev,
+      categories: {
+        ...prev.categories,
+        [category]: prev.categories[category] === state ? null : state,
+      },
+    }));
+  };
+
+  const handleEnvironmentChange = (side, value) => {
+    setPending(prev => ({
+      ...prev,
+      environment: {
+        ...prev.environment,
+        [side]: value || null,
+      },
+    }));
+  };
+
   const handleUndo = () => {
-    setPending({ ...snapshot, loaders: { ...snapshot.loaders } });
+    setPending({
+      ...snapshot,
+      loaders: { ...snapshot.loaders },
+      categories: { ...snapshot.categories },
+      environment: { ...snapshot.environment },
+    });
     setPendingSort(snapshotSort);
   };
 
@@ -100,6 +136,56 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+          <div className="filter-category">
+            <h4 className="filter-category-title">{t.filters.categories}</h4>
+            <div className="filter-items">
+              {CATEGORY_OPTIONS.map(({ value, labelKey }) => {
+                const label = t.categories[labelKey];
+                return (
+                  <div key={value} className="filter-item-row">
+                    <span className="filter-item-label">{label}</span>
+                    <div className="filter-item-btns">
+                      <button
+                        className={`btn-filter-state${pending.categories[value] === 'include' ? ' active-include' : ''}`}
+                        onClick={() => toggleCategoryState(value, 'include')}
+                      >
+                        {t.filters.include}
+                      </button>
+                      <button
+                        className={`btn-filter-state${pending.categories[value] === 'exclude' ? ' active-exclude' : ''}`}
+                        onClick={() => toggleCategoryState(value, 'exclude')}
+                      >
+                        {t.filters.exclude}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="filter-category">
+            <h4 className="filter-category-title">{t.filters.environment}</h4>
+            <div className="filter-items">
+              <div className="filter-item-row">
+                <span className="filter-item-label">{t.filters.clientSide}</span>
+                <CustomSelect
+                  options={envOptions}
+                  value={pending.environment.client_side || ''}
+                  onChange={v => handleEnvironmentChange('client_side', v)}
+                  className="filter-env-select"
+                />
+              </div>
+              <div className="filter-item-row">
+                <span className="filter-item-label">{t.filters.serverSide}</span>
+                <CustomSelect
+                  options={envOptions}
+                  value={pending.environment.server_side || ''}
+                  onChange={v => handleEnvironmentChange('server_side', v)}
+                  className="filter-env-select"
+                />
+              </div>
             </div>
           </div>
           <div className="filter-category" style={{ marginBottom: 0 }}>
