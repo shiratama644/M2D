@@ -88,9 +88,9 @@ export default function ModList({ searchParams }) {
     loadingRef.current = false;
     hasMoreRef.current = true;
     // Trigger initial load after reset
-    setTimeout(() => loadMore(), 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    const t = setTimeout(() => loadMore(), 0);
+    return () => clearTimeout(t);
+  }, [searchParams, loadMore]);
 
   // Infinite scroll observer
   useEffect(() => {

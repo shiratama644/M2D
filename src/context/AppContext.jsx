@@ -27,6 +27,7 @@ export function AppProvider({ children }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [depModalOpen, setDepModalOpen] = useState(false);
   const [selectedModalOpen, setSelectedModalOpen] = useState(false);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
 
   // Custom dialog
   const [dialog, setDialog] = useState(null);
@@ -189,6 +190,7 @@ export function AppProvider({ children }) {
     settingsOpen, setSettingsOpen,
     depModalOpen, setDepModalOpen,
     selectedModalOpen, setSelectedModalOpen,
+    filterModalOpen, setFilterModalOpen,
     debugLogs, addDebugLog, clearDebugLogs,
     dialog, showAlert, showConfirm, closeDialog,
   };

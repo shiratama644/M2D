@@ -34,6 +34,8 @@ export default function App() {
     modDataMap, updateModDataMap,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     depModalOpen, setDepModalOpen,
+    settingsOpen, filterModalOpen,
+    dialog,
     showAlert,
     addDebugLog,
     modLoader, modVersion,
@@ -49,9 +51,9 @@ export default function App() {
 
   // Prevent scroll when modal/menu open
   useEffect(() => {
-    const isOpen = menuOpen || selectedModalOpen || depModalOpen;
+    const isOpen = menuOpen || selectedModalOpen || depModalOpen || settingsOpen || filterModalOpen || !!dialog;
     document.body.classList.toggle('modal-open', isOpen);
-  }, [menuOpen, selectedModalOpen, depModalOpen]);
+  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, filterModalOpen, dialog]);
 
   const handleSearch = ({ query, sort, filters }) => {
     setSearchParams({ query, sort, filters });
