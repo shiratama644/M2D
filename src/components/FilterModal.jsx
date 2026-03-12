@@ -1,18 +1,30 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { LOADER_OPTIONS } from '../utils/helpers';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
+import CustomSelect from './CustomSelect';
 
-export default function FilterModal({ filters, onApply, onClose }) {
+export default function FilterModal({ filters, onApply, onClose, sort }) {
   const { t } = useApp();
   const [pending, setPending] = useState({
     ...filters,
     loaders: { ...filters.loaders },
   });
+  const [pendingSort, setPendingSort] = useState(sort);
   const [snapshot] = useState({
     ...filters,
     loaders: { ...filters.loaders },
   });
+  const [snapshotSort] = useState(sort);
+
+  const sortOptions = [
+    { value: 'relevance', label: t.sort.relevance },
+    { value: 'downloads', label: t.sort.downloads },
+    { value: 'follows',   label: t.sort.followers },
+    { value: 'newest',    label: t.sort.publishedDate },
+    { value: 'updated',   label: t.sort.updatedDate },
+  ];
 
   const toggleLoaderState = (loader, state) => {
     setPending(prev => ({
@@ -26,18 +38,19 @@ export default function FilterModal({ filters, onApply, onClose }) {
 
   const handleUndo = () => {
     setPending({ ...snapshot, loaders: { ...snapshot.loaders } });
+    setPendingSort(snapshotSort);
   };
 
   const handleApply = () => {
-    onApply(pending);
+    onApply(pending, pendingSort);
   };
 
   const handleDone = () => {
-    onApply(pending);
+    onApply(pending, pendingSort);
     onClose();
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-container">
         <div className="modal-header">
@@ -50,27 +63,43 @@ export default function FilterModal({ filters, onApply, onClose }) {
         </div>
         <div className="modal-body">
           <div className="filter-category">
+            <h4 className="filter-category-title">{t.sort.label}</h4>
+            <CustomSelect
+              options={sortOptions}
+              value={pendingSort}
+              onChange={setPendingSort}
+            />
+          </div>
+          <div className="filter-category">
             <h4 className="filter-category-title">{t.filters.loader}</h4>
             <div className="filter-items">
-              {LOADER_OPTIONS.map(({ value, label }) => (
-                <div key={value} className="filter-item-row">
-                  <span className="filter-item-label">{label}</span>
-                  <div className="filter-item-btns">
-                    <button
-                      className={`btn-filter-state${pending.loaders[value] === 'include' ? ' active-include' : ''}`}
-                      onClick={() => toggleLoaderState(value, 'include')}
-                    >
-                      {t.filters.include}
-                    </button>
-                    <button
-                      className={`btn-filter-state${pending.loaders[value] === 'exclude' ? ' active-exclude' : ''}`}
-                      onClick={() => toggleLoaderState(value, 'exclude')}
-                    >
-                      {t.filters.exclude}
-                    </button>
+              {LOADER_OPTIONS.map(({ value, label }) => {
+                const iconSrc = LOADER_ICON_PATHS[value];
+                return (
+                  <div key={value} className="filter-item-row">
+                    <span className="filter-item-label">
+                      {iconSrc && (
+                        <img src={iconSrc} alt={label} className="loader-icon-img" />
+                      )}
+                      {label}
+                    </span>
+                    <div className="filter-item-btns">
+                      <button
+                        className={`btn-filter-state${pending.loaders[value] === 'include' ? ' active-include' : ''}`}
+                        onClick={() => toggleLoaderState(value, 'include')}
+                      >
+                        {t.filters.include}
+                      </button>
+                      <button
+                        className={`btn-filter-state${pending.loaders[value] === 'exclude' ? ' active-exclude' : ''}`}
+                        onClick={() => toggleLoaderState(value, 'exclude')}
+                      >
+                        {t.filters.exclude}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="filter-category" style={{ marginBottom: 0 }}>
@@ -90,6 +119,7 @@ export default function FilterModal({ filters, onApply, onClose }) {
           <button onClick={handleDone} className="btn-primary" style={{ height: '2.25rem', padding: '0 1rem' }}>{t.filters.done}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

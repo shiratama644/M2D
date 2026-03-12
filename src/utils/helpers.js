@@ -32,3 +32,10 @@ export const LOADER_OPTIONS = [
   { value: 'neoforge', label: 'NeoForge' },
   { value: 'quilt', label: 'Quilt' },
 ];
+
+export const LOADER_ICON_PATHS = {
+  fabric:   '/icons/fabric.svg',
+  forge:    '/icons/forge.svg',
+  neoforge: '/icons/neoforge.svg',
+  quilt:    '/icons/quilt.svg',
+};
