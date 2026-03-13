@@ -40,6 +40,8 @@ const translations = {
       undo: 'Undo',
       apply: 'Apply',
       done: 'Done',
+      other: 'Other',
+      openSource: 'Open Source',
     },
     categories: {
       optimization: 'Optimization',
@@ -107,6 +109,8 @@ const translations = {
       undo: '元に戻す',
       apply: '適用',
       done: '完了',
+      other: 'その他',
+      openSource: 'オープンソース',
     },
     categories: {
       optimization: '最適化',

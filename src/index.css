@@ -181,6 +181,7 @@ input, select { font-family: inherit; }
 .filter-item-row { display: flex; align-items: center; justify-content: space-between; padding: 0.25rem 0; }
 .filter-item-label { font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.375rem; }
 .loader-icon-img { width: 1rem; height: 1rem; object-fit: contain; border-radius: 2px; flex-shrink: 0; }
+.modrinth-filter-icon { width: 1rem; height: 1rem; object-fit: contain; flex-shrink: 0; color: var(--primary-color); }
 .filter-item-btns { display: flex; gap: 0.375rem; }
 .btn-filter-state {
   font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-weight: bold;
@@ -189,8 +190,16 @@ input, select { font-family: inherit; }
 .btn-filter-state:hover { background: var(--glass-bg-hover); color: var(--text-main); }
 .btn-filter-state.active-include { background: rgba(34, 197, 94, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
 .btn-filter-state.active-exclude { background: rgba(239, 68, 68, 0.12); color: var(--danger-color); border-color: var(--danger-color); }
-.filter-env-select { width: 9rem; flex-shrink: 0; }
-.filter-env-select .custom-select-display { height: 2rem; padding: 0 0.625rem; font-size: 0.8125rem; }
+.filter-env-row { display: flex; flex-direction: column; gap: 0.375rem; padding: 0.375rem 0; border-bottom: 1px solid var(--glass-border); }
+.filter-env-row:last-child { border-bottom: none; }
+.filter-env-label { padding-bottom: 0.25rem; }
+.filter-env-btns { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+.btn-filter-env {
+  font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-weight: bold;
+  border: 1px solid var(--glass-border); background: transparent; color: var(--text-muted); transition: all 0.15s;
+}
+.btn-filter-env:hover { background: var(--glass-bg-hover); color: var(--text-main); }
+.btn-filter-env.active-include { background: rgba(34, 197, 94, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
 
 /* Settings Categories */
 .settings-category { margin-bottom: 1.5rem; }

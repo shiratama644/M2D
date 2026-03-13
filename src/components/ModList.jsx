@@ -26,11 +26,25 @@ function buildFacets(filters) {
   excludedCats.forEach(([k]) => facets.push([`NOT categories:${k}`]));
 
   if (filters.environment) {
-    if (filters.environment.client_side) {
-      facets.push([`client_side:${filters.environment.client_side}`]);
+    const cs = filters.environment.client_side;
+    const ss = filters.environment.server_side;
+    if (Array.isArray(cs) && cs.length > 0) {
+      facets.push(cs.map(v => `client_side:${v}`));
+    } else if (typeof cs === 'string' && cs) {
+      facets.push([`client_side:${cs}`]);
     }
-    if (filters.environment.server_side) {
-      facets.push([`server_side:${filters.environment.server_side}`]);
+    if (Array.isArray(ss) && ss.length > 0) {
+      facets.push(ss.map(v => `server_side:${v}`));
+    } else if (typeof ss === 'string' && ss) {
+      facets.push([`server_side:${ss}`]);
+    }
+  }
+
+  if (filters.other) {
+    if (filters.other.open_source === 'include') {
+      facets.push(['open_source:true']);
+    } else if (filters.other.open_source === 'exclude') {
+      facets.push(['NOT open_source:true']);
     }
   }
 
