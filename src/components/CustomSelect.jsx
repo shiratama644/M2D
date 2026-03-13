@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import Icon from './Icon';
+import chevronDownIconRaw from '../assets/icons/chevron-down.svg?raw';
 
 export default function CustomSelect({ options, value, onChange, className = '' }) {
   const [open, setOpen] = useState(false);
@@ -25,7 +26,7 @@ export default function CustomSelect({ options, value, onChange, className = '' 
           {selectedOption?.icon}
           {selectedLabel}
         </span>
-        <ChevronDown size={16} className="chevron" />
+        <Icon svg={chevronDownIconRaw} size={16} className="chevron" />
       </div>
       {open && (
         <div className="custom-select-options">

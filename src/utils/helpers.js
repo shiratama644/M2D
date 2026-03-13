@@ -1,3 +1,8 @@
+import fabricIconRaw from '../assets/icons/tags/loaders/fabric.svg?raw';
+import forgeIconRaw from '../assets/icons/tags/loaders/forge.svg?raw';
+import neoforgeIconRaw from '../assets/icons/tags/loaders/neoforge.svg?raw';
+import quiltIconRaw from '../assets/icons/tags/loaders/quilt.svg?raw';
+
 export const asyncPool = async (poolLimit, array, iteratorFn) => {
   const ret = [];
   const executing = new Set();
@@ -34,10 +39,10 @@ export const LOADER_OPTIONS = [
 ];
 
 export const LOADER_ICON_PATHS = {
-  fabric:   '/icons/fabric.svg',
-  forge:    '/icons/forge.svg',
-  neoforge: '/icons/neoforge.svg',
-  quilt:    '/icons/quilt.svg',
+  fabric:   fabricIconRaw,
+  forge:    forgeIconRaw,
+  neoforge: neoforgeIconRaw,
+  quilt:    quiltIconRaw,
 };
 
 export const CATEGORY_OPTIONS = [

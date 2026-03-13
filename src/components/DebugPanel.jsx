@@ -1,6 +1,10 @@
 import { useRef, useEffect, useState } from 'react';
-import { Terminal, Trash2, ChevronDown, Copy } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Icon from './Icon';
+import terminalIconRaw from '../assets/icons/terminal-square.svg?raw';
+import trashIconRaw from '../assets/icons/trash.svg?raw';
+import chevronDownIconRaw from '../assets/icons/chevron-down.svg?raw';
+import copyIconRaw from '../assets/icons/copy.svg?raw';
 
 const LEVELS = ['all', 'log', 'info', 'warn', 'error'];
 const LEVEL_LABELS = { all: 'All', log: 'Log', info: 'Info', warn: 'Warn', error: 'Err' };
@@ -121,7 +125,7 @@ export default function DebugPanel() {
   return (
     <>
       <div ref={fabRef} className="debug-fab">
-        <Terminal size={24} style={{ pointerEvents: 'none' }} />
+        <Icon svg={terminalIconRaw} size={24} style={{ pointerEvents: 'none' }} />
         {debugLogs.length > 0 && (
           <span className="debug-fab-badge">{debugLogs.length > 99 ? '99+' : debugLogs.length}</span>
         )}
@@ -129,7 +133,7 @@ export default function DebugPanel() {
       <div className={`debug-panel ${isOpen ? 'open' : ''}`}>
         <div className="debug-header" onClick={() => setIsOpen(o => !o)}>
           <span className="debug-title">
-            <Terminal size={12} /> Console
+            <Icon svg={terminalIconRaw} size={12} /> Console
             <span className="debug-count">({filteredLogs.length}{filterLevel !== 'all' ? ` ${filterLevel}` : ''})</span>
           </span>
           <div className="debug-actions">
@@ -138,16 +142,16 @@ export default function DebugPanel() {
               title="Copy Logs"
               className="debug-action-btn"
             >
-              {copied ? <span style={{ fontSize: '0.625rem', color: '#4ade80' }}>Copied!</span> : <Copy size={14} />}
+              {copied ? <span style={{ fontSize: '0.625rem', color: '#4ade80' }}>Copied!</span> : <Icon svg={copyIconRaw} size={14} />}
             </button>
             <button
               onClick={e => { e.stopPropagation(); clearDebugLogs(); }}
               title="Clear Console"
               className="debug-action-btn"
             >
-              <Trash2 size={14} />
+              <Icon svg={trashIconRaw} size={14} />
             </button>
-            <button className="debug-action-btn"><ChevronDown size={14} /></button>
+            <button className="debug-action-btn"><Icon svg={chevronDownIconRaw} size={14} /></button>
           </div>
         </div>
         <div className="debug-filter-bar" onClick={e => e.stopPropagation()}>

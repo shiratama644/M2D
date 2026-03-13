@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { API } from '../utils/api';
+import Icon from './Icon';
+import checkCircleIconRaw from '../assets/icons/check-circle.svg?raw';
+import xIconRaw from '../assets/icons/x.svg?raw';
 
 const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
@@ -42,10 +44,10 @@ export default function SelectedModal() {
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--primary-color)' }}>
-            <CheckCircle2 size={20} /> Selected Mods
+            <Icon svg={checkCircleIconRaw} size={20} /> Selected Mods
           </h3>
           <button onClick={() => setSelectedModalOpen(false)} className="btn-close-modal">
-            <X size={20} />
+            <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="modal-body">

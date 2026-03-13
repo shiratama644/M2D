@@ -1,7 +1,9 @@
-import { Settings2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import CustomSelect from './CustomSelect';
+import Icon from './Icon';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
+import settingsIconRaw from '../assets/icons/settings.svg?raw';
+import xIconRaw from '../assets/icons/x.svg?raw';
 
 export default function SettingsModal() {
   const {
@@ -32,7 +34,7 @@ export default function SettingsModal() {
     ...LOADER_OPTIONS.map(o => ({
       ...o,
       icon: LOADER_ICON_PATHS[o.value]
-        ? <img src={LOADER_ICON_PATHS[o.value]} alt={o.label} className="loader-icon-img" />
+        ? <Icon svg={LOADER_ICON_PATHS[o.value]} size={16} className="loader-icon-img" />
         : undefined,
     })),
   ];
@@ -42,10 +44,10 @@ export default function SettingsModal() {
       <div className="modal-container">
         <div className="modal-header">
           <h3 className="modal-title">
-            <Settings2 size={20} /> {t.settings.title}
+            <Icon svg={settingsIconRaw} size={20} /> {t.settings.title}
           </h3>
           <button onClick={() => setSettingsOpen(false)} className="btn-close-modal">
-            <X size={20} />
+            <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="modal-body">
