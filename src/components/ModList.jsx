@@ -28,15 +28,15 @@ function buildFacets(filters) {
   if (filters.environment) {
     const cs = filters.environment.client_side;
     const ss = filters.environment.server_side;
-    if (Array.isArray(cs) && cs.length > 0) {
-      facets.push(cs.map(v => `client_side:${v}`));
-    } else if (typeof cs === 'string' && cs) {
-      facets.push([`client_side:${cs}`]);
+    if (cs === 'include') {
+      facets.push(['client_side:required', 'client_side:optional']);
+    } else if (cs === 'exclude') {
+      facets.push(['client_side:unsupported']);
     }
-    if (Array.isArray(ss) && ss.length > 0) {
-      facets.push(ss.map(v => `server_side:${v}`));
-    } else if (typeof ss === 'string' && ss) {
-      facets.push([`server_side:${ss}`]);
+    if (ss === 'include') {
+      facets.push(['server_side:required', 'server_side:optional']);
+    } else if (ss === 'exclude') {
+      facets.push(['server_side:unsupported']);
     }
   }
 
