@@ -7,7 +7,7 @@ export default function Header() {
   const { setMenuOpen, setSettingsOpen } = useApp();
   return (
     <header className="header">
-      <button onClick={() => setMenuOpen(true)} className="icon-btn">
+      <button onClick={() => setMenuOpen(true)} className="icon-btn hamburger-btn">
         <Icon svg={hamburgerIconRaw} size={24} />
       </button>
       <h1>Mod Manager</h1>

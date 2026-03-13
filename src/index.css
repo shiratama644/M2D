@@ -378,3 +378,75 @@ input, select { font-family: inherit; }
 @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(1.5rem, 0); } }
 
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 12rem; color: var(--text-muted); }
+
+/* === PC Desktop Layout (min-width: 1024px) === */
+@media (min-width: 1024px) {
+  /* Header height and sidebar width references */
+  :root {
+    --header-height: 4rem;
+    --sidebar-width: 20rem;
+  }
+
+  /* Hide hamburger button - sidebar always visible on PC */
+  .hamburger-btn { display: none !important; }
+
+  /* Hide side-menu close button on PC */
+  .side-menu-close-btn { display: none !important; }
+
+  /* Hide the click-away overlay - not needed when sidebar is static */
+  .overlay { display: none !important; }
+
+  /* Sidebar: always visible as a fixed left panel below the header */
+  .side-menu {
+    transform: translateX(0) !important;
+    top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+    border-radius: 0;
+    border-top: none;
+    z-index: 35;
+  }
+
+  /* Main content area: shifted right to make room for the sidebar */
+  .layout-center {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* Ensure enough space at the bottom for the fixed action bar */
+  body {
+    padding-bottom: 6rem;
+  }
+
+  /* Action bar: offset by sidebar width so it doesn't overlap the sidebar */
+  .action-bar {
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  /* Console (debug panel): fixed in bottom-right corner */
+  .debug-panel {
+    width: 32rem;
+    left: auto;
+    right: 0;
+    border-left: 1px solid var(--glass-border);
+    border-radius: 0.5rem 0 0 0;
+  }
+
+  /* Debug FAB: keep in bottom-right (already positioned there) */
+  .debug-fab {
+    bottom: 5rem;
+    right: 1.5rem;
+  }
+
+  /* Center the search and mod list within the content area */
+  .layout-center .search-section {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .layout-center .main-content {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

@@ -191,8 +191,10 @@ export default function App() {
       <ThreeBackground />
       <Header />
       <SideMenu />
-      <SearchSection onSearch={handleSearch} />
-      <ModList searchParams={searchParams} />
+      <div className="layout-center">
+        <SearchSection onSearch={handleSearch} />
+        <ModList searchParams={searchParams} />
+      </div>
       <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
       <SettingsModal />
       {depModalOpen && depIssues && (
