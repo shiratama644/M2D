@@ -1,5 +1,7 @@
-import { ShieldCheck, Download } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Icon from './Icon';
+import shieldCheckIconRaw from '../assets/icons/shield-check.svg?raw';
+import downloadIconRaw from '../assets/icons/download.svg?raw';
 
 export default function ActionBar({ onCheckDeps, onDownload }) {
   const { selectedMods, clearMods, setSelectedModalOpen } = useApp();
@@ -16,10 +18,10 @@ export default function ActionBar({ onCheckDeps, onDownload }) {
       </div>
       <div className="action-buttons">
         <button onClick={onCheckDeps} className="btn-action btn-check">
-          <ShieldCheck size={16} /> Check
+          <Icon svg={shieldCheckIconRaw} size={16} /> Check
         </button>
         <button onClick={onDownload} className="btn-action btn-download">
-          <Download size={16} /> Download
+          <Icon svg={downloadIconRaw} size={16} /> Download
         </button>
       </div>
     </div>

@@ -1,10 +1,20 @@
 import { useState, useRef } from 'react';
-import { X, FolderHeart, FileArchive, Import, Upload, Share2, Trash2, Pencil, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CONCURRENCY_LIMIT, asyncPool } from '../utils/helpers';
 import { API } from '../utils/api';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import Icon from './Icon';
+
+import xIconRaw from '../assets/icons/x.svg?raw';
+import bookmarkIconRaw from '../assets/icons/bookmark.svg?raw';
+import fileArchiveIconRaw from '../assets/icons/file-archive.svg?raw';
+import importIconRaw from '../assets/icons/import.svg?raw';
+import uploadIconRaw from '../assets/icons/upload.svg?raw';
+import shareIconRaw from '../assets/icons/share.svg?raw';
+import trashIconRaw from '../assets/icons/trash.svg?raw';
+import pencilIconRaw from '../assets/icons/pencil.svg?raw';
+import checkIconRaw from '../assets/icons/check.svg?raw';
 
 export default function SideMenu() {
   const {
@@ -211,10 +221,10 @@ export default function SideMenu() {
       <div className={`side-menu ${menuOpen ? 'open' : ''}`}>
         <div className="side-menu-header">
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FolderHeart size={20} /> My Profiles
+            <Icon svg={bookmarkIconRaw} size={20} /> My Profiles
           </span>
           <button onClick={closeMenu} className="icon-btn">
-            <X size={20} />
+            <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="side-menu-content">
@@ -238,10 +248,10 @@ export default function SideMenu() {
             <h3>Saved Profiles</h3>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <button onClick={() => importZipInputRef.current?.click()} className="btn-text-icon" title="Scan ZIP for Mods">
-                <FileArchive size={12} /> ZIP
+                <Icon svg={fileArchiveIconRaw} size={12} /> ZIP
               </button>
               <button onClick={() => importInputRef.current?.click()} className="btn-text-icon" title="Import TXT">
-                <Import size={12} /> TXT
+                <Icon svg={importIconRaw} size={12} /> TXT
               </button>
             </div>
             <input type="file" ref={importInputRef} accept=".txt" style={{ display: 'none' }} onChange={importFile} />
@@ -271,7 +281,7 @@ export default function SideMenu() {
                           className="input-base rename-input"
                         />
                         <button onClick={() => commitRename(i)} className="btn-icon-small blue" title="Confirm Rename">
-                          <Check size={14} />
+                          <Icon svg={checkIconRaw} size={14} />
                         </button>
                       </div>
                     ) : (
@@ -281,16 +291,16 @@ export default function SideMenu() {
                   </div>
                   <div className="profile-actions">
                     <button onClick={() => loadProfile(i)} className="btn-icon-small blue" title="Load">
-                      <Upload size={16} />
+                      <Icon svg={uploadIconRaw} size={16} />
                     </button>
                     <button onClick={() => startRename(i)} className="btn-icon-small gray" title="Rename">
-                      <Pencil size={16} />
+                      <Icon svg={pencilIconRaw} size={16} />
                     </button>
                     <button onClick={() => exportProfile(i)} className="btn-icon-small gray" title="Export">
-                      <Share2 size={16} />
+                      <Icon svg={shareIconRaw} size={16} />
                     </button>
                     <button onClick={() => deleteProfile(i)} className="btn-icon-small red" title="Delete">
-                      <Trash2 size={16} />
+                      <Icon svg={trashIconRaw} size={16} />
                     </button>
                   </div>
                 </div>

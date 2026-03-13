@@ -1,12 +1,43 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import { useApp } from '../context/AppContext';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../utils/helpers';
 import { API } from '../utils/api';
 import CustomSelect from './CustomSelect';
+import Icon from './Icon';
+
+import listFilterIconRaw from '../assets/icons/list-filter.svg?raw';
+import xIconRaw from '../assets/icons/x.svg?raw';
+
+import optimizationIconRaw from '../assets/icons/tags/categories/optimization.svg?raw';
+import technologyIconRaw from '../assets/icons/tags/categories/technology.svg?raw';
+import magicIconRaw from '../assets/icons/tags/categories/magic.svg?raw';
+import adventureIconRaw from '../assets/icons/tags/categories/adventure.svg?raw';
+import decorationIconRaw from '../assets/icons/tags/categories/decoration.svg?raw';
+import equipmentIconRaw from '../assets/icons/tags/categories/equipment.svg?raw';
+import mobsIconRaw from '../assets/icons/tags/categories/mobs.svg?raw';
+import libraryIconRaw from '../assets/icons/tags/categories/library.svg?raw';
+import utilityIconRaw from '../assets/icons/tags/categories/utility.svg?raw';
+import worldgenIconRaw from '../assets/icons/tags/categories/worldgen.svg?raw';
+import foodIconRaw from '../assets/icons/tags/categories/food.svg?raw';
+import storageIconRaw from '../assets/icons/tags/categories/storage.svg?raw';
+import gameMechanicsIconRaw from '../assets/icons/tags/categories/game-mechanics.svg?raw';
+
+const CATEGORY_ICON_MAP = {
+  optimization:    optimizationIconRaw,
+  technology:      technologyIconRaw,
+  magic:           magicIconRaw,
+  adventure:       adventureIconRaw,
+  decoration:      decorationIconRaw,
+  equipment:       equipmentIconRaw,
+  mobs:            mobsIconRaw,
+  library:         libraryIconRaw,
+  utility:         utilityIconRaw,
+  worldgen:        worldgenIconRaw,
+  food:            foodIconRaw,
+  storage:         storageIconRaw,
+  'game-mechanics': gameMechanicsIconRaw,
+};
 
 export default function FilterModal({ filters, onApply, onClose, sort }) {
   const { t, addDebugLog } = useApp();
@@ -33,20 +64,12 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
   });
   const [snapshotSort] = useState(sort);
   const [gameVersions, setGameVersions] = useState([]);
-  const [categoryIcons, setCategoryIcons] = useState({});
 
   useEffect(() => {
     API.getGameVersions().then(versions => {
       const releases = versions.filter(v => v.version_type === 'release');
       setGameVersions(releases);
     }).catch(e => addDebugLog('warn', `Failed to load game versions: ${e}`));
-    API.getCategories().then(cats => {
-      const iconMap = {};
-      cats.filter(c => c.project_type === 'mod').forEach(c => {
-        iconMap[c.name] = c.icon;
-      });
-      setCategoryIcons(iconMap);
-    }).catch(e => addDebugLog('warn', `Failed to load category icons: ${e}`));
   }, [addDebugLog]);
 
   const sortOptions = [
@@ -125,11 +148,11 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
       <div className="modal-container">
         <div className="modal-header">
           <h3 className="modal-title">
-            <FontAwesomeIcon icon={faSlidersH} className="filter-btn-icon" />
+            <Icon svg={listFilterIconRaw} size={20} className="filter-btn-icon" />
             {t.filters.title}
           </h3>
           <button onClick={onClose} className="btn-close-modal">
-            <X size={20} />
+            <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="modal-body">
@@ -156,12 +179,12 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
             <h4 className="filter-category-title">{t.filters.loader}</h4>
             <div className="filter-items">
               {LOADER_OPTIONS.map(({ value, label }) => {
-                const iconSrc = LOADER_ICON_PATHS[value];
+                const iconSvg = LOADER_ICON_PATHS[value];
                 return (
                   <div key={value} className="filter-item-row">
                     <span className="filter-item-label">
-                      {iconSrc && (
-                        <img src={iconSrc} alt={label} className="loader-icon-img" />
+                      {iconSvg && (
+                        <Icon svg={iconSvg} size={16} className="loader-icon-img" />
                       )}
                       {label}
                     </span>
@@ -189,16 +212,12 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
             <div className="filter-items">
               {CATEGORY_OPTIONS.map(({ value, labelKey }) => {
                 const label = t.categories[labelKey];
-                const iconSvg = categoryIcons[value];
+                const iconSvg = CATEGORY_ICON_MAP[value];
                 return (
                   <div key={value} className="filter-item-row">
                     <span className="filter-item-label">
                       {iconSvg && (
-                        <img
-                          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(iconSvg)}`}
-                          alt=""
-                          className="category-icon-img"
-                        />
+                        <Icon svg={iconSvg} size={16} className="category-icon-img" />
                       )}
                       {label}
                     </span>

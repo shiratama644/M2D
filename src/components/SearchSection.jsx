@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import { useApp } from '../context/AppContext';
 import FilterModal from './FilterModal';
+import Icon from './Icon';
 import { LOADER_OPTIONS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../utils/helpers';
+
+import searchIconRaw from '../assets/icons/search.svg?raw';
+import listFilterIconRaw from '../assets/icons/list-filter.svg?raw';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map(o => [o.value, null]));
 const INITIAL_CATEGORY_STATE = Object.fromEntries(CATEGORY_OPTIONS.map(o => [o.value, null]));
@@ -69,7 +70,7 @@ export default function SearchSection({ onSearch }) {
           className="btn-filters"
           onClick={() => setFilterModalOpen(true)}
         >
-          <FontAwesomeIcon icon={faSlidersH} className="filter-btn-icon" />
+          <Icon svg={listFilterIconRaw} size={16} className="filter-btn-icon" />
           {t.filters.label}
           {hasActiveFilters(filters, sort) && <span className="filter-active-dot" />}
         </button>
@@ -83,7 +84,7 @@ export default function SearchSection({ onSearch }) {
         />
         {!fastSearch && (
           <button onClick={() => doSearch()} className="btn-search">
-            <Search size={20} />
+            <Icon svg={searchIconRaw} size={20} />
           </button>
         )}
       </div>

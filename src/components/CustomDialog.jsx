@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { AlertCircle, HelpCircle, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Icon from './Icon';
+import circleAlertIconRaw from '../assets/icons/circle-alert.svg?raw';
+import infoIconRaw from '../assets/icons/info.svg?raw';
+import xIconRaw from '../assets/icons/x.svg?raw';
 
 export default function CustomDialog() {
   const { dialog, closeDialog } = useApp();
@@ -38,12 +41,12 @@ export default function CustomDialog() {
         <div className="modal-header">
           <h3 className="modal-title">
             {isConfirm
-              ? <><HelpCircle size={20} style={{ color: 'var(--accent-color)' }} /> Confirm</>
-              : <><AlertCircle size={20} style={{ color: 'var(--primary-color)' }} /> Notice</>
+              ? <><Icon svg={infoIconRaw} size={20} style={{ color: 'var(--accent-color)' }} /> Confirm</>
+              : <><Icon svg={circleAlertIconRaw} size={20} style={{ color: 'var(--primary-color)' }} /> Notice</>
             }
           </h3>
           <button onClick={() => closeDialog(isConfirm ? false : undefined)} className="btn-close-modal">
-            <X size={20} />
+            <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="modal-body">

@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { Activity, X, CheckCircle, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Icon from './Icon';
+import gitGraphIconRaw from '../assets/icons/git-graph.svg?raw';
+import xIconRaw from '../assets/icons/x.svg?raw';
+import checkCircleIconRaw from '../assets/icons/check-circle.svg?raw';
+import infoIconRaw from '../assets/icons/info.svg?raw';
 
 const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
@@ -14,10 +18,10 @@ export default function DependencyModal({ issues, onClose }) {
 
   const renderEmptyState = () => {
     const msgs = { required: 'All good! 🎉', optional: 'No optional deps.', conflict: 'No conflicts! ✅' };
-    const Icon = activeTab === 'conflict' ? CheckCircle : Info;
+    const iconSvg = activeTab === 'conflict' ? checkCircleIconRaw : infoIconRaw;
     return (
       <div className="empty-state">
-        <Icon size={40} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+        <Icon svg={iconSvg} size={40} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
         <p>{msgs[activeTab]}</p>
       </div>
     );
@@ -28,9 +32,9 @@ export default function DependencyModal({ issues, onClose }) {
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--accent-color)' }}>
-            <Activity size={20} /> Dependency Report
+            <Icon svg={gitGraphIconRaw} size={20} /> Dependency Report
           </h3>
-          <button onClick={onClose} className="btn-close-modal"><X size={20} /></button>
+          <button onClick={onClose} className="btn-close-modal"><Icon svg={xIconRaw} size={20} /></button>
         </div>
         <div className="tabs">
           {['required', 'optional', 'conflict'].map(tab => (
