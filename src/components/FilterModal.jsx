@@ -1,19 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import { useApp } from '../context/AppContext';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../utils/helpers';
+import { API } from '../utils/api';
 import CustomSelect from './CustomSelect';
 
 export default function FilterModal({ filters, onApply, onClose, sort }) {
-  const { t } = useApp();
+  const { t, addDebugLog } = useApp();
   const [pending, setPending] = useState({
     ...filters,
     loaders: { ...filters.loaders },
     categories: { ...(filters.categories || {}) },
     environment: {
-      client_side: [...(filters.environment?.client_side || [])],
-      server_side: [...(filters.environment?.server_side || [])],
+      client_side: filters.environment?.client_side ?? null,
+      server_side: filters.environment?.server_side ?? null,
     },
     other: { ...(filters.other || {}) },
   });
@@ -23,12 +26,28 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
     loaders: { ...filters.loaders },
     categories: { ...(filters.categories || {}) },
     environment: {
-      client_side: [...(filters.environment?.client_side || [])],
-      server_side: [...(filters.environment?.server_side || [])],
+      client_side: filters.environment?.client_side ?? null,
+      server_side: filters.environment?.server_side ?? null,
     },
     other: { ...(filters.other || {}) },
   });
   const [snapshotSort] = useState(sort);
+  const [gameVersions, setGameVersions] = useState([]);
+  const [categoryIcons, setCategoryIcons] = useState({});
+
+  useEffect(() => {
+    API.getGameVersions().then(versions => {
+      const releases = versions.filter(v => v.version_type === 'release');
+      setGameVersions(releases);
+    }).catch(e => addDebugLog('warn', `Failed to load game versions: ${e}`));
+    API.getCategories().then(cats => {
+      const iconMap = {};
+      cats.filter(c => c.project_type === 'mod').forEach(c => {
+        iconMap[c.name] = c.icon;
+      });
+      setCategoryIcons(iconMap);
+    }).catch(e => addDebugLog('warn', `Failed to load category icons: ${e}`));
+  }, [addDebugLog]);
 
   const sortOptions = [
     { value: 'relevance', label: t.sort.relevance },
@@ -36,12 +55,6 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
     { value: 'follows',   label: t.sort.followers },
     { value: 'newest',    label: t.sort.publishedDate },
     { value: 'updated',   label: t.sort.updatedDate },
-  ];
-
-  const envButtonOptions = [
-    { value: 'required', label: t.environment.required },
-    { value: 'optional', label: t.environment.optional },
-    { value: 'unsupported', label: t.environment.unsupported },
   ];
 
   const toggleLoaderState = (loader, state) => {
@@ -64,17 +77,14 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
     }));
   };
 
-  const toggleEnvironmentValue = (side, value) => {
-    setPending(prev => {
-      const current = prev.environment[side] || [];
-      const updated = current.includes(value)
-        ? current.filter(v => v !== value)
-        : [...current, value];
-      return {
-        ...prev,
-        environment: { ...prev.environment, [side]: updated },
-      };
-    });
+  const toggleEnvironmentState = (side, state) => {
+    setPending(prev => ({
+      ...prev,
+      environment: {
+        ...prev.environment,
+        [side]: prev.environment[side] === state ? null : state,
+      },
+    }));
   };
 
   const toggleOtherState = (key, state) => {
@@ -93,8 +103,8 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
       loaders: { ...snapshot.loaders },
       categories: { ...snapshot.categories },
       environment: {
-        client_side: [...(snapshot.environment?.client_side || [])],
-        server_side: [...(snapshot.environment?.server_side || [])],
+        client_side: snapshot.environment?.client_side ?? null,
+        server_side: snapshot.environment?.server_side ?? null,
       },
       other: { ...snapshot.other },
     });
@@ -115,7 +125,7 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
       <div className="modal-container">
         <div className="modal-header">
           <h3 className="modal-title">
-            <img src="/icons/modrinth.svg" alt="Modrinth" className="modrinth-filter-icon" />
+            <FontAwesomeIcon icon={faSlidersH} className="filter-btn-icon" />
             {t.filters.title}
           </h3>
           <button onClick={onClose} className="btn-close-modal">
@@ -125,12 +135,13 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
         <div className="modal-body">
           <div className="filter-category">
             <h4 className="filter-category-title">{t.filters.version}</h4>
-            <input
-              type="text"
-              value={pending.version}
-              onChange={e => setPending(prev => ({ ...prev, version: e.target.value }))}
-              placeholder="ex: 1.21.1"
-              className="input-large"
+            <CustomSelect
+              options={[
+                { value: '', label: t.filters.versionAny || 'Any' },
+                ...gameVersions.map(v => ({ value: v.version, label: v.version })),
+              ]}
+              value={pending.version || ''}
+              onChange={v => setPending(prev => ({ ...prev, version: v }))}
             />
           </div>
           <div className="filter-category">
@@ -178,9 +189,19 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
             <div className="filter-items">
               {CATEGORY_OPTIONS.map(({ value, labelKey }) => {
                 const label = t.categories[labelKey];
+                const iconSvg = categoryIcons[value];
                 return (
                   <div key={value} className="filter-item-row">
-                    <span className="filter-item-label">{label}</span>
+                    <span className="filter-item-label">
+                      {iconSvg && (
+                        <img
+                          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(iconSvg)}`}
+                          alt=""
+                          className="category-icon-img"
+                        />
+                      )}
+                      {label}
+                    </span>
                     <div className="filter-item-btns">
                       <button
                         className={`btn-filter-state${pending.categories[value] === 'include' ? ' active-include' : ''}`}
@@ -203,32 +224,38 @@ export default function FilterModal({ filters, onApply, onClose, sort }) {
           <div className="filter-category">
             <h4 className="filter-category-title">{t.filters.environment}</h4>
             <div className="filter-items">
-              <div className="filter-env-row">
-                <span className="filter-item-label filter-env-label">{t.filters.clientSide}</span>
-                <div className="filter-env-btns">
-                  {envButtonOptions.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      className={`btn-filter-env${(pending.environment.client_side || []).includes(value) ? ' active-include' : ''}`}
-                      onClick={() => toggleEnvironmentValue('client_side', value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
+              <div className="filter-item-row">
+                <span className="filter-item-label">{t.filters.clientSide}</span>
+                <div className="filter-item-btns">
+                  <button
+                    className={`btn-filter-state${pending.environment.client_side === 'include' ? ' active-include' : ''}`}
+                    onClick={() => toggleEnvironmentState('client_side', 'include')}
+                  >
+                    {t.filters.include}
+                  </button>
+                  <button
+                    className={`btn-filter-state${pending.environment.client_side === 'exclude' ? ' active-exclude' : ''}`}
+                    onClick={() => toggleEnvironmentState('client_side', 'exclude')}
+                  >
+                    {t.filters.exclude}
+                  </button>
                 </div>
               </div>
-              <div className="filter-env-row">
-                <span className="filter-item-label filter-env-label">{t.filters.serverSide}</span>
-                <div className="filter-env-btns">
-                  {envButtonOptions.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      className={`btn-filter-env${(pending.environment.server_side || []).includes(value) ? ' active-include' : ''}`}
-                      onClick={() => toggleEnvironmentValue('server_side', value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
+              <div className="filter-item-row">
+                <span className="filter-item-label">{t.filters.serverSide}</span>
+                <div className="filter-item-btns">
+                  <button
+                    className={`btn-filter-state${pending.environment.server_side === 'include' ? ' active-include' : ''}`}
+                    onClick={() => toggleEnvironmentState('server_side', 'include')}
+                  >
+                    {t.filters.include}
+                  </button>
+                  <button
+                    className={`btn-filter-state${pending.environment.server_side === 'exclude' ? ' active-exclude' : ''}`}
+                    onClick={() => toggleEnvironmentState('server_side', 'exclude')}
+                  >
+                    {t.filters.exclude}
+                  </button>
                 </div>
               </div>
             </div>

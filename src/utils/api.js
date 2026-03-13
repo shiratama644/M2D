@@ -29,6 +29,8 @@ export const API = {
       if (!r.ok) throw new Error(`API Error: ${r.status}`);
       return r.json();
     }),
+  getGameVersions: () => request('/tag/game_version'),
+  getCategories: () => request('/tag/category'),
 };
 
 export const API_BASE_URL = API_BASE;

@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import { useApp } from '../context/AppContext';
 import FilterModal from './FilterModal';
 import { LOADER_OPTIONS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../utils/helpers';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map(o => [o.value, null]));
 const INITIAL_CATEGORY_STATE = Object.fromEntries(CATEGORY_OPTIONS.map(o => [o.value, null]));
-const INITIAL_ENVIRONMENT_STATE = { client_side: [], server_side: [] };
+const INITIAL_ENVIRONMENT_STATE = { client_side: null, server_side: null };
 const INITIAL_OTHER_STATE = Object.fromEntries(OTHER_FILTER_OPTIONS.map(o => [o.value, null]));
 
 function hasActiveFilters(filters, sort) {
   const hasLoader = Object.values(filters.loaders).some(v => v !== null);
   const hasCategory = Object.values(filters.categories || {}).some(v => v !== null);
-  const hasEnv = Object.values(filters.environment || {}).some(v => Array.isArray(v) ? v.length > 0 : v !== null);
+  const hasEnv = Object.values(filters.environment || {}).some(v => v !== null);
   const hasOther = Object.values(filters.other || {}).some(v => v !== null);
   return hasLoader || hasCategory || hasEnv || hasOther || filters.version.trim() !== '' || sort !== 'relevance';
 }
@@ -67,7 +69,7 @@ export default function SearchSection({ onSearch }) {
           className="btn-filters"
           onClick={() => setFilterModalOpen(true)}
         >
-          <img src="/icons/modrinth.svg" alt="Modrinth" className="modrinth-filter-icon" />
+          <FontAwesomeIcon icon={faSlidersH} className="filter-btn-icon" />
           {t.filters.label}
           {hasActiveFilters(filters, sort) && <span className="filter-active-dot" />}
         </button>
