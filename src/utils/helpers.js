@@ -29,6 +29,9 @@ export const FAST_SEARCH_KEY = 'mod_manager_fast_search';
 export const LANGUAGE_KEY = 'mod_manager_language';
 export const LOADER_KEY = 'mod_manager_loader';
 export const VERSION_KEY = 'mod_manager_version';
+export const FAVORITES_KEY = 'mod_manager_favorites';
+export const SEARCH_HISTORY_KEY = 'mod_manager_search_history';
+export const MAX_SEARCH_HISTORY = 50;
 export const CONCURRENCY_LIMIT = 15;
 
 export const LOADER_OPTIONS = [

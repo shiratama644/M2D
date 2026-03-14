@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY, LOADER_KEY, VERSION_KEY } from '../utils/helpers';
+import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY, LOADER_KEY, VERSION_KEY, FAVORITES_KEY, SEARCH_HISTORY_KEY, MAX_SEARCH_HISTORY } from '../utils/helpers';
 import translations from '../i18n/translations';
 
 const AppContext = createContext(null);
@@ -12,6 +12,15 @@ export function AppProvider({ children }) {
   const [modLoader, setModLoader] = useState(() => localStorage.getItem(LOADER_KEY) || 'fabric');
   const [modVersion, setModVersion] = useState(() => localStorage.getItem(VERSION_KEY) || '1.21.1');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeModId, setActiveModId] = useState(null);
+  const [favorites, setFavorites] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]')); }
+    catch { return new Set(); }
+  });
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]'); }
+    catch { return []; }
+  });
   const [profiles, setProfiles] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -174,6 +183,44 @@ export function AppProvider({ children }) {
     setSelectedMods(new Set(modsArray));
   }, []);
 
+  const toggleFavorite = useCallback((id) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(next)));
+      return next;
+    });
+  }, []);
+
+  const clearFavorites = useCallback(() => {
+    setFavorites(new Set());
+    localStorage.removeItem(FAVORITES_KEY);
+  }, []);
+
+  const addSearchHistory = useCallback((query) => {
+    if (!query || !query.trim()) return;
+    setSearchHistory(prev => {
+      const filtered = prev.filter(q => q !== query.trim());
+      const next = [query.trim(), ...filtered].slice(0, MAX_SEARCH_HISTORY);
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const removeSearchHistory = useCallback((query) => {
+    setSearchHistory(prev => {
+      const next = prev.filter(q => q !== query);
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const clearSearchHistory = useCallback(() => {
+    setSearchHistory([]);
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+  }, []);
+
   const value = {
     theme, toggleTheme,
     debugMode, toggleDebug,
@@ -183,6 +230,9 @@ export function AppProvider({ children }) {
     modVersion, updateModVersion,
     t: translations[language],
     menuOpen, setMenuOpen,
+    activeModId, setActiveModId,
+    favorites, toggleFavorite, clearFavorites,
+    searchHistory, addSearchHistory, removeSearchHistory, clearSearchHistory,
     profiles, saveProfiles,
     selectedMods, toggleMod, clearMods, addMod, removeMod, replaceSelectedMods,
     modDataMap, updateModDataMap,

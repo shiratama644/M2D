@@ -15,6 +15,7 @@ async function request(endpoint, params = {}) {
 }
 
 export const API = {
+  getProject: (id) => request(`/project/${id}`),
   searchMods: (query, facets, offset, limit, index) =>
     request('/search', { query, facets, offset, limit, index }),
   getProjects: (ids) => request('/projects', { ids }),

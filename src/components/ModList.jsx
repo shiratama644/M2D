@@ -51,10 +51,13 @@ function buildFacets(filters) {
   if (filters.version && filters.version.trim()) {
     facets.push([`versions:${filters.version.trim()}`]);
   }
+  if (filters.license && filters.license.trim()) {
+    facets.push([`license:${filters.license.trim()}`]);
+  }
   return facets;
 }
 
-export default function ModList({ searchParams }) {
+export default function ModList({ searchParams, isDesktop }) {
   const { updateModDataMap, addDebugLog } = useApp();
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -148,7 +151,7 @@ export default function ModList({ searchParams }) {
           </div>
         )}
         {mods.map(mod => (
-          <ModCard key={mod.project_id} mod={mod} />
+          <ModCard key={mod.project_id} mod={mod} isDesktop={isDesktop} />
         ))}
       </div>
       <div

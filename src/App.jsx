@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useApp } from './context/AppContext';
-import ThreeBackground from './components/ThreeBackground';
 import Header from './components/Header';
 import SideMenu from './components/SideMenu';
 import SearchSection from './components/SearchSection';
@@ -12,6 +11,8 @@ import SelectedModal from './components/SelectedModal';
 import LoadingOverlay from './components/LoadingOverlay';
 import DebugPanel from './components/DebugPanel';
 import CustomDialog from './components/CustomDialog';
+import LeftPanel from './components/LeftPanel';
+import RightPanel from './components/RightPanel';
 import { API } from './utils/api';
 import { asyncPool, CONCURRENCY_LIMIT, LOADER_OPTIONS } from './utils/helpers';
 import JSZip from 'jszip';
@@ -26,6 +27,17 @@ const DEFAULT_SEARCH = {
   },
 };
 
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isDesktop;
+}
+
 export default function App() {
   const {
     theme,
@@ -34,13 +46,16 @@ export default function App() {
     modDataMap, updateModDataMap,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     depModalOpen, setDepModalOpen,
-    settingsOpen, filterModalOpen,
+    settingsOpen, setSettingsOpen,
+    filterModalOpen,
     dialog,
     showAlert,
     addDebugLog,
     modLoader, modVersion,
+    addSearchHistory,
   } = useApp();
 
+  const isDesktop = useIsDesktop();
   const [searchParams, setSearchParams] = useState(DEFAULT_SEARCH);
   const [depIssues, setDepIssues] = useState(null);
 
@@ -58,6 +73,16 @@ export default function App() {
   const handleSearch = ({ query, sort, filters }) => {
     setSearchParams({ query, sort, filters });
     addDebugLog('info', `Search: query="${query}" sort=${sort}`);
+    if (query && query.trim()) addSearchHistory(query.trim());
+  };
+
+  const handleLeftPanelFilter = (filters) => {
+    setSearchParams(prev => ({ ...prev, filters }));
+  };
+
+  const handleHistorySearch = (query) => {
+    setSearchParams(prev => ({ ...prev, query }));
+    addSearchHistory(query);
   };
 
   const handleCheckDeps = async () => {
@@ -188,21 +213,48 @@ export default function App() {
 
   return (
     <>
-      <ThreeBackground />
       <Header />
       <SideMenu />
-      <div className="layout-center">
-        <SearchSection onSearch={handleSearch} />
-        <ModList searchParams={searchParams} />
-      </div>
-      <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+
+      {isDesktop ? (
+        /* ── PC 3-column layout ── */
+        <div className="pc-layout">
+          <aside className="pc-left-panel">
+            <LeftPanel onFilterChange={handleLeftPanelFilter} />
+          </aside>
+          <main className="pc-center-panel">
+            <SearchSection onSearch={handleSearch} />
+            <ModList searchParams={searchParams} isDesktop={true} />
+            <div className="pc-action-bar">
+              <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+            </div>
+          </main>
+          <aside className="pc-right-panel">
+            <RightPanel
+              onSettingsClick={() => setSettingsOpen(true)}
+              onHistorySearch={handleHistorySearch}
+            />
+          </aside>
+        </div>
+      ) : (
+        /* ── Mobile layout ── */
+        <div className="layout-center">
+          <SearchSection onSearch={handleSearch} />
+          <ModList searchParams={searchParams} isDesktop={false} />
+        </div>
+      )}
+
+      {!isDesktop && (
+        <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+      )}
+
       <SettingsModal />
       {depModalOpen && depIssues && (
         <DependencyModal issues={depIssues} onClose={() => setDepModalOpen(false)} />
       )}
       <SelectedModal />
       <LoadingOverlay />
-      <DebugPanel />
+      {!isDesktop && <DebugPanel />}
       <CustomDialog />
     </>
   );
