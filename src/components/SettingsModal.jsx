@@ -14,6 +14,8 @@ export default function SettingsModal() {
     language, toggleLanguage,
     modLoader, updateModLoader,
     modVersion, updateModVersion,
+    clearSearchHistory, clearFavorites,
+    showConfirm,
     t,
   } = useApp();
 
@@ -38,6 +40,14 @@ export default function SettingsModal() {
         : undefined,
     })),
   ];
+
+  const handleClearHistory = async () => {
+    if (await showConfirm(t.settings.clearHistory + '?')) clearSearchHistory();
+  };
+
+  const handleClearFavorites = async () => {
+    if (await showConfirm(t.settings.clearFavorites + '?')) clearFavorites();
+  };
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSettingsOpen(false)}>
@@ -125,6 +135,29 @@ export default function SettingsModal() {
             </div>
           </div>
 
+          {/* Data Management */}
+          <div className="settings-category">
+            <h4 className="settings-category-title">Data</h4>
+            <div className="settings-row">
+              <div>
+                <span className="settings-label">{t.settings.clearHistory}</span>
+                <span className="settings-description">{t.settings.clearHistoryDesc}</span>
+              </div>
+              <button onClick={handleClearHistory} className="btn-secondary settings-btn-sm">
+                Clear
+              </button>
+            </div>
+            <div className="settings-row settings-row-last">
+              <div>
+                <span className="settings-label">{t.settings.clearFavorites}</span>
+                <span className="settings-description">{t.settings.clearFavoritesDesc}</span>
+              </div>
+              <button onClick={handleClearFavorites} className="btn-secondary settings-btn-sm">
+                Clear
+              </button>
+            </div>
+          </div>
+
           {/* Developer Mode Category */}
           <div className="settings-category" style={{ marginBottom: 0 }}>
             <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
@@ -152,3 +185,4 @@ export default function SettingsModal() {
     </div>
   );
 }
+

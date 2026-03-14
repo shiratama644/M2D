@@ -14,6 +14,10 @@ const translations = {
       debugMode: { label: 'Debug Mode', description: 'Show floating developer console' },
       language: { label: 'Language', description: 'Select display language' },
       close: 'Close',
+      clearHistory: 'Clear Search History',
+      clearHistoryDesc: 'Delete all saved search history',
+      clearFavorites: 'Clear Favorites',
+      clearFavoritesDesc: 'Delete all favorited mods',
     },
     search: {
       placeholder: 'Search mods...',
@@ -43,6 +47,7 @@ const translations = {
       done: 'Done',
       other: 'Other',
       openSource: 'Open Source',
+      license: 'License',
     },
     categories: {
       optimization: 'Optimization',
@@ -68,6 +73,32 @@ const translations = {
     themes: { light: 'Light', dark: 'Dark' },
     languages: { en: 'English', ja: '日本語' },
     loaders: { any: 'Any' },
+    nav: {
+      mods: 'Mods',
+      resourcePacks: 'Resource Packs',
+      shaders: 'Shaders',
+      profilesHint: 'Profiles via ☰',
+    },
+    rightPanel: {
+      description: 'Description',
+      history: 'History',
+      settings: 'Settings',
+      selected: 'Selected',
+      favorites: 'Favorites',
+      console: 'Console',
+      noDescription: 'Select a mod to view details.',
+      gallery: 'Gallery',
+      openModrinth: 'Open on Modrinth',
+    },
+    history: {
+      clear: 'Clear All',
+      noHistory: 'No search history.',
+    },
+    favorites: {
+      noFavorites: 'No favorites yet.',
+      addToSelected: 'Add to Selected',
+      removeFromSelected: 'Remove',
+    },
   },
   ja: {
     settings: {
@@ -84,6 +115,10 @@ const translations = {
       debugMode: { label: 'デバッグモード', description: 'フローティングデベロッパーコンソールを表示' },
       language: { label: '言語', description: '表示言語を選択' },
       close: '閉じる',
+      clearHistory: '検索履歴を削除',
+      clearHistoryDesc: '保存された検索履歴をすべて削除',
+      clearFavorites: 'お気に入りを削除',
+      clearFavoritesDesc: 'お気に入りのModをすべて削除',
     },
     search: {
       placeholder: 'Modを検索...',
@@ -113,6 +148,7 @@ const translations = {
       done: '完了',
       other: 'その他',
       openSource: 'オープンソース',
+      license: 'ライセンス',
     },
     categories: {
       optimization: '最適化',
@@ -138,6 +174,32 @@ const translations = {
     themes: { light: 'ライト', dark: 'ダーク' },
     languages: { en: 'English', ja: '日本語' },
     loaders: { any: 'すべて' },
+    nav: {
+      mods: 'Mods',
+      resourcePacks: 'リソースパック',
+      shaders: 'シェーダー',
+      profilesHint: 'プロフィールは ☰ から',
+    },
+    rightPanel: {
+      description: '説明',
+      history: '検索履歴',
+      settings: '設定',
+      selected: '選択中',
+      favorites: 'お気に入り',
+      console: 'コンソール',
+      noDescription: 'Modを選択すると詳細が表示されます。',
+      gallery: 'ギャラリー',
+      openModrinth: 'Modrinthで開く',
+    },
+    history: {
+      clear: 'すべて削除',
+      noHistory: '検索履歴がありません。',
+    },
+    favorites: {
+      noFavorites: 'お気に入りがありません。',
+      addToSelected: '選択に追加',
+      removeFromSelected: '削除',
+    },
   },
 };
 
