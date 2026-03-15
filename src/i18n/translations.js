@@ -90,6 +90,7 @@ const translations = {
       noDescription: 'Select a mod to view details.',
       gallery: 'Gallery',
       openModrinth: 'Open on Modrinth',
+      translating: 'Translating...',
     },
     history: {
       clear: 'Clear All',
@@ -192,6 +193,7 @@ const translations = {
       noDescription: 'Modを選択すると詳細が表示されます。',
       gallery: 'ギャラリー',
       openModrinth: 'Modrinthで開く',
+      translating: '翻訳中...',
     },
     history: {
       clear: 'すべて削除',
