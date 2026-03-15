@@ -80,23 +80,30 @@ export default function ModDetail() {
   const projectDetail = state.id === activeModId ? state.detail : null;
   const loading = activeModId !== null && state.id !== activeModId;
 
+  const translatingRef = useRef(false);
+
   const handleTranslate = () => {
-    if (!projectDetail || !activeModId || translating) return;
+    if (!projectDetail || !activeModId || translatingRef.current) return;
     const cacheKey = `${activeModId}:${language}`;
     if (translationCache.current[cacheKey]) {
       setTranslatedContent(translationCache.current[cacheKey]);
       return;
     }
+    const modId = activeModId;
+    translatingRef.current = true;
     setTranslating(true);
     Promise.all([
       translateChunk(projectDetail.description || ''),
       translateBody(projectDetail.body || ''),
     ]).then(([description, body]) => {
-      const result = { id: activeModId, lang: language, description, body };
+      translatingRef.current = false;
+      if (modId !== activeModId) return;
+      const result = { id: modId, lang: language, description, body };
       translationCache.current[cacheKey] = result;
       setTranslatedContent(result);
       setTranslating(false);
     }).catch((err) => {
+      translatingRef.current = false;
       console.error('Translation failed:', err);
       setTranslating(false);
     });
