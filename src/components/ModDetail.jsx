@@ -18,13 +18,13 @@ async function translateChunk(text) {
   // Preserve markdown links, image tags, and inline code from being mangled by translation API
   const preserved = [];
   const placeholder = (i) => `__MD${i}__`;
-  const safed = text.replace(/!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g, (match) => {
+  const textWithPlaceholders = text.replace(/!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g, (match) => {
     const idx = preserved.length;
     preserved.push(match);
     return placeholder(idx);
   });
   try {
-    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(safed)}&langpair=en|ja`);
+    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(textWithPlaceholders)}&langpair=en|ja`);
     if (!res.ok) return text;
     const data = await res.json();
     if (data.responseStatus === 200) {

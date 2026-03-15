@@ -29,7 +29,7 @@ export default function SettingsModal() {
     API.getGameVersions().then(versions => {
       const releases = versions.filter(v => v.version_type === 'release');
       setGameVersions(releases);
-    }).catch(() => {});
+    }).catch(e => console.error('Failed to load game versions:', e));
   }, [settingsOpen]);
 
   if (!settingsOpen) return null;
