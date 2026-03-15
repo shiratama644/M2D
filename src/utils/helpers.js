@@ -31,6 +31,7 @@ export const LOADER_KEY = 'mod_manager_loader';
 export const VERSION_KEY = 'mod_manager_version';
 export const FAVORITES_KEY = 'mod_manager_favorites';
 export const SEARCH_HISTORY_KEY = 'mod_manager_search_history';
+export const SHOW_CARD_DESCRIPTION_KEY = 'mod_manager_show_card_description';
 export const MAX_SEARCH_HISTORY = 50;
 export const CONCURRENCY_LIMIT = 15;
 

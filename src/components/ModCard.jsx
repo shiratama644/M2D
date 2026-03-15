@@ -8,7 +8,7 @@ import starIconRaw from '../assets/icons/star.svg?raw';
 const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
 export default function ModCard({ mod, isDesktop }) {
-  const { selectedMods, toggleMod, activeModId, setActiveModId, favorites, toggleFavorite } = useApp();
+  const { selectedMods, toggleMod, activeModId, setActiveModId, favorites, toggleFavorite, showCardDescription } = useApp();
   const isSelected = selectedMods.has(mod.project_id);
   const isFavorite = favorites.has(mod.project_id);
   const isActive = activeModId === mod.project_id;
@@ -55,6 +55,9 @@ export default function ModCard({ mod, isDesktop }) {
           <span><Icon svg={userIconRaw} size={12} /> {mod.author}</span>
           <span><Icon svg={downloadIconRaw} size={12} /> {formatNum(mod.downloads)}</span>
         </div>
+        {showCardDescription && mod.description && (
+          <p className="mod-card-summary">{mod.description}</p>
+        )}
       </div>
       <button
         className={`mod-favorite-btn ${isFavorite ? 'favorited' : ''}`}
