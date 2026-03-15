@@ -15,11 +15,8 @@ export default function ModCard({ mod, isDesktop }) {
 
   const handleCardClick = (e) => {
     if (e.target.type === 'checkbox') return;
-    if (isDesktop) {
-      setActiveModId(mod.project_id);
-    } else {
-      toggleMod(mod.project_id);
-    }
+    // On both desktop and mobile, clicking opens the detail view
+    setActiveModId(mod.project_id);
   };
 
   const handleCheckboxChange = (e) => {
