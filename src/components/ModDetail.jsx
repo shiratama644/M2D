@@ -15,14 +15,19 @@ const TRANSLATE_MAX = 500;
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 async function translateChunk(text) {
-  // Preserve markdown links, image tags, and inline code from being mangled by translation API
+  // Preserve markdown links, image tags, and inline code from being mangled by translation API.
+  // Use Unicode Private Use Area chars as delimiters so translation APIs won't alter them.
   const preserved = [];
-  const placeholder = (i) => `__MD${i}__`;
-  const textWithPlaceholders = text.replace(/!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g, (match) => {
-    const idx = preserved.length;
-    preserved.push(match);
-    return placeholder(idx);
-  });
+  const placeholder = (i) => `\uE000${i}\uE001`;
+  // Match nested image-in-link (e.g. [![img](img_url)](link_url)) before plain links/images
+  const textWithPlaceholders = text.replace(
+    /\[!?\[([^\]]*)\]\(([^)]*)\)\]\(([^)]*)\)|!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g,
+    (match) => {
+      const idx = preserved.length;
+      preserved.push(match);
+      return placeholder(idx);
+    }
+  );
   try {
     const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(textWithPlaceholders)}&langpair=en|ja`);
     if (!res.ok) return text;
@@ -30,7 +35,7 @@ async function translateChunk(text) {
     if (data.responseStatus === 200) {
       let result = data.responseData.translatedText;
       preserved.forEach((original, i) => {
-        result = result.replace(placeholder(i), original);
+        result = result.split(placeholder(i)).join(original);
       });
       return result;
     }
