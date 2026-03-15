@@ -15,11 +15,25 @@ const TRANSLATE_MAX = 500;
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 async function translateChunk(text) {
+  // Preserve markdown links, image tags, and inline code from being mangled by translation API
+  const preserved = [];
+  const placeholder = (i) => `__MD${i}__`;
+  const textWithPlaceholders = text.replace(/!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g, (match) => {
+    const idx = preserved.length;
+    preserved.push(match);
+    return placeholder(idx);
+  });
   try {
-    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(text)}&langpair=en|ja`);
+    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(textWithPlaceholders)}&langpair=en|ja`);
     if (!res.ok) return text;
     const data = await res.json();
-    if (data.responseStatus === 200) return data.responseData.translatedText;
+    if (data.responseStatus === 200) {
+      let result = data.responseData.translatedText;
+      preserved.forEach((original, i) => {
+        result = result.replace(placeholder(i), original);
+      });
+      return result;
+    }
   } catch {
     // fall through to return original text
   }

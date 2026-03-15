@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import CustomSelect from './CustomSelect';
 import Icon from './Icon';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
+import { API } from '../utils/api';
 import settingsIconRaw from '../assets/icons/settings.svg?raw';
 import xIconRaw from '../assets/icons/x.svg?raw';
 
@@ -19,6 +21,16 @@ export default function SettingsModal() {
     showConfirm,
     t,
   } = useApp();
+
+  const [gameVersions, setGameVersions] = useState([]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    API.getGameVersions().then(versions => {
+      const releases = versions.filter(v => v.version_type === 'release');
+      setGameVersions(releases);
+    }).catch(e => console.error('Failed to load game versions:', e));
+  }, [settingsOpen]);
 
   if (!settingsOpen) return null;
 
@@ -82,12 +94,15 @@ export default function SettingsModal() {
                 <span className="settings-label">{t.settings.modVersion.label}</span>
                 <span className="settings-description">{t.settings.modVersion.description}</span>
               </div>
-              <input
-                type="text"
+              <CustomSelect
+                className="settings-select"
+                options={[
+                  ...(gameVersions.length > 0
+                    ? gameVersions.map(v => ({ value: v.version, label: v.version }))
+                    : (modVersion ? [{ value: modVersion, label: modVersion }] : [])),
+                ]}
                 value={modVersion}
-                onChange={e => updateModVersion(e.target.value)}
-                placeholder="ex: 1.21.1"
-                className="input-large settings-version-input"
+                onChange={updateModVersion}
               />
             </div>
           </div>
