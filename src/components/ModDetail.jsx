@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { useApp } from '../context/AppContext';
 import { API } from '../utils/api';
 import Icon from './Icon';
@@ -10,10 +11,62 @@ import imageIconRaw from '../assets/icons/images.svg?raw';
 const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 const MODRINTH_BASE = 'https://modrinth.com/mod/';
 
+const TRANSLATE_MAX = 500;
+const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
+
+async function translateChunk(text) {
+  try {
+    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(text)}&langpair=en|ja`);
+    if (!res.ok) return text;
+    const data = await res.json();
+    if (data.responseStatus === 200) return data.responseData.translatedText;
+  } catch {
+    // fall through to return original text
+  }
+  return text;
+}
+
+async function translateBody(body) {
+  if (!body) return body;
+  const parts = body.split(/(\n\n+)/);
+  const translated = await Promise.all(
+    parts.map(async (part) => {
+      if (/^\s*$/.test(part)) return part;
+      const trimmed = part.trim();
+      if (!trimmed || trimmed.length < 3) return part;
+      // Skip code blocks
+      if (trimmed.startsWith('```') || trimmed.startsWith('    ')) return part;
+      if (trimmed.length <= TRANSLATE_MAX) {
+        return translateChunk(trimmed);
+      }
+      // Split long paragraphs by sentence boundaries (period followed by space + uppercase)
+      const chunks = [];
+      let current = '';
+      const sentences = trimmed.split(/(?<=\.)\s+(?=[A-Z])/);
+      for (const sentence of sentences) {
+        const candidate = current ? current + ' ' + sentence : sentence;
+        if (candidate.length > TRANSLATE_MAX && current) {
+          chunks.push(current);
+          current = sentence;
+        } else {
+          current = candidate;
+        }
+      }
+      if (current) chunks.push(current);
+      const results = await Promise.all(chunks.map(translateChunk));
+      return results.join(' ');
+    })
+  );
+  return translated.join('');
+}
+
 export default function ModDetail() {
-  const { activeModId, modDataMap, t } = useApp();
+  const { activeModId, modDataMap, t, language } = useApp();
   const [state, setState] = useState({ id: null, detail: null });
+  const [translatedContent, setTranslatedContent] = useState({ id: null, lang: null, description: null, body: null });
+  const [translating, setTranslating] = useState(false);
   const galleryRef = useRef(null);
+  const translationCache = useRef({});
 
   useEffect(() => {
     if (!activeModId) return;
@@ -26,6 +79,37 @@ export default function ModDetail() {
 
   const projectDetail = state.id === activeModId ? state.detail : null;
   const loading = activeModId !== null && state.id !== activeModId;
+
+  useEffect(() => {
+    if (language !== 'ja' || !projectDetail || !activeModId) return;
+    const cacheKey = `${activeModId}:${language}`;
+    if (translationCache.current[cacheKey]) {
+      setTranslatedContent(translationCache.current[cacheKey]);
+      return;
+    }
+    let cancelled = false;
+    setTranslating(true);
+    Promise.all([
+      translateChunk(projectDetail.description || ''),
+      translateBody(projectDetail.body || ''),
+    ]).then(([description, body]) => {
+      if (!cancelled) {
+        const result = { id: activeModId, lang: language, description, body };
+        translationCache.current[cacheKey] = result;
+        setTranslatedContent(result);
+        setTranslating(false);
+      }
+    }).catch((err) => {
+      if (!cancelled) {
+        console.error('Translation failed:', err);
+        setTranslating(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+      setTranslating(false);
+    };
+  }, [activeModId, language, projectDetail]);
 
   if (!activeModId) {
     return (
@@ -54,6 +138,10 @@ export default function ModDetail() {
     galleryRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const hasTranslation = translatedContent.id === activeModId && translatedContent.lang === language;
+  const displayDescription = (hasTranslation && translatedContent.description) ? translatedContent.description : projectDetail.description;
+  const displayBody = (hasTranslation && translatedContent.body) ? translatedContent.body : projectDetail.body;
+
   return (
     <div className="mod-detail">
       {/* Header */}
@@ -66,7 +154,7 @@ export default function ModDetail() {
         />
         <div className="mod-detail-header-info">
           <h2 className="mod-detail-title">{projectDetail.title || mod.title}</h2>
-          <p className="mod-detail-summary">{projectDetail.description}</p>
+          <p className="mod-detail-summary">{displayDescription}</p>
           <div className="mod-detail-actions">
             <a
               href={`${MODRINTH_BASE}${activeModId}`}
@@ -87,9 +175,13 @@ export default function ModDetail() {
 
       {/* Body (Markdown) */}
       <div className="mod-detail-body">
-        {projectDetail.body ? (
+        {translating && (
+          <p className="mod-detail-translating">{t.rightPanel.translating}</p>
+        )}
+        {displayBody ? (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
             components={{
               img: ({ src, alt, ...props }) => (
                 <img src={src} alt={alt} loading="lazy" style={{ maxWidth: '100%' }} {...props} />
@@ -99,7 +191,7 @@ export default function ModDetail() {
               ),
             }}
           >
-            {projectDetail.body}
+            {displayBody}
           </ReactMarkdown>
         ) : (
           <p className="mod-detail-body-empty">No description available.</p>
