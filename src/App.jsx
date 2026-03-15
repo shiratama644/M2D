@@ -28,6 +28,12 @@ const DEFAULT_SEARCH = {
   },
 };
 
+// Column resize constraints (percentages)
+const MIN_LEFT_WIDTH = 10;
+const MAX_LEFT_WIDTH = 40;
+const MIN_RIGHT_WIDTH = 15;
+const MAX_RIGHT_WIDTH = 50;
+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
   useEffect(() => {
@@ -84,11 +90,11 @@ export default function App() {
       const pct = (x / rect.width) * 100;
 
       if (draggingCol.current === 'left') {
-        const clamped = Math.min(40, Math.max(10, pct));
+        const clamped = Math.min(MAX_LEFT_WIDTH, Math.max(MIN_LEFT_WIDTH, pct));
         setLeftWidth(clamped);
       } else if (draggingCol.current === 'right') {
         const newRight = 100 - pct;
-        const clamped = Math.min(50, Math.max(15, newRight));
+        const clamped = Math.min(MAX_RIGHT_WIDTH, Math.max(MIN_RIGHT_WIDTH, newRight));
         setRightWidth(clamped);
       }
     };
@@ -153,7 +159,8 @@ export default function App() {
     return { effectiveLoader, effectiveVersion };
   }, [searchParams, modLoader, modVersion]);
 
-  const checkLoaderVersionMismatch = useCallback(async () => {
+  // Returns { proceed: boolean, loader: string, version: string }
+  const resolveDownloadSettings = useCallback(async () => {
     const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
     const mismatches = [];
     if (effectiveLoader && modLoader && effectiveLoader !== modLoader) {
@@ -164,20 +171,21 @@ export default function App() {
     }
     if (mismatches.length > 0) {
       const msg = `${t.settings.title} / ${t.filters.label} mismatch:\n${mismatches.join('\n')}\n\nDownload using filter settings?`;
-      return await showConfirm(msg);
+      const useFilter = await showConfirm(msg);
+      if (useFilter) {
+        return { proceed: true, loader: effectiveLoader, version: effectiveVersion };
+      }
+      return { proceed: false, loader: modLoader, version: modVersion };
     }
-    return null; // no mismatch
+    return { proceed: true, loader: modLoader, version: modVersion };
   }, [getEffectiveDownloadSettings, modLoader, modVersion, showConfirm, t]);
 
   const handleCheckDeps = async () => {
     if (selectedMods.size === 0) return;
 
-    const mismatchResult = await checkLoaderVersionMismatch();
-    const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
-    const useLoader = mismatchResult === true ? effectiveLoader : modLoader;
-    const useVersion = mismatchResult === true ? effectiveVersion : modVersion;
-
-    if (mismatchResult === false) return; // user cancelled
+    const settings = await resolveDownloadSettings();
+    if (!settings.proceed) return;
+    const { loader: useLoader, version: useVersion } = settings;
 
     addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
     showLoading('Analyzing Dependencies...');
@@ -251,12 +259,9 @@ export default function App() {
   const handleDownload = async () => {
     if (selectedMods.size === 0) return;
 
-    const mismatchResult = await checkLoaderVersionMismatch();
-    const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
-    const useLoader = mismatchResult === true ? effectiveLoader : modLoader;
-    const useVersion = mismatchResult === true ? effectiveVersion : modVersion;
-
-    if (mismatchResult === false) return; // user cancelled
+    const settings = await resolveDownloadSettings();
+    if (!settings.proceed) return;
+    const { loader: useLoader, version: useVersion } = settings;
 
     addDebugLog('info', `Starting download for ${selectedMods.size} mods (${useLoader} ${useVersion})...`);
     showLoading('Preparing Download...');
