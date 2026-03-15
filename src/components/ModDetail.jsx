@@ -79,7 +79,8 @@ async function translateChunk(text) {
 async function translateBody(body) {
   if (!body) return body;
 
-  // Extract fenced code blocks before splitting paragraphs to avoid translating code
+  // Extract fenced code blocks before splitting paragraphs to avoid translating code.
+  // The backreference \1 ensures the closing fence matches the opening type (``` or ~~~).
   const codeBlocks = [];
   const CODE_PH = '\uE010';
   let processed = body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, (match) => {
