@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from './context/AppContext';
 import Header from './components/Header';
 import SideMenu from './components/SideMenu';
@@ -13,6 +13,7 @@ import DebugPanel from './components/DebugPanel';
 import CustomDialog from './components/CustomDialog';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
+import ModDetail from './components/ModDetail';
 import { API } from './utils/api';
 import { asyncPool, CONCURRENCY_LIMIT, LOADER_OPTIONS } from './utils/helpers';
 import JSZip from 'jszip';
@@ -49,15 +50,61 @@ export default function App() {
     settingsOpen, setSettingsOpen,
     filterModalOpen,
     dialog,
-    showAlert,
+    showAlert, showConfirm,
     addDebugLog,
     modLoader, modVersion,
     addSearchHistory,
+    activeModId,
+    t,
   } = useApp();
 
   const isDesktop = useIsDesktop();
   const [searchParams, setSearchParams] = useState(DEFAULT_SEARCH);
   const [depIssues, setDepIssues] = useState(null);
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+
+  // Resizable columns state (percentages)
+  const [leftWidth, setLeftWidth] = useState(20);
+  const [rightWidth, setRightWidth] = useState(30);
+  const layoutRef = useRef(null);
+  const draggingCol = useRef(null);
+
+  const onColResizeStart = useCallback((which, e) => {
+    e.preventDefault();
+    draggingCol.current = which;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!draggingCol.current || !layoutRef.current) return;
+      const rect = layoutRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = (x / rect.width) * 100;
+
+      if (draggingCol.current === 'left') {
+        const clamped = Math.min(40, Math.max(10, pct));
+        setLeftWidth(clamped);
+      } else if (draggingCol.current === 'right') {
+        const newRight = 100 - pct;
+        const clamped = Math.min(50, Math.max(15, newRight));
+        setRightWidth(clamped);
+      }
+    };
+    const onMouseUp = () => {
+      if (!draggingCol.current) return;
+      draggingCol.current = null;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   // Apply theme to body
   useEffect(() => {
@@ -66,9 +113,16 @@ export default function App() {
 
   // Prevent scroll when modal/menu open
   useEffect(() => {
-    const isOpen = menuOpen || selectedModalOpen || depModalOpen || settingsOpen || filterModalOpen || !!dialog;
+    const isOpen = menuOpen || selectedModalOpen || depModalOpen || settingsOpen || filterModalOpen || mobileDetailOpen || !!dialog;
     document.body.classList.toggle('modal-open', isOpen);
-  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, filterModalOpen, dialog]);
+  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, filterModalOpen, mobileDetailOpen, dialog]);
+
+  // Open mobile detail modal when activeModId changes on mobile
+  useEffect(() => {
+    if (!isDesktop && activeModId) {
+      setMobileDetailOpen(true);
+    }
+  }, [activeModId, isDesktop]);
 
   const handleSearch = ({ query, sort, filters }) => {
     setSearchParams({ query, sort, filters });
@@ -85,8 +139,46 @@ export default function App() {
     addSearchHistory(query);
   };
 
+  // Derive effective loader/version from filter settings for download
+  const getEffectiveDownloadSettings = useCallback(() => {
+    const filterLoaders = searchParams.filters?.loaders || {};
+    const includedLoaders = Object.entries(filterLoaders)
+      .filter(([, v]) => v === 'include')
+      .map(([k]) => k);
+    const filterVersion = searchParams.filters?.version || '';
+
+    const effectiveLoader = includedLoaders.length === 1 ? includedLoaders[0] : modLoader;
+    const effectiveVersion = filterVersion.trim() || modVersion;
+
+    return { effectiveLoader, effectiveVersion };
+  }, [searchParams, modLoader, modVersion]);
+
+  const checkLoaderVersionMismatch = useCallback(async () => {
+    const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
+    const mismatches = [];
+    if (effectiveLoader && modLoader && effectiveLoader !== modLoader) {
+      mismatches.push(`Loader: ${t.settings.modLoader.label} = ${modLoader}, ${t.filters.label} = ${effectiveLoader}`);
+    }
+    if (effectiveVersion && modVersion && effectiveVersion !== modVersion) {
+      mismatches.push(`Version: ${t.settings.modVersion.label} = ${modVersion}, ${t.filters.label} = ${effectiveVersion}`);
+    }
+    if (mismatches.length > 0) {
+      const msg = `${t.settings.title} / ${t.filters.label} mismatch:\n${mismatches.join('\n')}\n\nDownload using filter settings?`;
+      return await showConfirm(msg);
+    }
+    return null; // no mismatch
+  }, [getEffectiveDownloadSettings, modLoader, modVersion, showConfirm, t]);
+
   const handleCheckDeps = async () => {
     if (selectedMods.size === 0) return;
+
+    const mismatchResult = await checkLoaderVersionMismatch();
+    const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
+    const useLoader = mismatchResult === true ? effectiveLoader : modLoader;
+    const useVersion = mismatchResult === true ? effectiveVersion : modVersion;
+
+    if (mismatchResult === false) return; // user cancelled
+
     addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
     showLoading('Analyzing Dependencies...');
 
@@ -102,7 +194,7 @@ export default function App() {
       const results = await asyncPool(CONCURRENCY_LIMIT, ids, async (pid) => {
         const modName = modDataMap[pid]?.title || pid;
         try {
-          const versions = await API.getVersions(pid, modLoader, modVersion);
+          const versions = await API.getVersions(pid, useLoader, useVersion);
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
           return versions?.length ? { modName, dependencies: versions[0].dependencies } : null;
         } catch (e) {
@@ -158,7 +250,15 @@ export default function App() {
 
   const handleDownload = async () => {
     if (selectedMods.size === 0) return;
-    addDebugLog('info', `Starting download for ${selectedMods.size} mods (${modLoader} ${modVersion})...`);
+
+    const mismatchResult = await checkLoaderVersionMismatch();
+    const { effectiveLoader, effectiveVersion } = getEffectiveDownloadSettings();
+    const useLoader = mismatchResult === true ? effectiveLoader : modLoader;
+    const useVersion = mismatchResult === true ? effectiveVersion : modVersion;
+
+    if (mismatchResult === false) return; // user cancelled
+
+    addDebugLog('info', `Starting download for ${selectedMods.size} mods (${useLoader} ${useVersion})...`);
     showLoading('Preparing Download...');
 
     const zip = new JSZip();
@@ -170,7 +270,7 @@ export default function App() {
     await asyncPool(CONCURRENCY_LIMIT, ids, async (pid) => {
       const modName = modDataMap[pid]?.title || pid;
       try {
-        const versions = await API.getVersions(pid, modLoader, modVersion);
+        const versions = await API.getVersions(pid, useLoader, useVersion);
         if (versions?.length && versions[0].files?.length) {
           const file = versions[0].files.find(f => f.primary) || versions[0].files[0];
           const res = await fetch(file.url);
@@ -201,7 +301,7 @@ export default function App() {
       const content = await zip.generateAsync({ type: 'blob' }, (meta) => {
         updateLoading(`Compressing ZIP... ${Math.round(meta.percent)}%`);
       });
-      const filename = `mods-${modLoader}-${modVersion}-${Date.now()}.zip`;
+      const filename = `mods-${useLoader}-${useVersion}-${Date.now()}.zip`;
       saveAs(content, filename);
       addDebugLog('info', `Download complete: ${filename}`);
     } else {
@@ -211,25 +311,35 @@ export default function App() {
     hideLoading();
   };
 
+  const centerWidth = 100 - leftWidth - rightWidth;
+
   return (
     <>
       <Header />
       <SideMenu />
 
       {isDesktop ? (
-        /* ── PC 3-column layout ── */
-        <div className="pc-layout">
-          <aside className="pc-left-panel">
+        /* ── PC 3-column layout with resizable columns ── */
+        <div ref={layoutRef} className="pc-layout">
+          <aside className="pc-left-panel" style={{ width: `${leftWidth}%` }}>
             <LeftPanel onFilterChange={handleLeftPanelFilter} />
           </aside>
-          <main className="pc-center-panel">
+          <div
+            className="pc-column-resizer"
+            onMouseDown={(e) => onColResizeStart('left', e)}
+          />
+          <main className="pc-center-panel" style={{ width: `${centerWidth}%` }}>
             <SearchSection onSearch={handleSearch} />
             <ModList searchParams={searchParams} isDesktop={true} />
             <div className="pc-action-bar">
               <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
             </div>
           </main>
-          <aside className="pc-right-panel">
+          <div
+            className="pc-column-resizer"
+            onMouseDown={(e) => onColResizeStart('right', e)}
+          />
+          <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
             <RightPanel
               onSettingsClick={() => setSettingsOpen(true)}
               onHistorySearch={handleHistorySearch}
@@ -246,6 +356,21 @@ export default function App() {
 
       {!isDesktop && (
         <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+      )}
+
+      {/* Mobile mod detail modal */}
+      {!isDesktop && mobileDetailOpen && activeModId && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setMobileDetailOpen(false)}>
+          <div className="modal-container large" style={{ maxHeight: '85vh' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">{t.rightPanel.description}</h3>
+              <button onClick={() => setMobileDetailOpen(false)} className="btn-close-modal">✕</button>
+            </div>
+            <div className="modal-body">
+              <ModDetail />
+            </div>
+          </div>
+        </div>
       )}
 
       <SettingsModal />

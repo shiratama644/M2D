@@ -18,7 +18,8 @@ export default function ModCard({ mod, isDesktop }) {
     if (isDesktop) {
       setActiveModId(mod.project_id);
     } else {
-      toggleMod(mod.project_id);
+      // On mobile, single tap selects, double tap shows detail
+      setActiveModId(mod.project_id);
     }
   };
 
