@@ -11,6 +11,7 @@ export default function SettingsModal() {
     theme, toggleTheme,
     debugMode, toggleDebug,
     fastSearch, toggleFastSearch,
+    showCardDescription, toggleShowCardDescription,
     language, toggleLanguage,
     modLoader, updateModLoader,
     modVersion, updateModVersion,
@@ -129,6 +130,21 @@ export default function SettingsModal() {
                   className="toggle-input"
                   checked={fastSearch}
                   onChange={e => toggleFastSearch(e.target.checked)}
+                />
+                <div className="toggle-bg"><div className="toggle-knob"></div></div>
+              </label>
+            </div>
+            <div className="settings-row" style={{ marginBottom: 0, marginTop: '1.25rem' }}>
+              <div>
+                <span className="settings-label">{t.settings.showCardDescription.label}</span>
+                <span className="settings-description">{t.settings.showCardDescription.description}</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  className="toggle-input"
+                  checked={showCardDescription}
+                  onChange={e => toggleShowCardDescription(e.target.checked)}
                 />
                 <div className="toggle-bg"><div className="toggle-knob"></div></div>
               </label>
