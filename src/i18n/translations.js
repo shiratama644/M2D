@@ -91,6 +91,8 @@ const translations = {
       gallery: 'Gallery',
       openModrinth: 'Open on Modrinth',
       translating: 'Translating...',
+      translate: 'Translate',
+      translated: 'Translated',
     },
     history: {
       clear: 'Clear All',
@@ -194,6 +196,8 @@ const translations = {
       gallery: 'ギャラリー',
       openModrinth: 'Modrinthで開く',
       translating: '翻訳中...',
+      translate: '翻訳',
+      translated: '翻訳済み',
     },
     history: {
       clear: 'すべて削除',

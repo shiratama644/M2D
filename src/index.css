@@ -662,6 +662,8 @@ input, select { font-family: inherit; }
 .mod-detail-body th, .mod-detail-body td { padding: 0.375rem 0.5rem; border: 1px solid var(--glass-border); }
 .mod-detail-body th { background: var(--glass-bg-hover); font-weight: bold; }
 .mod-detail-body hr { border: none; border-top: 1px solid var(--glass-border); margin: 1rem 0; }
+.mod-detail-translate-bar { margin-bottom: 0.75rem; display: flex; align-items: center; }
+.mod-detail-translate-bar .btn-small:disabled { opacity: 0.6; cursor: default; }
 
 .mod-detail-gallery { margin-top: 1rem; }
 .mod-detail-gallery-title { font-size: 0.875rem; font-weight: bold; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.375rem; }

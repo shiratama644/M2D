@@ -80,36 +80,27 @@ export default function ModDetail() {
   const projectDetail = state.id === activeModId ? state.detail : null;
   const loading = activeModId !== null && state.id !== activeModId;
 
-  useEffect(() => {
-    if (language !== 'ja' || !projectDetail || !activeModId) return;
+  const handleTranslate = () => {
+    if (!projectDetail || !activeModId || translating) return;
     const cacheKey = `${activeModId}:${language}`;
     if (translationCache.current[cacheKey]) {
       setTranslatedContent(translationCache.current[cacheKey]);
       return;
     }
-    let cancelled = false;
     setTranslating(true);
     Promise.all([
       translateChunk(projectDetail.description || ''),
       translateBody(projectDetail.body || ''),
     ]).then(([description, body]) => {
-      if (!cancelled) {
-        const result = { id: activeModId, lang: language, description, body };
-        translationCache.current[cacheKey] = result;
-        setTranslatedContent(result);
-        setTranslating(false);
-      }
-    }).catch((err) => {
-      if (!cancelled) {
-        console.error('Translation failed:', err);
-        setTranslating(false);
-      }
-    });
-    return () => {
-      cancelled = true;
+      const result = { id: activeModId, lang: language, description, body };
+      translationCache.current[cacheKey] = result;
+      setTranslatedContent(result);
       setTranslating(false);
-    };
-  }, [activeModId, language, projectDetail]);
+    }).catch((err) => {
+      console.error('Translation failed:', err);
+      setTranslating(false);
+    });
+  };
 
   if (!activeModId) {
     return (
@@ -175,8 +166,16 @@ export default function ModDetail() {
 
       {/* Body (Markdown) */}
       <div className="mod-detail-body">
-        {translating && (
-          <p className="mod-detail-translating">{t.rightPanel.translating}</p>
+        {language === 'ja' && (
+          <div className="mod-detail-translate-bar">
+            <button
+              className="btn-small green"
+              onClick={handleTranslate}
+              disabled={translating || hasTranslation}
+            >
+              {translating ? t.rightPanel.translating : hasTranslation ? t.rightPanel.translated : t.rightPanel.translate}
+            </button>
+          </div>
         )}
         {displayBody ? (
           <ReactMarkdown
