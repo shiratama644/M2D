@@ -15,21 +15,52 @@ const TRANSLATE_MAX = 500;
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 async function translateChunk(text) {
-  // Preserve markdown links, image tags, and inline code from being mangled by translation API.
+  // Preserve markdown/HTML syntax from being mangled by translation API.
   // Use Unicode Private Use Area chars as delimiters so translation APIs won't alter them.
   const preserved = [];
   const placeholder = (i) => `\uE000${i}\uE001`;
-  // Match nested image-in-link (e.g. [![img](img_url)](link_url)) before plain links/images
-  const textWithPlaceholders = text.replace(
-    /\[!?\[([^\]]*)\]\(([^)]*)\)\]\(([^)]*)\)|!?\[([^\]]*)\]\(([^)]*)\)|`[^`]+`/g,
-    (match) => {
-      const idx = preserved.length;
-      preserved.push(match);
-      return placeholder(idx);
-    }
-  );
+  const protect = (match) => {
+    const idx = preserved.length;
+    preserved.push(match);
+    return placeholder(idx);
+  };
+
+  let processed = text;
+
+  // Protect syntax in order of specificity (most complex patterns first)
+  // HTML comments
+  processed = processed.replace(/<!--[\s\S]*?-->/g, protect);
+  // Nested image-in-link: [![alt](img)](link)
+  processed = processed.replace(/\[!?\[([^\]]*)\]\(([^)]*)\)\]\(([^)]*)\)/g, protect);
+  // Images: ![alt](url)
+  processed = processed.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, protect);
+  // Links: [text](url)
+  processed = processed.replace(/\[([^\]]*)\]\(([^)]*)\)/g, protect);
+  // Inline code
+  processed = processed.replace(/`[^`]+`/g, protect);
+  // HTML tags (opening, closing, self-closing)
+  processed = processed.replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^>]*)?\/?>/g, protect);
+  // HTML entities
+  processed = processed.replace(/&(?:[a-zA-Z]+|#\d+|#x[a-fA-F0-9]+);/g, protect);
+  // Heading markers at start of line
+  processed = processed.replace(/^#{1,6}\s/gm, protect);
+  // Blockquote markers at start of line
+  processed = processed.replace(/^(?:\s*>)+\s?/gm, protect);
+  // Unordered list markers at start of line
+  processed = processed.replace(/^\s*[-*+]\s/gm, protect);
+  // Ordered list markers at start of line
+  processed = processed.replace(/^\s*\d+\.\s/gm, protect);
+  // Horizontal rules (entire line)
+  processed = processed.replace(/^[-*_]{3,}\s*$/gm, protect);
+  // Bold/strong markers
+  processed = processed.replace(/\*\*|__/g, protect);
+  // Strikethrough markers
+  processed = processed.replace(/~~/g, protect);
+  // Standalone URLs (not already captured inside links/images)
+  processed = processed.replace(/https?:\/\/[^\s<>)\]]+/g, protect);
+
   try {
-    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(textWithPlaceholders)}&langpair=en|ja`);
+    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(processed)}&langpair=en|ja`);
     if (!res.ok) return text;
     const data = await res.json();
     if (data.responseStatus === 200) {
@@ -47,14 +78,27 @@ async function translateChunk(text) {
 
 async function translateBody(body) {
   if (!body) return body;
-  const parts = body.split(/(\n\n+)/);
+
+  // Extract fenced code blocks before splitting paragraphs to avoid translating code.
+  // The backreference \1 ensures the closing fence matches the opening type (``` or ~~~).
+  const codeBlocks = [];
+  const CODE_PH = '\uE010';
+  let processed = body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, (match) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(match);
+    return `${CODE_PH}${idx}${CODE_PH}`;
+  });
+
+  const parts = processed.split(/(\n\n+)/);
   const translated = await Promise.all(
     parts.map(async (part) => {
       if (/^\s*$/.test(part)) return part;
       const trimmed = part.trim();
       if (!trimmed || trimmed.length < 3) return part;
-      // Skip code blocks
-      if (trimmed.startsWith('```') || trimmed.startsWith('    ')) return part;
+      // Skip code block placeholders
+      if (trimmed.includes(CODE_PH)) return part;
+      // Skip remaining code blocks (safety net)
+      if (trimmed.startsWith('```') || trimmed.startsWith('~~~') || trimmed.startsWith('    ')) return part;
       if (trimmed.length <= TRANSLATE_MAX) {
         return translateChunk(trimmed);
       }
@@ -76,7 +120,15 @@ async function translateBody(body) {
       return results.join(' ');
     })
   );
-  return translated.join('');
+
+  let result = translated.join('');
+
+  // Restore fenced code blocks
+  codeBlocks.forEach((block, i) => {
+    result = result.split(`${CODE_PH}${i}${CODE_PH}`).join(block);
+  });
+
+  return result;
 }
 
 export default function ModDetail() {
