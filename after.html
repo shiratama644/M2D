@@ -707,6 +707,7 @@
                 },
                 searchMods: (query, facets, offset, limit, index) => API.request('/search', { query, facets, offset, limit, index }),
                 getProjects: (ids) => API.request('/projects', { ids }), 
+                getVersionsById: (ids) => API.request('/versions', { ids }),
                 getVersions: (id, loader, version) => {
                     const loaders = loader ? [loader] : undefined;
                     const game_versions = version ? [version] : undefined;
@@ -1237,6 +1238,28 @@
                             }
                         });
                         UI.hideProgress();
+
+                        // Resolve dependencies that have only version_id (no project_id)
+                        const versionIdDeps = [];
+                        results.filter(Boolean).forEach(res => {
+                            res.dependencies.forEach(dep => {
+                                if (!dep.project_id && dep.version_id) versionIdDeps.push(dep);
+                            });
+                        });
+                        if (versionIdDeps.length > 0) {
+                            UI.updateLoading("Resolving version IDs...");
+                            try {
+                                const uniqueVersionIds = [...new Set(versionIdDeps.map(d => d.version_id).filter(Boolean))];
+                                const resolvedVersions = await API.getVersionsById(uniqueVersionIds);
+                                const versionProjectMap = {};
+                                resolvedVersions.forEach(v => { versionProjectMap[v.id] = v.project_id; });
+                                versionIdDeps.forEach(dep => {
+                                    if (versionProjectMap[dep.version_id]) dep.project_id = versionProjectMap[dep.version_id];
+                                });
+                            } catch (e) {
+                                console.error('Failed to resolve version IDs', e);
+                            }
+                        }
 
                         results.filter(Boolean).forEach(res => {
                             res.dependencies.forEach(dep => {
