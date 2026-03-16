@@ -53,8 +53,7 @@ export default function App() {
     modDataMap, updateModDataMap,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     depModalOpen, setDepModalOpen,
-    settingsOpen, setSettingsOpen,
-    filterModalOpen,
+    settingsOpen,
     dialog,
     showAlert, showConfirm,
     addDebugLog,
@@ -119,9 +118,9 @@ export default function App() {
 
   // Prevent scroll when modal/menu open
   useEffect(() => {
-    const isOpen = menuOpen || selectedModalOpen || depModalOpen || settingsOpen || filterModalOpen || mobileDetailOpen || !!dialog;
+    const isOpen = menuOpen || selectedModalOpen || depModalOpen || settingsOpen || mobileDetailOpen || !!dialog;
     document.body.classList.toggle('modal-open', isOpen);
-  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, filterModalOpen, mobileDetailOpen, dialog]);
+  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, mobileDetailOpen, dialog]);
 
   // Open mobile detail modal when activeModId changes on mobile
   useEffect(() => {
@@ -346,7 +345,6 @@ export default function App() {
           />
           <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
             <RightPanel
-              onSettingsClick={() => setSettingsOpen(true)}
               onHistorySearch={handleHistorySearch}
             />
           </aside>

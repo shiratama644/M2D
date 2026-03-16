@@ -51,9 +51,6 @@ function buildFacets(filters) {
   if (filters.version && filters.version.trim()) {
     facets.push([`versions:${filters.version.trim()}`]);
   }
-  if (filters.license && filters.license.trim()) {
-    facets.push([`license:${filters.license.trim()}`]);
-  }
   return facets;
 }
 
