@@ -12,6 +12,7 @@ export default function SettingsModal() {
     settingsOpen, setSettingsOpen,
     theme, toggleTheme,
     debugMode, toggleDebug,
+    advancedConsole, toggleAdvancedConsole,
     fastSearch, toggleFastSearch,
     showCardDescription, toggleShowCardDescription,
     language, toggleLanguage,
@@ -134,7 +135,7 @@ export default function SettingsModal() {
                 onChange={toggleLanguage}
               />
             </div>
-            <div className="settings-row" style={{ marginBottom: 0 }}>
+            <div className="settings-row">
               <div>
                 <span className="settings-label">{t.settings.fastSearch.label}</span>
                 <span className="settings-description">{t.settings.fastSearch.description}</span>
@@ -149,7 +150,7 @@ export default function SettingsModal() {
                 <div className="toggle-bg"><div className="toggle-knob"></div></div>
               </label>
             </div>
-            <div className="settings-row" style={{ marginBottom: 0, marginTop: '1.25rem' }}>
+            <div className="settings-row" style={{ marginBottom: 0 }}>
               <div>
                 <span className="settings-label">{t.settings.showCardDescription.label}</span>
                 <span className="settings-description">{t.settings.showCardDescription.description}</span>
@@ -168,7 +169,7 @@ export default function SettingsModal() {
 
           {/* Data Management */}
           <div className="settings-category">
-            <h4 className="settings-category-title">Data</h4>
+            <h4 className="settings-category-title">{t.settings.categories.data}</h4>
             <div className="settings-row">
               <div>
                 <span className="settings-label">{t.settings.clearHistory}</span>
@@ -192,7 +193,7 @@ export default function SettingsModal() {
           {/* Developer Mode Category */}
           <div className="settings-category" style={{ marginBottom: 0 }}>
             <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
-            <div className="settings-row" style={{ marginBottom: 0 }}>
+            <div className="settings-row">
               <div>
                 <span className="settings-label">{t.settings.debugMode.label}</span>
                 <span className="settings-description">{t.settings.debugMode.description}</span>
@@ -203,6 +204,21 @@ export default function SettingsModal() {
                   className="toggle-input"
                   checked={debugMode}
                   onChange={e => toggleDebug(e.target.checked)}
+                />
+                <div className="toggle-bg"><div className="toggle-knob"></div></div>
+              </label>
+            </div>
+            <div className="settings-row" style={{ marginBottom: 0 }}>
+              <div>
+                <span className="settings-label">{t.settings.advancedConsole.label}</span>
+                <span className="settings-description">{t.settings.advancedConsole.description}</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  className="toggle-input"
+                  checked={advancedConsole}
+                  onChange={e => toggleAdvancedConsole(e.target.checked)}
                 />
                 <div className="toggle-bg"><div className="toggle-knob"></div></div>
               </label>

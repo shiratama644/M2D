@@ -4,16 +4,13 @@ import shieldCheckIconRaw from '../assets/icons/shield-check.svg?raw';
 import downloadIconRaw from '../assets/icons/download.svg?raw';
 
 export default function ActionBar({ onCheckDeps, onDownload }) {
-  const { selectedMods, clearMods, setSelectedModalOpen } = useApp();
+  const { selectedMods, clearMods } = useApp();
   const count = selectedMods.size;
 
   return (
     <div className={`action-bar ${count > 0 ? 'visible' : ''}`}>
       <div className="action-bar-top">
-        <button onClick={() => setSelectedModalOpen(true)} className="selected-count-btn">
-          <span className="selected-badge">{count} Selected</span>
-          <span className="view-list-text">View List</span>
-        </button>
+        <span className="selected-badge">{count} Selected</span>
         <button onClick={clearMods} className="btn-clear">Clear All</button>
       </div>
       <div className="action-buttons">
