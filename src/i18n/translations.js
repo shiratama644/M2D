@@ -5,6 +5,7 @@ const translations = {
       categories: {
         mods: 'Mods',
         general: 'General',
+        data: 'Data',
         developerMode: 'Developer Mode',
       },
       modLoader: { label: 'Loader', description: 'Mod loader used when downloading' },
@@ -13,7 +14,7 @@ const translations = {
       fastSearch: { label: 'Fast Search', description: 'Auto-search 500ms after input (search button hidden)' },
       showCardDescription: { label: 'Show Description on Cards', description: 'Show a brief description on each mod card' },
       debugMode: { label: 'Debug Mode', description: 'Show floating developer console' },
-      advancedConsole: { label: 'Advanced Console', description: 'Capture browser console output for more detailed logs' },
+      advancedConsole: { label: 'Advanced Console', description: 'Capture browser console output for more detailed logs (requires Debug Mode)' },
       language: { label: 'Language', description: 'Select display language' },
       close: 'Close',
       clearHistory: 'Clear Search History',
@@ -111,6 +112,7 @@ const translations = {
       categories: {
         mods: 'Mods',
         general: '一般',
+        data: 'データ',
         developerMode: '開発者モード',
       },
       modLoader: { label: 'ローダー', description: 'ダウンロード時に使用するModローダー' },
@@ -119,7 +121,7 @@ const translations = {
       fastSearch: { label: '高速検索', description: '入力後500msで自動検索（検索ボタン非表示）' },
       showCardDescription: { label: 'カードに説明を表示', description: '各Modカードに短い説明を表示する' },
       debugMode: { label: 'デバッグモード', description: 'フローティングデベロッパーコンソールを表示' },
-      advancedConsole: { label: '高度なコンソール', description: 'ブラウザのコンソール出力をキャプチャして詳細なログを表示' },
+      advancedConsole: { label: '高度なコンソール', description: 'ブラウザのコンソール出力をキャプチャして詳細なログを表示（デバッグモードが必要）' },
       language: { label: '言語', description: '表示言語を選択' },
       close: '閉じる',
       clearHistory: '検索履歴を削除',

@@ -169,7 +169,7 @@ export default function SettingsModal() {
 
           {/* Data Management */}
           <div className="settings-category">
-            <h4 className="settings-category-title">Data</h4>
+            <h4 className="settings-category-title">{t.settings.categories.data}</h4>
             <div className="settings-row">
               <div>
                 <span className="settings-label">{t.settings.clearHistory}</span>
