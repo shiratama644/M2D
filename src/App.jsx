@@ -53,7 +53,7 @@ export default function App() {
     modDataMap, updateModDataMap,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     depModalOpen, setDepModalOpen,
-    settingsOpen, setSettingsOpen,
+    settingsOpen,
     filterModalOpen,
     dialog,
     showAlert, showConfirm,
@@ -61,6 +61,7 @@ export default function App() {
     modLoader, modVersion,
     addSearchHistory,
     activeModId,
+    advancedConsole, debugMode,
     t,
   } = useApp();
 
@@ -68,6 +69,32 @@ export default function App() {
   const [searchParams, setSearchParams] = useState(DEFAULT_SEARCH);
   const [depIssues, setDepIssues] = useState(null);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+
+  // Advanced Console: intercept browser console methods
+  useEffect(() => {
+    if (!advancedConsole || !debugMode) return;
+    const original = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+      info: console.info,
+    };
+    const makeHandler = (level) => (...args) => {
+      original[level](...args);
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+      addDebugLog(level, msg);
+    };
+    console.log = makeHandler('log');
+    console.error = makeHandler('error');
+    console.warn = makeHandler('warn');
+    console.info = makeHandler('info');
+    return () => {
+      console.log = original.log;
+      console.error = original.error;
+      console.warn = original.warn;
+      console.info = original.info;
+    };
+  }, [advancedConsole, debugMode, addDebugLog]);
 
   // Resizable columns state (percentages)
   const [leftWidth, setLeftWidth] = useState(20);
@@ -334,7 +361,7 @@ export default function App() {
             onMouseDown={(e) => onColResizeStart('left', e)}
           />
           <main className="pc-center-panel" style={{ width: `${centerWidth}%` }}>
-            <SearchSection onSearch={handleSearch} />
+            <SearchSection onSearch={handleSearch} isDesktop={true} />
             <ModList searchParams={searchParams} isDesktop={true} />
             <div className="pc-action-bar">
               <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
@@ -346,7 +373,6 @@ export default function App() {
           />
           <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
             <RightPanel
-              onSettingsClick={() => setSettingsOpen(true)}
               onHistorySearch={handleHistorySearch}
             />
           </aside>

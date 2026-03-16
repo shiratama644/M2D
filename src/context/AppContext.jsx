@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY, LOADER_KEY, VERSION_KEY, FAVORITES_KEY, SEARCH_HISTORY_KEY, SHOW_CARD_DESCRIPTION_KEY, MAX_SEARCH_HISTORY } from '../utils/helpers';
+import { STORAGE_KEY, DEBUG_KEY, THEME_KEY, FAST_SEARCH_KEY, LANGUAGE_KEY, LOADER_KEY, VERSION_KEY, FAVORITES_KEY, SEARCH_HISTORY_KEY, SHOW_CARD_DESCRIPTION_KEY, ADVANCED_CONSOLE_KEY, MAX_SEARCH_HISTORY } from '../utils/helpers';
 import translations from '../i18n/translations';
 
 const AppContext = createContext(null);
@@ -9,6 +9,7 @@ export function AppProvider({ children }) {
   const [debugMode, setDebugMode] = useState(() => localStorage.getItem(DEBUG_KEY) === 'true');
   const [fastSearch, setFastSearch] = useState(() => localStorage.getItem(FAST_SEARCH_KEY) === 'true');
   const [showCardDescription, setShowCardDescription] = useState(() => localStorage.getItem(SHOW_CARD_DESCRIPTION_KEY) === 'true');
+  const [advancedConsole, setAdvancedConsole] = useState(() => localStorage.getItem(ADVANCED_CONSOLE_KEY) === 'true');
   const [language, setLanguage] = useState(() => localStorage.getItem(LANGUAGE_KEY) || 'en');
   const [modLoader, setModLoader] = useState(() => localStorage.getItem(LOADER_KEY) || 'fabric');
   const [modVersion, setModVersion] = useState(() => localStorage.getItem(VERSION_KEY) || '1.21.1');
@@ -86,6 +87,11 @@ export function AppProvider({ children }) {
   const toggleShowCardDescription = useCallback((enabled) => {
     setShowCardDescription(enabled);
     localStorage.setItem(SHOW_CARD_DESCRIPTION_KEY, enabled);
+  }, []);
+
+  const toggleAdvancedConsole = useCallback((enabled) => {
+    setAdvancedConsole(enabled);
+    localStorage.setItem(ADVANCED_CONSOLE_KEY, enabled);
   }, []);
 
   const toggleLanguage = useCallback((lang) => {
@@ -232,6 +238,7 @@ export function AppProvider({ children }) {
     debugMode, toggleDebug,
     fastSearch, toggleFastSearch,
     showCardDescription, toggleShowCardDescription,
+    advancedConsole, toggleAdvancedConsole,
     language, toggleLanguage,
     modLoader, updateModLoader,
     modVersion, updateModVersion,

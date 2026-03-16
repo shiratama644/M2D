@@ -75,12 +75,6 @@ export default function LeftPanel({ onFilterChange }) {
     emit(newFilters);
   };
 
-  const setLicense = (v) => {
-    const newFilters = { ...filters, license: v };
-    setFilters(newFilters);
-    emit(newFilters);
-  };
-
   const toggleLoader = (loader, state) => {
     const newFilters = {
       ...filters,
@@ -118,17 +112,6 @@ export default function LeftPanel({ onFilterChange }) {
   };
 
   const navIcons = { mods: cubeIconRaw, resourcePacks: packageIconRaw, shaders: blocksIconRaw };
-
-  const LICENSE_OPTIONS = [
-    { value: '', label: t.filters.versionAny },
-    { value: 'mit', label: 'MIT' },
-    { value: 'apache-2', label: 'Apache 2.0' },
-    { value: 'lgpl-3', label: 'LGPL 3.0' },
-    { value: 'gpl-3', label: 'GPL 3.0' },
-    { value: 'mpl', label: 'MPL 2.0' },
-    { value: 'arr', label: 'ARR' },
-    { value: 'custom', label: 'Custom' },
-  ];
 
   return (
     <div className="left-panel">
@@ -249,16 +232,6 @@ export default function LeftPanel({ onFilterChange }) {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* License */}
-        <div className="lp-filter-section">
-          <h4 className="lp-filter-title">{t.filters.license}</h4>
-          <CustomSelect
-            options={LICENSE_OPTIONS}
-            value={filters.license}
-            onChange={setLicense}
-          />
         </div>
 
         {/* Other */}

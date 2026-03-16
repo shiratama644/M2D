@@ -11,7 +11,7 @@ export default function Header() {
         <Icon svg={hamburgerIconRaw} size={24} />
       </button>
       <h1>Mod Manager</h1>
-      <button onClick={() => setSettingsOpen(true)} className="icon-btn">
+      <button onClick={() => setSettingsOpen(true)} className="icon-btn header-settings-btn">
         <Icon svg={settingsIconRaw} size={24} />
       </button>
     </header>

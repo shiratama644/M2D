@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import ModDetail from './ModDetail';
+import CustomSelect from './CustomSelect';
 import Icon from './Icon';
 import { API } from '../utils/api';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../utils/helpers';
 
 import fileTextIconRaw from '../assets/icons/file-text.svg?raw';
 import historyIconRaw from '../assets/icons/history.svg?raw';
@@ -17,8 +19,187 @@ import plusIconRaw from '../assets/icons/package-plus.svg?raw';
 const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 const LEVEL_COLORS = { log: '#cbd5e1', info: '#7dd3fc', warn: '#facc15', error: '#f87171' };
 
+/* ─── Inline Settings Panel ─── */
+function InlineSettings() {
+  const {
+    t, theme, toggleTheme,
+    debugMode, toggleDebug,
+    advancedConsole, toggleAdvancedConsole,
+    fastSearch, toggleFastSearch,
+    showCardDescription, toggleShowCardDescription,
+    language, toggleLanguage,
+    modLoader, updateModLoader,
+    modVersion, updateModVersion,
+    clearSearchHistory, clearFavorites,
+    showConfirm,
+  } = useApp();
+
+  const [gameVersions, setGameVersions] = useState([]);
+
+  useEffect(() => {
+    API.getGameVersions().then(versions => {
+      const releases = versions.filter(v => v.version_type === 'release');
+      setGameVersions(releases);
+    }).catch(e => console.error('Failed to load game versions:', e));
+  }, []);
+
+  const themeOptions = [
+    { value: 'light', label: t.themes.light },
+    { value: 'dark', label: t.themes.dark },
+  ];
+
+  const languageOptions = [
+    { value: 'en', label: t.languages.en },
+    { value: 'ja', label: t.languages.ja },
+  ];
+
+  const loaderOptions = [
+    { value: '', label: t.loaders.any },
+    ...LOADER_OPTIONS.map(o => ({
+      ...o,
+      icon: LOADER_ICON_PATHS[o.value]
+        ? <Icon svg={LOADER_ICON_PATHS[o.value]} size={16} className="loader-icon-img" />
+        : undefined,
+    })),
+  ];
+
+  const handleClearHistory = async () => {
+    if (await showConfirm(t.settings.clearHistory + '?')) clearSearchHistory();
+  };
+
+  const handleClearFavorites = async () => {
+    if (await showConfirm(t.settings.clearFavorites + '?')) clearFavorites();
+  };
+
+  return (
+    <div className="rp-inline-settings">
+      <div className="settings-category">
+        <h4 className="settings-category-title">{t.settings.categories.mods}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.modLoader.label}</span>
+            <span className="settings-description">{t.settings.modLoader.description}</span>
+          </div>
+          <CustomSelect
+            className="settings-select"
+            options={loaderOptions}
+            value={modLoader}
+            onChange={updateModLoader}
+          />
+        </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.modVersion.label}</span>
+            <span className="settings-description">{t.settings.modVersion.description}</span>
+          </div>
+          <CustomSelect
+            className="settings-select"
+            options={[
+              ...(gameVersions.length > 0
+                ? gameVersions.map(v => ({ value: v.version, label: v.version }))
+                : (modVersion ? [{ value: modVersion, label: modVersion }] : [])),
+            ]}
+            value={modVersion}
+            onChange={updateModVersion}
+          />
+        </div>
+      </div>
+
+      <div className="settings-category">
+        <h4 className="settings-category-title">{t.settings.categories.general}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.theme.label}</span>
+            <span className="settings-description">{t.settings.theme.description}</span>
+          </div>
+          <CustomSelect
+            className="settings-select"
+            options={themeOptions}
+            value={theme}
+            onChange={toggleTheme}
+          />
+        </div>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.language.label}</span>
+            <span className="settings-description">{t.settings.language.description}</span>
+          </div>
+          <CustomSelect
+            className="settings-select"
+            options={languageOptions}
+            value={language}
+            onChange={toggleLanguage}
+          />
+        </div>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.fastSearch.label}</span>
+            <span className="settings-description">{t.settings.fastSearch.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={fastSearch} onChange={e => toggleFastSearch(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob"></div></div>
+          </label>
+        </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.showCardDescription.label}</span>
+            <span className="settings-description">{t.settings.showCardDescription.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={showCardDescription} onChange={e => toggleShowCardDescription(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob"></div></div>
+          </label>
+        </div>
+      </div>
+
+      <div className="settings-category">
+        <h4 className="settings-category-title">Data</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.clearHistory}</span>
+            <span className="settings-description">{t.settings.clearHistoryDesc}</span>
+          </div>
+          <button onClick={handleClearHistory} className="btn-secondary settings-btn-sm">Clear</button>
+        </div>
+        <div className="settings-row settings-row-last">
+          <div>
+            <span className="settings-label">{t.settings.clearFavorites}</span>
+            <span className="settings-description">{t.settings.clearFavoritesDesc}</span>
+          </div>
+          <button onClick={handleClearFavorites} className="btn-secondary settings-btn-sm">Clear</button>
+        </div>
+      </div>
+
+      <div className="settings-category" style={{ marginBottom: 0 }}>
+        <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.debugMode.label}</span>
+            <span className="settings-description">{t.settings.debugMode.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={debugMode} onChange={e => toggleDebug(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob"></div></div>
+          </label>
+        </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.advancedConsole.label}</span>
+            <span className="settings-description">{t.settings.advancedConsole.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={advancedConsole} onChange={e => toggleAdvancedConsole(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob"></div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Upper panel ─── */
-function UpperPanel({ onSettingsClick, onHistorySearch }) {
+function UpperPanel({ onHistorySearch }) {
   const { t, searchHistory, removeSearchHistory, clearSearchHistory } = useApp();
   const [tab, setTab] = useState('description');
 
@@ -35,10 +216,7 @@ function UpperPanel({ onSettingsClick, onHistorySearch }) {
           <button
             key={tb.id}
             className={`rp-tab-btn ${tab === tb.id ? 'active' : ''}`}
-            onClick={() => {
-              if (tb.id === 'settings') { onSettingsClick(); return; }
-              setTab(tb.id);
-            }}
+            onClick={() => setTab(tb.id)}
           >
             <Icon svg={tb.icon} size={14} />
             <span>{tb.label}</span>
@@ -72,6 +250,7 @@ function UpperPanel({ onSettingsClick, onHistorySearch }) {
             )}
           </div>
         )}
+        {tab === 'settings' && <InlineSettings />}
       </div>
     </div>
   );
@@ -227,7 +406,7 @@ function LowerPanel() {
 }
 
 /* ─── RightPanel with resizer ─── */
-export default function RightPanel({ onSettingsClick, onHistorySearch }) {
+export default function RightPanel({ onHistorySearch }) {
   const [upperHeight, setUpperHeight] = useState(55); // percentage
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
@@ -264,7 +443,7 @@ export default function RightPanel({ onSettingsClick, onHistorySearch }) {
   return (
     <div ref={containerRef} className="right-panel">
       <div className="rp-upper" style={{ height: `${upperHeight}%` }}>
-        <UpperPanel onSettingsClick={onSettingsClick} onHistorySearch={onHistorySearch} />
+        <UpperPanel onHistorySearch={onHistorySearch} />
       </div>
       <div className="rp-resizer" onMouseDown={onMouseDown} />
       <div className="rp-lower" style={{ height: `${100 - upperHeight}%` }}>

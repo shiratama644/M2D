@@ -11,16 +11,16 @@ const LEVEL_LABELS = { all: 'All', log: 'Log', info: 'Info', warn: 'Warn', error
 const LEVEL_COLORS = { log: '#cbd5e1', info: '#7dd3fc', warn: '#facc15', error: '#f87171' };
 
 export default function DebugPanel() {
-  const { debugMode, debugLogs, clearDebugLogs, addDebugLog } = useApp();
+  const { debugMode, advancedConsole, debugLogs, clearDebugLogs, addDebugLog } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [filterLevel, setFilterLevel] = useState('all');
   const [copied, setCopied] = useState(false);
   const fabRef = useRef(null);
   const logsRef = useRef(null);
 
-  // Override console methods
+  // Override console methods (skip if advancedConsole is on, since App.jsx handles it)
   useEffect(() => {
-    if (!debugMode) return;
+    if (!debugMode || advancedConsole) return;
     const original = {
       log: console.log,
       error: console.error,
@@ -42,7 +42,7 @@ export default function DebugPanel() {
       console.warn = original.warn;
       console.info = original.info;
     };
-  }, [debugMode, addDebugLog]);
+  }, [debugMode, advancedConsole, addDebugLog]);
 
   // Auto-scroll debug logs
   useEffect(() => {

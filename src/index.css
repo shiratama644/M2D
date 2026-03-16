@@ -393,7 +393,7 @@ input, select { font-family: inherit; }
     --right-panel-w: 30%;
   }
 
-  body { padding-bottom: 0; }
+  body { padding-bottom: 0; overflow: hidden; }
 
   /* PC top-level layout: 3 columns below the sticky header */
   .pc-layout {
@@ -494,6 +494,16 @@ input, select { font-family: inherit; }
 
   /* Mobile action bar: hidden on desktop */
   .mobile-action-bar { display: none !important; }
+
+  /* Hide settings button in header on PC */
+  .header-settings-btn { display: none !important; }
+
+  /* Hide "View List" text in PC action bar */
+  .pc-action-bar .view-list-text { display: none; }
+
+  /* Hide mobile debug FAB on PC */
+  .debug-fab { display: none !important; }
+  .debug-panel { display: none !important; }
 
   /* Keep side-menu accessible via header hamburger */
   .overlay { display: none !important; }
@@ -677,3 +687,23 @@ input, select { font-family: inherit; }
 .mod-gallery-caption { font-size: 0.7rem; color: var(--text-muted); padding: 0.25rem 0.375rem; background: var(--glass-bg); }
 .settings-btn-sm { font-size: 0.75rem; padding: 0.375rem 0.75rem; flex-shrink: 0; }
 .settings-row-last { margin-bottom: 0; }
+
+/* Sort dropdown (search bar) */
+.sort-btn-wrapper { position: relative; flex-shrink: 0; }
+.sort-dropdown {
+  position: absolute; top: calc(100% + 0.375rem); left: 0; min-width: 10rem;
+  background: var(--glass-bg-solid); backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border); border-radius: 0.5rem;
+  box-shadow: var(--glass-shadow); z-index: 100;
+  overflow: hidden; animation: dropdownOpen 0.2s forwards;
+}
+.sort-dropdown-item {
+  display: block; width: 100%; text-align: left;
+  padding: 0.625rem 0.875rem; font-size: 0.8rem; font-weight: 600;
+  color: var(--text-main); transition: background 0.15s;
+}
+.sort-dropdown-item:hover { background: var(--glass-bg-hover); }
+.sort-dropdown-item.active { color: var(--accent-color); background: rgba(27, 217, 106, 0.1); }
+
+/* Inline settings in right panel */
+.rp-inline-settings { display: flex; flex-direction: column; gap: 0; }
