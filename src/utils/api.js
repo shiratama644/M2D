@@ -24,6 +24,7 @@ export const API = {
     const game_versions = version ? [version] : undefined;
     return request(`/project/${id}/version`, { loaders, game_versions });
   },
+  getVersionsBulk: (ids) => request('/versions', { ids }),
   getVersionFile: (hash) =>
     fetch(`${API_BASE}/version_file/${hash}?algorithm=sha1`, { headers: HEADERS }).then(r => {
       if (r.status === 404) return null;
