@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import CustomSelect from './CustomSelect';
 import Icon from './Icon';
@@ -15,13 +15,13 @@ export default function SearchSection({ onSearch }) {
   const { fastSearch, t, modVersion } = useApp();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
-  const [filters] = useState(() => ({
+  const filters = useMemo(() => ({
     loaders: INITIAL_LOADER_STATE,
     categories: INITIAL_CATEGORY_STATE,
     environment: INITIAL_ENVIRONMENT_STATE,
     other: INITIAL_OTHER_STATE,
     version: modVersion || '',
-  }));
+  }), [modVersion]);
   const debounceRef = useRef(null);
 
   const sortOptions = [

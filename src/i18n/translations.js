@@ -5,6 +5,7 @@ const translations = {
       categories: {
         mods: 'Mods',
         general: 'General',
+        data: 'Data',
         developerMode: 'Developer Mode',
       },
       modLoader: { label: 'Loader', description: 'Mod loader used when downloading' },
@@ -111,6 +112,7 @@ const translations = {
       categories: {
         mods: 'Mods',
         general: '一般',
+        data: 'データ',
         developerMode: '開発者モード',
       },
       modLoader: { label: 'ローダー', description: 'ダウンロード時に使用するModローダー' },
@@ -119,7 +121,7 @@ const translations = {
       fastSearch: { label: '高速検索', description: '入力後500msで自動検索（検索ボタン非表示）' },
       showCardDescription: { label: 'カードに説明を表示', description: '各Modカードに短い説明を表示する' },
       debugMode: { label: 'デバッグモード', description: 'フローティングデベロッパーコンソールを表示' },
-      advancedConsole: { label: '高度なコンソール', description: '詳細なコンソール出力を有効にする' },
+      advancedConsole: { label: '高度なコンソール', description: '詳細ログ記録を使用した詳細なコンソール出力を有効にする' },
       language: { label: '言語', description: '表示言語を選択' },
       close: '閉じる',
       clearHistory: '検索履歴を削除',
