@@ -6,9 +6,13 @@ import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIO
 import { API } from '../../lib/api';
 import CustomSelect from '../ui/CustomSelect';
 import Icon from '../ui/Icon';
+import MobileModal from '../ui/MobileModal';
 
 import filterIconRaw from '../../assets/icons/filter.svg';
-import xIconRaw from '../../assets/icons/x.svg';
+import checkIconRaw from '../../assets/icons/check.svg';
+import banIconRaw from '../../assets/icons/ban.svg';
+import clientIconRaw from '../../assets/icons/client.svg';
+import serverIconRaw from '../../assets/icons/server.svg';
 
 import optimizationIconRaw from '../../assets/icons/tags/categories/optimization.svg';
 import technologyIconRaw from '../../assets/icons/tags/categories/technology.svg';
@@ -93,147 +97,146 @@ export default function FilterModal({ filters, onFiltersChange, onClose }) {
     });
   };
 
+  const environmentRows = [
+    { key: 'client_side', label: t.filters.clientSide, iconSvg: clientIconRaw },
+    { key: 'server_side', label: t.filters.serverSide, iconSvg: serverIconRaw },
+  ];
+
   return (
-    <div
-      className="modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <MobileModal
+      title={t.filters.title}
+      titleIcon={filterIconRaw}
+      onClose={onClose}
+      size="large"
+      footer={<button onClick={onClose} className="btn-secondary">{t.settings.close}</button>}
     >
-      <div className="modal-container large">
-        <div className="modal-header">
-          <h3 className="modal-title">
-            <Icon svg={filterIconRaw} size={20} /> {t.filters.title}
-          </h3>
-          <button onClick={onClose} className="btn-close-modal">
-            <Icon svg={xIconRaw} size={20} />
-          </button>
-        </div>
-        <div className="modal-body">
+      {/* Version */}
+      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+        <h4 className="lp-filter-title">{t.filters.version}</h4>
+        <CustomSelect
+          options={[
+            { value: '', label: t.filters.versionAny },
+            ...gameVersions.map((v) => ({ value: v.version, label: v.version })),
+          ]}
+          value={localFilters.version}
+          onChange={setVersion}
+        />
+      </div>
 
-          {/* Version */}
-          <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-            <h4 className="lp-filter-title">{t.filters.version}</h4>
-            <CustomSelect
-              options={[
-                { value: '', label: t.filters.versionAny },
-                ...gameVersions.map((v) => ({ value: v.version, label: v.version })),
-              ]}
-              value={localFilters.version}
-              onChange={setVersion}
-            />
-          </div>
-
-          {/* Loader */}
-          <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-            <h4 className="lp-filter-title">{t.filters.loader}</h4>
-            <div className="lp-filter-items">
-              {LOADER_OPTIONS.map(({ value, label }) => {
-                const iconSvg = LOADER_ICON_PATHS[value];
-                return (
-                  <div key={value} className="lp-filter-row">
-                    <span className="lp-filter-label">
-                      {iconSvg && <Icon svg={iconSvg} size={14} className="loader-icon-img" />}
-                      {label}
-                    </span>
-                    <div className="lp-filter-btns">
-                      <button
-                        className={`btn-filter-state${localFilters.loaders[value] === 'include' ? ' active-include' : ''}`}
-                        onClick={() => toggleLoader(value, 'include')}
-                      >{t.filters.include}</button>
-                      <button
-                        className={`btn-filter-state${localFilters.loaders[value] === 'exclude' ? ' active-exclude' : ''}`}
-                        onClick={() => toggleLoader(value, 'exclude')}
-                      >{t.filters.exclude}</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Category */}
-          <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-            <h4 className="lp-filter-title">{t.filters.categories}</h4>
-            <div className="lp-filter-items">
-              {CATEGORY_OPTIONS.map(({ value, labelKey }) => {
-                const label = t.categories[labelKey];
-                const iconSvg = CATEGORY_ICON_MAP[value];
-                return (
-                  <div key={value} className="lp-filter-row">
-                    <span className="lp-filter-label">
-                      {iconSvg && <Icon svg={iconSvg} size={14} className="category-icon-img" />}
-                      {label}
-                    </span>
-                    <div className="lp-filter-btns">
-                      <button
-                        className={`btn-filter-state${localFilters.categories[value] === 'include' ? ' active-include' : ''}`}
-                        onClick={() => toggleCategory(value, 'include')}
-                      >{t.filters.include}</button>
-                      <button
-                        className={`btn-filter-state${localFilters.categories[value] === 'exclude' ? ' active-exclude' : ''}`}
-                        onClick={() => toggleCategory(value, 'exclude')}
-                      >{t.filters.exclude}</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Environment */}
-          <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-            <h4 className="lp-filter-title">{t.filters.environment}</h4>
-            <div className="lp-filter-items">
-              {[
-                { key: 'client_side', label: t.filters.clientSide },
-                { key: 'server_side', label: t.filters.serverSide },
-              ].map(({ key, label }) => (
-                <div key={key} className="lp-filter-row">
-                  <span className="lp-filter-label">{label}</span>
-                  <div className="lp-filter-btns">
-                    <button
-                      className={`btn-filter-state${localFilters.environment[key] === 'include' ? ' active-include' : ''}`}
-                      onClick={() => toggleEnvironment(key, 'include')}
-                    >{t.filters.include}</button>
-                    <button
-                      className={`btn-filter-state${localFilters.environment[key] === 'exclude' ? ' active-exclude' : ''}`}
-                      onClick={() => toggleEnvironment(key, 'exclude')}
-                    >{t.filters.exclude}</button>
-                  </div>
+      {/* Loader */}
+      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+        <h4 className="lp-filter-title">{t.filters.loader}</h4>
+        <div className="lp-filter-items">
+          {LOADER_OPTIONS.map(({ value, label }) => {
+            const iconSvg = LOADER_ICON_PATHS[value];
+            return (
+              <div key={value} className="lp-filter-row">
+                <span className="lp-filter-label">
+                  {iconSvg && <Icon svg={iconSvg} size={14} className="loader-icon-img" />}
+                  {label}
+                </span>
+                <div className="lp-filter-btns">
+                  <button
+                    className={`btn-filter-state${localFilters.loaders[value] === 'include' ? ' active-include' : ''}`}
+                    title={t.filters.include}
+                    onClick={() => toggleLoader(value, 'include')}
+                  ><Icon svg={checkIconRaw} size={14} /></button>
+                  <button
+                    className={`btn-filter-state${localFilters.loaders[value] === 'exclude' ? ' active-exclude' : ''}`}
+                    title={t.filters.exclude}
+                    onClick={() => toggleLoader(value, 'exclude')}
+                  ><Icon svg={banIconRaw} size={14} /></button>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Other */}
-          <div className="lp-filter-section">
-            <h4 className="lp-filter-title">{t.filters.other}</h4>
-            <div className="lp-filter-items">
-              {OTHER_FILTER_OPTIONS.map(({ value, labelKey }) => {
-                const label = t.filters[labelKey];
-                return (
-                  <div key={value} className="lp-filter-row">
-                    <span className="lp-filter-label">{label}</span>
-                    <div className="lp-filter-btns">
-                      <button
-                        className={`btn-filter-state${localFilters.other[value] === 'include' ? ' active-include' : ''}`}
-                        onClick={() => toggleOther(value, 'include')}
-                      >{t.filters.include}</button>
-                      <button
-                        className={`btn-filter-state${localFilters.other[value] === 'exclude' ? ' active-exclude' : ''}`}
-                        onClick={() => toggleOther(value, 'exclude')}
-                      >{t.filters.exclude}</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-        <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">{t.settings.close}</button>
+              </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+
+      {/* Category */}
+      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+        <h4 className="lp-filter-title">{t.filters.categories}</h4>
+        <div className="lp-filter-items">
+          {CATEGORY_OPTIONS.map(({ value, labelKey }) => {
+            const label = t.categories[labelKey];
+            const iconSvg = CATEGORY_ICON_MAP[value];
+            return (
+              <div key={value} className="lp-filter-row">
+                <span className="lp-filter-label">
+                  {iconSvg && <Icon svg={iconSvg} size={14} className="category-icon-img" />}
+                  {label}
+                </span>
+                <div className="lp-filter-btns">
+                  <button
+                    className={`btn-filter-state${localFilters.categories[value] === 'include' ? ' active-include' : ''}`}
+                    title={t.filters.include}
+                    onClick={() => toggleCategory(value, 'include')}
+                  ><Icon svg={checkIconRaw} size={14} /></button>
+                  <button
+                    className={`btn-filter-state${localFilters.categories[value] === 'exclude' ? ' active-exclude' : ''}`}
+                    title={t.filters.exclude}
+                    onClick={() => toggleCategory(value, 'exclude')}
+                  ><Icon svg={banIconRaw} size={14} /></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Environment */}
+      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+        <h4 className="lp-filter-title">{t.filters.environment}</h4>
+        <div className="lp-filter-items">
+          {environmentRows.map(({ key, label, iconSvg }) => (
+            <div key={key} className="lp-filter-row">
+              <span className="lp-filter-label">
+                <Icon svg={iconSvg} size={14} />
+                {label}
+              </span>
+              <div className="lp-filter-btns">
+                <button
+                  className={`btn-filter-state${localFilters.environment[key] === 'include' ? ' active-include' : ''}`}
+                  title={t.filters.include}
+                  onClick={() => toggleEnvironment(key, 'include')}
+                ><Icon svg={checkIconRaw} size={14} /></button>
+                <button
+                  className={`btn-filter-state${localFilters.environment[key] === 'exclude' ? ' active-exclude' : ''}`}
+                  title={t.filters.exclude}
+                  onClick={() => toggleEnvironment(key, 'exclude')}
+                ><Icon svg={banIconRaw} size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Other */}
+      <div className="lp-filter-section">
+        <h4 className="lp-filter-title">{t.filters.other}</h4>
+        <div className="lp-filter-items">
+          {OTHER_FILTER_OPTIONS.map(({ value, labelKey }) => {
+            const label = t.filters[labelKey];
+            return (
+              <div key={value} className="lp-filter-row">
+                <span className="lp-filter-label">{label}</span>
+                <div className="lp-filter-btns">
+                  <button
+                    className={`btn-filter-state${localFilters.other[value] === 'include' ? ' active-include' : ''}`}
+                    title={t.filters.include}
+                    onClick={() => toggleOther(value, 'include')}
+                  ><Icon svg={checkIconRaw} size={14} /></button>
+                  <button
+                    className={`btn-filter-state${localFilters.other[value] === 'exclude' ? ' active-exclude' : ''}`}
+                    title={t.filters.exclude}
+                    onClick={() => toggleOther(value, 'exclude')}
+                  ><Icon svg={banIconRaw} size={14} /></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </MobileModal>
   );
 }

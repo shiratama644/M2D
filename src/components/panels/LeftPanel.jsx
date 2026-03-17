@@ -11,6 +11,10 @@ import cubeIconRaw from '../../assets/icons/cube.svg';
 import packageIconRaw from '../../assets/icons/package.svg';
 import blocksIconRaw from '../../assets/icons/blocks.svg';
 import bookmarkIconRaw from '../../assets/icons/bookmark.svg';
+import checkIconRaw from '../../assets/icons/check.svg';
+import banIconRaw from '../../assets/icons/ban.svg';
+import clientIconRaw from '../../assets/icons/client.svg';
+import serverIconRaw from '../../assets/icons/server.svg';
 
 import optimizationIconRaw from '../../assets/icons/tags/categories/optimization.svg';
 import technologyIconRaw from '../../assets/icons/tags/categories/technology.svg';
@@ -170,12 +174,14 @@ export default function LeftPanel({ onFilterChange }) {
                   <div className="lp-filter-btns">
                     <button
                       className={`btn-filter-state${filters.loaders[value] === 'include' ? ' active-include' : ''}`}
+                      title={t.filters.include}
                       onClick={() => toggleLoader(value, 'include')}
-                    >{t.filters.include}</button>
+                    ><Icon svg={checkIconRaw} size={14} /></button>
                     <button
                       className={`btn-filter-state${filters.loaders[value] === 'exclude' ? ' active-exclude' : ''}`}
+                      title={t.filters.exclude}
                       onClick={() => toggleLoader(value, 'exclude')}
-                    >{t.filters.exclude}</button>
+                    ><Icon svg={banIconRaw} size={14} /></button>
                   </div>
                 </div>
               );
@@ -199,12 +205,14 @@ export default function LeftPanel({ onFilterChange }) {
                   <div className="lp-filter-btns">
                     <button
                       className={`btn-filter-state${filters.categories[value] === 'include' ? ' active-include' : ''}`}
+                      title={t.filters.include}
                       onClick={() => toggleCategory(value, 'include')}
-                    >{t.filters.include}</button>
+                    ><Icon svg={checkIconRaw} size={14} /></button>
                     <button
                       className={`btn-filter-state${filters.categories[value] === 'exclude' ? ' active-exclude' : ''}`}
+                      title={t.filters.exclude}
                       onClick={() => toggleCategory(value, 'exclude')}
-                    >{t.filters.exclude}</button>
+                    ><Icon svg={banIconRaw} size={14} /></button>
                   </div>
                 </div>
               );
@@ -217,20 +225,25 @@ export default function LeftPanel({ onFilterChange }) {
           <h4 className="lp-filter-title">{t.filters.environment}</h4>
           <div className="lp-filter-items">
             {[
-              { key: 'client_side', label: t.filters.clientSide },
-              { key: 'server_side', label: t.filters.serverSide },
-            ].map(({ key, label }) => (
+              { key: 'client_side', label: t.filters.clientSide, iconSvg: clientIconRaw },
+              { key: 'server_side', label: t.filters.serverSide, iconSvg: serverIconRaw },
+            ].map(({ key, label, iconSvg }) => (
               <div key={key} className="lp-filter-row">
-                <span className="lp-filter-label">{label}</span>
+                <span className="lp-filter-label">
+                  <Icon svg={iconSvg} size={14} />
+                  {label}
+                </span>
                 <div className="lp-filter-btns">
                   <button
                     className={`btn-filter-state${filters.environment[key] === 'include' ? ' active-include' : ''}`}
+                    title={t.filters.include}
                     onClick={() => toggleEnvironment(key, 'include')}
-                  >{t.filters.include}</button>
+                  ><Icon svg={checkIconRaw} size={14} /></button>
                   <button
                     className={`btn-filter-state${filters.environment[key] === 'exclude' ? ' active-exclude' : ''}`}
+                    title={t.filters.exclude}
                     onClick={() => toggleEnvironment(key, 'exclude')}
-                  >{t.filters.exclude}</button>
+                  ><Icon svg={banIconRaw} size={14} /></button>
                 </div>
               </div>
             ))}
@@ -249,12 +262,14 @@ export default function LeftPanel({ onFilterChange }) {
                   <div className="lp-filter-btns">
                     <button
                       className={`btn-filter-state${filters.other[value] === 'include' ? ' active-include' : ''}`}
+                      title={t.filters.include}
                       onClick={() => toggleOther(value, 'include')}
-                    >{t.filters.include}</button>
+                    ><Icon svg={checkIconRaw} size={14} /></button>
                     <button
                       className={`btn-filter-state${filters.other[value] === 'exclude' ? ' active-exclude' : ''}`}
+                      title={t.filters.exclude}
                       onClick={() => toggleOther(value, 'exclude')}
-                    >{t.filters.exclude}</button>
+                    ><Icon svg={banIconRaw} size={14} /></button>
                   </div>
                 </div>
               );
