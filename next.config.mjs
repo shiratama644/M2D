@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack(config) {
+  webpack(config, { dev }) {
+    // Termux環境でのファイルシステムキャッシュエラーを抑制
+    if (dev) {
+      config.cache = false;
+    }
+
     // Handle *.svg imports as raw strings so the Icon component can render them inline.
     // Find any existing rule that would claim .svg files and exclude them so our rule wins.
     config.module.rules.forEach((rule) => {
