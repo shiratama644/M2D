@@ -670,6 +670,7 @@ input, select { font-family: inherit; }
 .mod-gallery-item { display: flex; flex-direction: column; border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--glass-border); transition: transform 0.15s; }
 .mod-gallery-item:hover { transform: scale(1.02); }
 .mod-gallery-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+.mod-gallery-img-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; }
 .rp-fav-mod-star { color: var(--text-muted); }
 .mod-detail-body-empty { color: var(--text-muted); font-size: 0.875rem; }
 

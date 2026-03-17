@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -121,6 +122,7 @@ export default function ModDetail() {
     id: null, lang: null, description: null, body: null,
   });
   const [translating, setTranslating] = useState(false);
+  const [iconError, setIconError] = useState({ id: null, errored: false });
   const galleryRef = useRef(null);
   const translationCache = useRef({});
   const translatingRef = useRef(false);
@@ -200,15 +202,23 @@ export default function ModDetail() {
     ? translatedContent.body
     : projectDetail.body;
 
+  // Use FALLBACK_ICON if the icon for the current mod failed to load.
+  // iconError tracks { id, errored } so the error auto-resets when the mod changes.
+  const iconSrc = (iconError.id === activeModId && iconError.errored)
+    ? FALLBACK_ICON
+    : (projectDetail.icon_url || mod.icon_url || FALLBACK_ICON);
+
   return (
     <div className="mod-detail">
       {/* Header */}
       <div className="mod-detail-header">
-        <img
-          src={projectDetail.icon_url || mod.icon_url || FALLBACK_ICON}
+        <Image
+          src={iconSrc}
           className="mod-detail-icon"
           alt="icon"
-          onError={(e) => { e.target.src = FALLBACK_ICON; }}
+          width={64}
+          height={64}
+          onError={() => setIconError({ id: activeModId, errored: true })}
         />
         <div className="mod-detail-header-info">
           <h2 className="mod-detail-title">{projectDetail.title || mod.title}</h2>
@@ -253,9 +263,18 @@ export default function ModDetail() {
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
             components={{
-              img: ({ src, alt, ...props }) => (
-                <img src={src} alt={alt} loading="lazy" style={{ maxWidth: '100%' }} {...props} />
-              ),
+              img: ({ src, alt }) => src ? (
+                <Image
+                  src={src}
+                  alt={alt || ''}
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  style={{ width: '100%', height: 'auto' }}
+                  loading="lazy"
+                  unoptimized
+                />
+              ) : null,
               a: ({ href, children, ...props }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
               ),
@@ -283,12 +302,16 @@ export default function ModDetail() {
                 rel="noopener noreferrer"
                 className="mod-gallery-item"
               >
-                <img
-                  src={item.url}
-                  alt={item.title || `Screenshot ${i + 1}`}
-                  loading="lazy"
-                  className="mod-gallery-img"
-                />
+                <div className="mod-gallery-img-wrapper">
+                  <Image
+                    src={item.url}
+                    alt={item.title || `Screenshot ${i + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                    loading="lazy"
+                  />
+                </div>
                 {item.title && <span className="mod-gallery-caption">{item.title}</span>}
               </a>
             ))}
