@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import CustomSelect from '../ui/CustomSelect';
 import Icon from '../ui/Icon';
+import MobileModal from '../ui/MobileModal';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../../lib/helpers';
 import { API } from '../../lib/api';
 import settingsIconRaw from '../../assets/icons/settings.svg';
-import xIconRaw from '../../assets/icons/x.svg';
 
 export default function SettingsModal() {
   const {
@@ -68,140 +68,127 @@ export default function SettingsModal() {
   };
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && setSettingsOpen(false)}
+    <MobileModal
+      title={t.settings.title}
+      titleIcon={settingsIconRaw}
+      onClose={() => setSettingsOpen(false)}
+      footer={<button onClick={() => setSettingsOpen(false)} className="btn-secondary">{t.settings.close}</button>}
     >
-      <div className="modal-container">
-        <div className="modal-header">
-          <h3 className="modal-title">
-            <Icon svg={settingsIconRaw} size={20} /> {t.settings.title}
-          </h3>
-          <button onClick={() => setSettingsOpen(false)} className="btn-close-modal">
-            <Icon svg={xIconRaw} size={20} />
-          </button>
+      {/* Mods */}
+      <div className="settings-category">
+        <h4 className="settings-category-title">{t.settings.categories.mods}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.modLoader.label}</span>
+            <span className="settings-description">{t.settings.modLoader.description}</span>
+          </div>
+          <CustomSelect
+            className="settings-select"
+            options={loaderOptions}
+            value={modLoader}
+            onChange={updateModLoader}
+          />
         </div>
-        <div className="modal-body">
-          {/* Mods */}
-          <div className="settings-category">
-            <h4 className="settings-category-title">{t.settings.categories.mods}</h4>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.modLoader.label}</span>
-                <span className="settings-description">{t.settings.modLoader.description}</span>
-              </div>
-              <CustomSelect
-                className="settings-select"
-                options={loaderOptions}
-                value={modLoader}
-                onChange={updateModLoader}
-              />
-            </div>
-            <div className="settings-row" style={{ marginBottom: 0 }}>
-              <div>
-                <span className="settings-label">{t.settings.modVersion.label}</span>
-                <span className="settings-description">{t.settings.modVersion.description}</span>
-              </div>
-              <CustomSelect
-                className="settings-select"
-                options={[
-                  ...(gameVersions.length > 0
-                    ? gameVersions.map((v) => ({ value: v.version, label: v.version }))
-                    : modVersion ? [{ value: modVersion, label: modVersion }] : []),
-                ]}
-                value={modVersion}
-                onChange={updateModVersion}
-              />
-            </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.modVersion.label}</span>
+            <span className="settings-description">{t.settings.modVersion.description}</span>
           </div>
-
-          {/* General */}
-          <div className="settings-category">
-            <h4 className="settings-category-title">{t.settings.categories.general}</h4>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.theme.label}</span>
-                <span className="settings-description">{t.settings.theme.description}</span>
-              </div>
-              <CustomSelect className="settings-select" options={themeOptions} value={theme} onChange={toggleTheme} />
-            </div>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.language.label}</span>
-                <span className="settings-description">{t.settings.language.description}</span>
-              </div>
-              <CustomSelect className="settings-select" options={languageOptions} value={language} onChange={toggleLanguage} />
-            </div>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.fastSearch.label}</span>
-                <span className="settings-description">{t.settings.fastSearch.description}</span>
-              </div>
-              <label className="toggle-switch">
-                <input type="checkbox" className="toggle-input" checked={fastSearch} onChange={(e) => toggleFastSearch(e.target.checked)} />
-                <div className="toggle-bg"><div className="toggle-knob" /></div>
-              </label>
-            </div>
-            <div className="settings-row" style={{ marginBottom: 0 }}>
-              <div>
-                <span className="settings-label">{t.settings.showCardDescription.label}</span>
-                <span className="settings-description">{t.settings.showCardDescription.description}</span>
-              </div>
-              <label className="toggle-switch">
-                <input type="checkbox" className="toggle-input" checked={showCardDescription} onChange={(e) => toggleShowCardDescription(e.target.checked)} />
-                <div className="toggle-bg"><div className="toggle-knob" /></div>
-              </label>
-            </div>
-          </div>
-
-          {/* Data */}
-          <div className="settings-category">
-            <h4 className="settings-category-title">{t.settings.categories.data}</h4>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.clearHistory}</span>
-                <span className="settings-description">{t.settings.clearHistoryDesc}</span>
-              </div>
-              <button onClick={handleClearHistory} className="btn-secondary settings-btn-sm">Clear</button>
-            </div>
-            <div className="settings-row settings-row-last">
-              <div>
-                <span className="settings-label">{t.settings.clearFavorites}</span>
-                <span className="settings-description">{t.settings.clearFavoritesDesc}</span>
-              </div>
-              <button onClick={handleClearFavorites} className="btn-secondary settings-btn-sm">Clear</button>
-            </div>
-          </div>
-
-          {/* Developer */}
-          <div className="settings-category" style={{ marginBottom: 0 }}>
-            <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
-            <div className="settings-row">
-              <div>
-                <span className="settings-label">{t.settings.debugMode.label}</span>
-                <span className="settings-description">{t.settings.debugMode.description}</span>
-              </div>
-              <label className="toggle-switch">
-                <input type="checkbox" className="toggle-input" checked={debugMode} onChange={(e) => toggleDebug(e.target.checked)} />
-                <div className="toggle-bg"><div className="toggle-knob" /></div>
-              </label>
-            </div>
-            <div className="settings-row" style={{ marginBottom: 0 }}>
-              <div>
-                <span className="settings-label">{t.settings.advancedConsole.label}</span>
-                <span className="settings-description">{t.settings.advancedConsole.description}</span>
-              </div>
-              <label className="toggle-switch">
-                <input type="checkbox" className="toggle-input" checked={advancedConsole} onChange={(e) => toggleAdvancedConsole(e.target.checked)} />
-                <div className="toggle-bg"><div className="toggle-knob" /></div>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button onClick={() => setSettingsOpen(false)} className="btn-secondary">{t.settings.close}</button>
+          <CustomSelect
+            className="settings-select"
+            options={[
+              ...(gameVersions.length > 0
+                ? gameVersions.map((v) => ({ value: v.version, label: v.version }))
+                : modVersion ? [{ value: modVersion, label: modVersion }] : []),
+            ]}
+            value={modVersion}
+            onChange={updateModVersion}
+          />
         </div>
       </div>
-    </div>
+
+      {/* General */}
+      <div className="settings-category">
+        <h4 className="settings-category-title">{t.settings.categories.general}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.theme.label}</span>
+            <span className="settings-description">{t.settings.theme.description}</span>
+          </div>
+          <CustomSelect className="settings-select" options={themeOptions} value={theme} onChange={toggleTheme} />
+        </div>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.language.label}</span>
+            <span className="settings-description">{t.settings.language.description}</span>
+          </div>
+          <CustomSelect className="settings-select" options={languageOptions} value={language} onChange={toggleLanguage} />
+        </div>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.fastSearch.label}</span>
+            <span className="settings-description">{t.settings.fastSearch.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={fastSearch} onChange={(e) => toggleFastSearch(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob" /></div>
+          </label>
+        </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.showCardDescription.label}</span>
+            <span className="settings-description">{t.settings.showCardDescription.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={showCardDescription} onChange={(e) => toggleShowCardDescription(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob" /></div>
+          </label>
+        </div>
+      </div>
+
+      {/* Data */}
+      <div className="settings-category">
+        <h4 className="settings-category-title">{t.settings.categories.data}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.clearHistory}</span>
+            <span className="settings-description">{t.settings.clearHistoryDesc}</span>
+          </div>
+          <button onClick={handleClearHistory} className="btn-secondary settings-btn-sm">Clear</button>
+        </div>
+        <div className="settings-row settings-row-last">
+          <div>
+            <span className="settings-label">{t.settings.clearFavorites}</span>
+            <span className="settings-description">{t.settings.clearFavoritesDesc}</span>
+          </div>
+          <button onClick={handleClearFavorites} className="btn-secondary settings-btn-sm">Clear</button>
+        </div>
+      </div>
+
+      {/* Developer */}
+      <div className="settings-category" style={{ marginBottom: 0 }}>
+        <h4 className="settings-category-title">{t.settings.categories.developerMode}</h4>
+        <div className="settings-row">
+          <div>
+            <span className="settings-label">{t.settings.debugMode.label}</span>
+            <span className="settings-description">{t.settings.debugMode.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={debugMode} onChange={(e) => toggleDebug(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob" /></div>
+          </label>
+        </div>
+        <div className="settings-row" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="settings-label">{t.settings.advancedConsole.label}</span>
+            <span className="settings-description">{t.settings.advancedConsole.description}</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" className="toggle-input" checked={advancedConsole} onChange={(e) => toggleAdvancedConsole(e.target.checked)} />
+            <div className="toggle-bg"><div className="toggle-knob" /></div>
+          </label>
+        </div>
+      </div>
+    </MobileModal>
   );
 }
