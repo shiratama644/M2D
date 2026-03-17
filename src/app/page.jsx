@@ -72,9 +72,9 @@ export default function HomePage() {
   const [depIssues, setDepIssues] = useState(null);
   const { handleCheckDeps } = useDependencyCheck(searchParams, resolveDownloadSettings, setDepIssues);
 
-  // Apply theme to <body>
+  // Apply theme to <html> (documentElement) so the blocking script and React stay in sync
   useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   // Prevent scroll when a modal/menu is open
