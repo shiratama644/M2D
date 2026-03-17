@@ -9,6 +9,7 @@ M2D
 ├── eslint.config.js
 ├── next.config.mjs
 ├── node_modules
+├── package-lock.json
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
@@ -436,6 +437,7 @@ M2D
     │   │   └── SideMenu.jsx
     │   ├── modals
     │   │   ├── DependencyModal.jsx
+    │   │   ├── FilterModal.jsx
     │   │   ├── SelectedModal.jsx
     │   │   └── SettingsModal.jsx
     │   ├── mods
