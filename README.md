@@ -1,32 +1,47 @@
 # M2D - Modrinth Mod Manager
 
-Minecraft Mod Downloader - rebuilt with React, Vite, and TailwindCSS v4.
+A powerful and fast tool to search, manage, and download Minecraft mods from Modrinth, rebuilt with Next.js 15 and Tailwind CSS 4.
 
 ## Tech Stack
 
-- **Node.js** + **pnpm**
-- **React 19** (UI framework)
-- **Vite** (bundler)
-- **TailwindCSS v4.2** (with `@tailwindcss/vite` plugin)
-- **Three.js** (animated background)
-- **JSZip** + **FileSaver.js** (ZIP download/import)
-- **Lucide React** (icons)
+- **Framework**: [Next.js](https://nextjs.org/) 15 (with **React 19**)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Package Manager**: **pnpm**
+- **Downloading**: **JSZip** + **FileSaver.js**
+- **Icons**: Custom local SVGs (loaded as raw assets)
 
-## Development
+## Development Setup
 
+1.  **Install dependencies**
+    ```bash
+    pnpm install
+    ```
+
+2.  **Run the development server**
+    ```bash
+    pnpm dev
+    ```
+    This project uses a special script that automatically optimizes the development environment for your system:
+    - 💻 **On PC (Windows, macOS, Linux):** It launches using **Turbopack**, Next.js's high-speed engine, for the fastest possible development experience.
+    - 📱 **On Termux (Android):** It automatically switches to **Webpack** and disables the file system cache to prevent errors common in the Termux environment.
+
+## Other Scripts
+
+#### Building for Production
 ```bash
-# Install dependencies
-pnpm install
-
-# Start dev server
-pnpm dev
-
-# Build for production
+# Create an optimized production build
 pnpm build
 
-# Preview production build
-pnpm preview
+# Run the production server
+pnpm start
 ```
+
+#### Generating Directory Tree
+To get an overview of the project structure, you can generate a `tree.txt` file.
+```bash
+pnpm tree
+```
+This command will create/update a file at `scripts/tree/tree.txt`, excluding large folders like `node_modules` and `.next`.
 
 ## Features
 
@@ -37,4 +52,4 @@ pnpm preview
 - 🔗 Dependency analysis (required/optional/conflict)
 - 📦 Download selected mods as ZIP
 - 🌙 Dark/Light theme toggle
-- 🐛 Floating debug console
+- 🐛 Floating debug console for easy mobile development

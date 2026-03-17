@@ -2,12 +2,11 @@
 const nextConfig = {
   webpack(config, { dev }) {
     // Termux環境でのファイルシステムキャッシュエラーを抑制
-    if (dev) {
+    if (dev && process.platform === 'android') {
       config.cache = false;
     }
 
-    // Handle *.svg imports as raw strings so the Icon component can render them inline.
-    // Find any existing rule that would claim .svg files and exclude them so our rule wins.
+    // Webpack環境 (スマホ等) 向け: .svg を raw string として扱う
     config.module.rules.forEach((rule) => {
       if (rule.test instanceof RegExp && rule.test.test('.svg')) {
         rule.exclude = /\.svg$/i;
@@ -29,8 +28,18 @@ const nextConfig = {
     return config;
   },
 
+  // Turbopack向けの設定
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+    },
+  },
+
   images: {
-    remotePatterns: [
+    remotePatterns:[
       { protocol: 'https', hostname: 'cdn.modrinth.com' },
       { protocol: 'https', hostname: '*.modrinth.com' },
     ],
