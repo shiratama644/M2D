@@ -12,7 +12,7 @@ async function fetchInitialMods() {
     url.searchParams.set('facets', JSON.stringify([['project_type:mod']]));
     url.searchParams.set('index', 'downloads');
     url.searchParams.set('limit', '12');
-    const res = await fetch(url.toString(), { next: { revalidate: 300 } });
+    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ['mods-home'] } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.hits ?? [];
