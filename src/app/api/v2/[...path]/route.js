@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 
 const MODRINTH_BASE = 'https://api.modrinth.com/v2';
 
-/** Upstream request timeout in milliseconds. */
-const UPSTREAM_TIMEOUT_MS = 8_000;
+/**
+ * Upstream request timeout in milliseconds.
+ * Override via the UPSTREAM_TIMEOUT_MS environment variable.
+ */
+const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS) || 8_000;
 
 /**
  * Determine an appropriate ISR revalidation window (in seconds) for each
@@ -13,7 +16,7 @@ const UPSTREAM_TIMEOUT_MS = 8_000;
  */
 function getRevalidate(pathStr) {
   if (pathStr.startsWith('tag/')) return 3600;         // Tags rarely change
-  if (pathStr.startsWith('version_file/')) return 60;  // Short TTL – hash is stable but allow eventual refresh
+  if (pathStr.startsWith('version_file/')) return 60;  // Hash-addressed → immutable result; 60 s TTL avoids redundant upstream hits
   if (pathStr.includes('/version')) return 300;         // Project versions
   if (pathStr.startsWith('project/')) return 300;       // Project details
   if (pathStr.startsWith('versions')) return 300;       // Bulk version fetch
@@ -26,12 +29,17 @@ function getRevalidate(pathStr) {
  * key.  Sorting the entries alphabetically means ?b=2&a=1 and ?a=1&b=2
  * resolve to the same upstream URL and share the same Next.js fetch-cache
  * entry, preventing unnecessary cache-key explosion on the search endpoint.
+ *
+ * Edge cases handled:
+ *   - Empty / missing search string → returns ''
+ *   - Bare '?' with no params → returns '' (avoids trailing '?')
+ *   - Duplicate keys are kept (sorted stably with their values)
  */
 function normalizeQueryString(search) {
   if (!search) return '';
   const params = new URLSearchParams(search);
-  const sorted = new URLSearchParams([...params.entries()].sort());
-  return `?${sorted.toString()}`;
+  const qs = new URLSearchParams([...params.entries()].sort()).toString();
+  return qs ? `?${qs}` : '';
 }
 
 export async function GET(request, { params }) {
