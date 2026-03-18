@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { API } from '../../lib/api';
+import { FALLBACK_ICON } from '../../lib/helpers';
 import Icon from '../ui/Icon';
 import checkCircleIconRaw from '../../assets/icons/check-circle.svg';
 import xIconRaw from '../../assets/icons/x.svg';
-
-const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
 export default function SelectedModal() {
   const {

@@ -1,13 +1,11 @@
 'use client';
 
-import { formatNum } from '../../lib/helpers';
+import { formatNum, FALLBACK_ICON } from '../../lib/helpers';
 import { useApp } from '../../context/AppContext';
 import Icon from '../ui/Icon';
 import userIconRaw from '../../assets/icons/user.svg';
 import downloadIconRaw from '../../assets/icons/download.svg';
 import starIconRaw from '../../assets/icons/star.svg';
-
-const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
 export default function ModCard({ mod, isDesktop }) {
   const {
