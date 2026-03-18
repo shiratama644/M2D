@@ -149,7 +149,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   theme: ls.get(THEME_KEY) || 'dark',
   toggleTheme: (value) => {
-    set({ theme: value, t: translations[value as keyof typeof translations] ?? get().t });
+    set({ theme: value });
     ls.set(THEME_KEY, value);
   },
 
@@ -198,10 +198,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
-  get t(): Translation {
-    const lang = ls.get(LANGUAGE_KEY) || 'en';
-    return translations[lang as keyof typeof translations] ?? translations.en;
-  },
+  // `t` is kept as reactive state so components can subscribe and re-render on language changes.
+  t: translations[(ls.get(LANGUAGE_KEY) || 'en') as keyof typeof translations] ?? translations.en,
 
   // ── UI State ──────────────────────────────────────────────────────────────
 
@@ -409,10 +407,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   debugLogs: [],
 
   addDebugLog: (level, msg) => {
+    const lang = get().language;
+    const locale = lang === 'ja' ? 'ja-JP' : 'en-US';
     const entry: DebugLog = {
       level,
       msg,
-      time: new Date().toLocaleTimeString('ja-JP', { hour12: false }),
+      time: new Date().toLocaleTimeString(locale, { hour12: false }),
     };
     set((state) => ({
       debugLogs: [...state.debugLogs.slice(-499), entry],

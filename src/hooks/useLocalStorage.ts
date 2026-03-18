@@ -10,6 +10,11 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T,
 ): [T, (value: T | ((prev: T) => T)) => void, () => void] {
+  /**
+   * Read from localStorage. Boolean-as-string values ('true'/'false') are
+   * returned as their boolean equivalents for convenience; all other values
+   * are JSON-parsed or returned as-is.
+   */
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') return initialValue;
     try {
