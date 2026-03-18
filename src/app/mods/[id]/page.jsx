@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   try {
     const res = await fetch(`${API_BASE}/project/${id}`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: [`project-${id}`] },
     });
     if (!res.ok) return { title: 'Mod Not Found | M2D' };
     const project = await res.json();
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
 
 async function fetchProject(id) {
   const res = await fetch(`${API_BASE}/project/${id}`, {
-    next: { revalidate: 300 },
+    next: { revalidate: 300, tags: [`project-${id}`] },
   });
   if (res.status === 404) notFound();
   if (!res.ok) throw new Error(`Failed to fetch project: ${res.status}`);
