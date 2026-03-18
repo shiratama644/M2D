@@ -89,6 +89,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
         const modMap = {};
         data.hits.forEach((mod) => { modMap[mod.project_id] = mod; });
         updateModDataMap(modMap);
+        setNoResults(false);
         setMods((prev) => [...prev, ...data.hits]);
         offsetRef.current = offset + data.hits.length;
         addDebugLog('log', `Loaded ${data.hits.length} mods (offset=${offset}, total≈${data.total_hits ?? '?'})`);
