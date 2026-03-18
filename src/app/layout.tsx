@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { AppProvider } from '../context/AppContext';
+import SessionProvider from '../components/auth/SessionProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -33,9 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <SessionProvider>
+          <AppProvider>
+            {children}
+          </AppProvider>
+        </SessionProvider>
       </body>
     </html>
   );
