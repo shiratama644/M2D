@@ -8,10 +8,10 @@ import rehypeRaw from 'rehype-raw';
 import { useApp } from '../../context/AppContext';
 import { API } from '../../lib/api';
 import Icon from '../ui/Icon';
+import { FALLBACK_ICON } from '../../lib/helpers';
 import externalLinkIconRaw from '../../assets/icons/arrow-up-right.svg';
 import imageIconRaw from '../../assets/icons/images.svg';
 
-const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 const MODRINTH_BASE = 'https://modrinth.com/mod/';
 const TRANSLATE_MAX = 500;
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';

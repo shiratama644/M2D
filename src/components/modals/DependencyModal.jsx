@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import Icon from '../ui/Icon';
+import { FALLBACK_ICON } from '../../lib/helpers';
 import gitGraphIconRaw from '../../assets/icons/git-graph.svg';
 import xIconRaw from '../../assets/icons/x.svg';
 import checkCircleIconRaw from '../../assets/icons/check-circle.svg';
 import infoIconRaw from '../../assets/icons/info.svg';
-
-const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
 export default function DependencyModal({ issues, onClose }) {
   const { selectedMods, addMod, removeMod, modDataMap } = useApp();

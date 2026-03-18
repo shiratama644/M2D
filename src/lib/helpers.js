@@ -58,6 +58,10 @@ export const ADVANCED_CONSOLE_KEY = 'mod_manager_advanced_console';
 
 export const MAX_SEARCH_HISTORY = 50;
 export const CONCURRENCY_LIMIT = 15;
+export const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
+
+// Debug log level → display colour mapping (shared by DebugPanel and RightPanel console)
+export const LEVEL_COLORS = { log: '#cbd5e1', info: '#7dd3fc', warn: '#facc15', error: '#f87171' };
 
 // ---------------------------------------------------------------------------
 // Loader / category / environment options
