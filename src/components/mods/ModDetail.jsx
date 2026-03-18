@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -232,6 +233,9 @@ export default function ModDetail() {
             >
               <Icon svg={externalLinkIconRaw} size={12} /> {t.rightPanel.openModrinth}
             </a>
+            <Link href={`/mods/${activeModId}`} className="btn-small" target="_blank">
+              <Icon svg={externalLinkIconRaw} size={12} /> {t.rightPanel.share}
+            </Link>
             {gallery.length > 0 && (
               <button className="btn-small" onClick={scrollToGallery}>
                 <Icon svg={imageIconRaw} size={12} /> {t.rightPanel.gallery} ({gallery.length})

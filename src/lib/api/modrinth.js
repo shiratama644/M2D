@@ -1,4 +1,4 @@
-import { request, API_BASE, ApiError } from './client';
+import { request, API_BASE, getApiBase, ApiError } from './client';
 
 /**
  * Typed wrappers around the Modrinth v2 REST API.
@@ -36,7 +36,7 @@ export const modrinth = {
    * Returns null when the hash is not found in Modrinth's database.
    */
   getVersionFile: async (hash, signal) => {
-    const url = `${API_BASE}/version_file/${hash}?algorithm=sha1`;
+    const url = `${getApiBase()}/version_file/${hash}?algorithm=sha1`;
     const res = await fetch(url, { signal });
     if (res.status === 404) return null;
     if (!res.ok) throw new ApiError(res.status, `Modrinth API error: HTTP ${res.status}`);
