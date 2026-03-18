@@ -43,8 +43,15 @@ function isRateLimited(ip) {
 // Scope validation
 // ---------------------------------------------------------------------------
 
-/** Slug characters accepted by Modrinth (alphanumeric, hyphens, underscores). */
-const SLUG_RE = /^[a-zA-Z0-9_-]+$/;
+/**
+ * Slug format accepted by Modrinth:
+ *   - 3–64 characters
+ *   - Alphanumeric, hyphens, and underscores
+ *   - Must not start or end with a hyphen
+ *
+ * Anchored first/last char to [a-zA-Z0-9_] avoids the need for a lookbehind.
+ */
+const SLUG_RE = /^[a-zA-Z0-9_][a-zA-Z0-9_-]{1,62}[a-zA-Z0-9_]$/;
 
 function isAllowedTag(tag) {
   if (typeof tag !== 'string') return false;
@@ -67,9 +74,23 @@ function isAllowedPath(path) {
 // ---------------------------------------------------------------------------
 
 export async function POST(request) {
-  // Rate-limit by forwarded IP (best-effort; not a hard security guarantee).
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  // ---------------------------------------------------------------------------
+  // IP extraction for rate limiting.
+  //
+  // Prefer x-real-ip (set by a trusted reverse proxy such as Nginx; the client
+  // cannot inject it).  Fall back to the LAST entry in x-forwarded-for, which
+  // is appended by the nearest trusted proxy and is harder for a client to
+  // spoof than the first/leftmost entry.  Clamp to 45 chars (max IPv6 length)
+  // so the map key can never be an arbitrarily large string.
+  // ---------------------------------------------------------------------------
+  const xRealIp = request.headers.get('x-real-ip');
+  const xForwardedFor = request.headers.get('x-forwarded-for');
+  const rawIp =
+    xRealIp?.trim() ||
+    xForwardedFor?.split(',').at(-1)?.trim() ||
+    'unknown';
+  const ip = rawIp.slice(0, 45);
+
   if (isRateLimited(ip)) {
     return NextResponse.json(
       { error: 'Too many requests' },
