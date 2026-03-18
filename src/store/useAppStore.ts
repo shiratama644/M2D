@@ -32,6 +32,9 @@ const ls = {
 // Module-level ref for dialog promise resolution (not a React ref).
 let dialogResolver: ((result?: boolean) => void) | null = null;
 
+// Locale mapping for debug log timestamps.
+const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
+
 export interface Profile {
   name: string;
   mods: string[];
@@ -408,7 +411,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addDebugLog: (level, msg) => {
     const lang = get().language;
-    const locale = lang === 'ja' ? 'ja-JP' : 'en-US';
+    const locale = LOCALE_MAP[lang] ?? 'en-US';
     const entry: DebugLog = {
       level,
       msg,

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const MODRINTH_BASE = 'https://api.modrinth.com/v2';
 
-const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS) || 8_000;
+const UPSTREAM_TIMEOUT_MS = parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '', 10) || 8_000;
 
 function getRevalidate(pathStr: string): number {
   if (pathStr.startsWith('tag/')) return 3600;
