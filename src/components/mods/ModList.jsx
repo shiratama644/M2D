@@ -46,16 +46,19 @@ function buildFacets(filters) {
 
 const LIMIT = 12;
 
-export default function ModList({ searchParams, isDesktop }) {
+export default function ModList({ searchParams, isDesktop, initialMods }) {
   const { updateModDataMap, addDebugLog } = useApp();
-  const [mods, setMods] = useState([]);
+  const [mods, setMods] = useState(() => initialMods ?? []);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
 
-  const offsetRef = useRef(0);
+  const offsetRef = useRef(initialMods?.length ?? 0);
   const loadingRef = useRef(false);
-  const hasMoreRef = useRef(true);
+  const hasMoreRef = useRef(initialMods != null ? initialMods.length >= LIMIT : true);
   const sentinelRef = useRef(null);
+
+  // Track unconsumed SSR data: null means "no server data, client must fetch".
+  const initialDataRef = useRef(initialMods != null ? initialMods : null);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -100,8 +103,23 @@ export default function ModList({ searchParams, isDesktop }) {
     }
   }, [searchParams, updateModDataMap, addDebugLog]);
 
-  // Reset on new search params then trigger first load
+  // Reset on new search params then trigger first load.
+  // On the very first render after SSR, consume the server-provided data
+  // instead of re-fetching it from the client.
   useEffect(() => {
+    if (initialDataRef.current !== null) {
+      // Consume the SSR snapshot: populate modDataMap and update refs.
+      const serverMods = initialDataRef.current;
+      initialDataRef.current = null;
+      const modMap = {};
+      serverMods.forEach((mod) => { modMap[mod.project_id] = mod; });
+      updateModDataMap(modMap);
+      // mods state is already initialised via useState(initialMods ?? []).
+      offsetRef.current = serverMods.length;
+      hasMoreRef.current = serverMods.length >= LIMIT;
+      if (serverMods.length === 0) setNoResults(true);
+      return;
+    }
     setMods([]);
     setNoResults(false);
     offsetRef.current = 0;
@@ -109,6 +127,7 @@ export default function ModList({ searchParams, isDesktop }) {
     hasMoreRef.current = true;
     const t = setTimeout(() => loadMore(), 0);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, loadMore]);
 
   // Infinite-scroll sentinel observer
