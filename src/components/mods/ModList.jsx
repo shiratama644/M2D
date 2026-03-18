@@ -56,6 +56,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(initialMods != null ? initialMods.length >= LIMIT : true);
   const sentinelRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   // Track unconsumed SSR data: null means "no server data, client must fetch".
   const initialDataRef = useRef(initialMods != null ? initialMods : null);
@@ -65,6 +66,13 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
 
     const p = searchParams;
     const offset = offsetRef.current;
+
+    // Cancel any previous in-flight request before starting a new one.
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     loadingRef.current = true;
     setLoading(true);
@@ -78,7 +86,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
     }
 
     try {
-      const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index);
+      const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index, controller.signal);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;
         if (offset === 0) {
@@ -96,11 +104,14 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
         if (data.hits.length < LIMIT) hasMoreRef.current = false;
       }
     } catch (err) {
+      if (err.name === 'AbortError') return;
       addDebugLog('error', `Search error: ${err}`);
       hasMoreRef.current = false;
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
     }
   }, [searchParams, updateModDataMap, addDebugLog]);
 
@@ -120,6 +131,10 @@ export default function ModList({ searchParams, isDesktop, initialMods }) {
       hasMoreRef.current = serverMods.length >= LIMIT;
       if (serverMods.length === 0) setNoResults(true);
       return;
+    }
+    // Abort any stale in-flight request before resetting for the new query.
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
     setMods([]);
     setNoResults(false);
