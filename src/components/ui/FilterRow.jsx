@@ -13,8 +13,9 @@ import banIconRaw from '../../assets/icons/ban.svg';
  *   iconSvg      – optional SVG string for the leading icon
  *   iconClassName – optional className for the leading icon
  *   state        – current filter state: 'include' | 'exclude' | null
- *   onToggle     – callback(newState: 'include'|'exclude') – toggling the same
- *                  state again (to deactivate) is handled here
+ *   onToggle     – callback(clickedState: 'include'|'exclude') called whenever a
+ *                  button is clicked; the parent component is responsible for
+ *                  toggling the state off when the same button is clicked twice
  */
 export default function FilterRow({ label, iconSvg, iconClassName, state, onToggle }) {
   const { t } = useApp();
