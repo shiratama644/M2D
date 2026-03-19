@@ -760,6 +760,14 @@ input, select { font-family: inherit; }
   border-radius: 50%;
   border: 3px solid var(--accent-color);
 }
+.account-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-solid);
+}
 .account-info {
   display: flex;
   flex-direction: column;

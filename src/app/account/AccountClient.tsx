@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { signIn, signOut } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import Icon from '../../components/ui/Icon';
 import discordIconRaw from '../../assets/icons/discord.svg';
+import userIconRaw from '../../assets/icons/user.svg';
 
 interface Props {
   session: Session | null;
@@ -13,6 +15,7 @@ interface Props {
 
 export default function AccountClient({ session }: Props) {
   const user = session?.user;
+  const [avatarError, setAvatarError] = useState(false);
 
   return (
     <div className="account-page-wrapper">
@@ -26,14 +29,19 @@ export default function AccountClient({ session }: Props) {
 
         {user ? (
           <div className="account-profile">
-            {user.image && (
+            {user.image && !avatarError ? (
               <Image
                 src={user.image}
                 alt={user.name ?? 'avatar'}
                 width={80}
                 height={80}
                 className="account-avatar"
+                onError={() => setAvatarError(true)}
               />
+            ) : (
+              <div className="account-avatar account-avatar-fallback">
+                <Icon svg={userIconRaw as string} size={48} />
+              </div>
             )}
             <div className="account-info">
               <div className="account-name">{user.name}</div>

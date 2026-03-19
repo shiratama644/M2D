@@ -5,7 +5,7 @@ import type { DefaultSession } from 'next-auth';
 declare module 'next-auth' {
   interface Session {
     user: {
-      id: string;
+      id?: string;
       discordId?: string;
     } & DefaultSession['user'];
   }
@@ -16,6 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      authorization: { params: { scope: 'identify email' } },
     }),
   ],
   pages: {
