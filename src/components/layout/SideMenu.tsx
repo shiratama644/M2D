@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
+import { cn } from '../../lib/utils';
 import { CONCURRENCY_LIMIT, asyncPool } from '../../lib/helpers';
 import { API } from '../../lib/api';
 import JSZip from 'jszip';
@@ -221,8 +223,25 @@ export default function SideMenu() {
 
   return (
     <>
-      {menuOpen && <div className="overlay" onClick={closeMenu} />}
-      <div className={`side-menu ${menuOpen ? 'open' : ''}`}>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="overlay"
+            onClick={closeMenu}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+      </AnimatePresence>
+      <motion.div
+        className={cn('side-menu', menuOpen && 'open')}
+        initial={false}
+        animate={{ x: menuOpen ? 0 : '-100%' }}
+        transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+        style={{ transform: undefined }}
+      >
         <div className="side-menu-header">
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Icon svg={bookmarkIconRaw} size={20} /> My Profiles
@@ -343,7 +362,7 @@ export default function SideMenu() {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }

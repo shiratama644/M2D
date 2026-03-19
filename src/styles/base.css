@@ -1,0 +1,22 @@
+/* --- Base & Reset --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  background-size: cover;
+  color: var(--text-main);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.5s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+body.modal-open { overflow: hidden; }
+
+button { cursor: pointer; border: none; background: none; font-family: inherit; outline: none; color: var(--text-main); }
+input, select { font-family: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
