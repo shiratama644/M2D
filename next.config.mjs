@@ -42,6 +42,7 @@ const nextConfig = {
     remotePatterns:[
       { protocol: 'https', hostname: 'cdn.modrinth.com' },
       { protocol: 'https', hostname: '*.modrinth.com' },
+      { protocol: 'https', hostname: 'cdn.discordapp.com' },
     ],
   },
 };

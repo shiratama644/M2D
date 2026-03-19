@@ -722,3 +722,145 @@ input, select { font-family: inherit; }
 
 /* Inline settings in right panel */
 .rp-inline-settings { display: flex; flex-direction: column; gap: 0; }
+
+/* Account Page */
+.account-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+.account-card {
+  background: var(--glass-bg-solid);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: var(--glass-shadow);
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.account-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.account-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.account-avatar {
+  border-radius: 50%;
+  border: 3px solid var(--accent-color);
+}
+.account-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-solid);
+}
+.account-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+}
+.account-name {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+.account-email {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.account-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  background: rgba(88, 101, 242, 0.15);
+  color: #7289da;
+  border: 1px solid rgba(88, 101, 242, 0.3);
+  border-radius: 9999px;
+  padding: 0.2rem 0.625rem;
+  font-weight: 600;
+}
+.account-section {
+  width: 100%;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.account-section h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.account-linked-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+.account-linked-status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+.account-linked-status.connected {
+  background: rgba(27, 217, 106, 0.15);
+  color: #1bd96a;
+  border: 1px solid rgba(27, 217, 106, 0.3);
+}
+.account-signout-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.account-signin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+.account-signin-desc {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.btn-discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #5865f2;
+  color: #fff;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.btn-discord:hover { background: #4752c4; }
