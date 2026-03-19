@@ -15,12 +15,12 @@ export default function Header() {
 
   return (
     <header className="header">
-      <button onClick={() => setMenuOpen(true)} className="icon-btn hamburger-btn">
+      <button onClick={() => setMenuOpen(true)} className="btn icon-only-btn hamburger-btn">
         <Icon svg={hamburgerIconRaw} size={24} />
       </button>
       <h1>Mod Manager</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-        <Link href="/account" className="icon-btn" aria-label="Account">
+        <Link href="/account" className="btn icon-only-btn" aria-label="Account">
           {session?.user?.image ? (
             <Image
               src={session.user.image}
@@ -35,7 +35,7 @@ export default function Header() {
         </Link>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="icon-btn header-settings-btn"
+          className="btn icon-only-btn header-settings-btn"
           aria-label="Settings"
         >
           <Icon svg={settingsIconRaw} size={24} />
