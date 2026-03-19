@@ -1,12 +1,30 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { cva } from 'class-variance-authority';
 import { formatNum, FALLBACK_ICON } from '../../lib/helpers';
 import { useApp } from '../../context/AppContext';
+import { cn } from '../../lib/utils';
 import Icon from '../ui/Icon';
 import userIconRaw from '../../assets/icons/user.svg';
 import downloadIconRaw from '../../assets/icons/download.svg';
 import starIconRaw from '../../assets/icons/star.svg';
 import type { ModHit } from '../../types/modrinth';
+
+const modCardVariants = cva('mod-card', {
+  variants: {
+    selected: { true: 'selected', false: '' },
+    active: { true: 'active', false: '' },
+  },
+  defaultVariants: { selected: false, active: false },
+});
+
+const favBtnVariants = cva('mod-favorite-btn', {
+  variants: {
+    favorited: { true: 'favorited', false: '' },
+  },
+  defaultVariants: { favorited: false },
+});
 
 interface ModCardProps {
   mod: ModHit;
@@ -41,9 +59,13 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
   };
 
   return (
-    <div
-      className={`mod-card ${isSelected ? 'selected' : ''} ${isActive && isDesktop ? 'active' : ''}`}
+    <motion.div
+      className={cn(modCardVariants({ selected: isSelected, active: isActive && isDesktop }))}
       onClick={handleCardClick}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      layout
     >
       <div className="mod-checkbox-wrapper">
         <input
@@ -71,12 +93,12 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
         )}
       </div>
       <button
-        className={`mod-favorite-btn ${isFavorite ? 'favorited' : ''}`}
+        className={cn(favBtnVariants({ favorited: isFavorite }))}
         onClick={handleFavoriteClick}
         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >
         <Icon svg={starIconRaw} size={14} />
       </button>
-    </div>
+    </motion.div>
   );
 }

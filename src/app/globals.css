@@ -1,1 +1,14 @@
-@import '../index.css';
+@import "tailwindcss";
+
+@import '../styles/variables.css';
+@import '../styles/base.css';
+@import '../styles/animations.css';
+@import '../styles/forms.css';
+@import '../styles/layout.css';
+@import '../styles/cards.css';
+@import '../styles/modals.css';
+@import '../styles/filters.css';
+@import '../styles/settings.css';
+@import '../styles/debug.css';
+@import '../styles/panels.css';
+@import '../styles/account.css';

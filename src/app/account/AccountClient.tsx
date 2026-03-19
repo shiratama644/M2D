@@ -6,6 +6,7 @@ import type { Session } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import Icon from '../../components/ui/Icon';
+import { Button } from '../../components/ui/button';
 import discordIconRaw from '../../assets/icons/discord.svg';
 import userIconRaw from '../../assets/icons/user.svg';
 
@@ -63,25 +64,26 @@ export default function AccountClient({ session }: Props) {
               </div>
             </div>
 
-            <button
+            <Button
+              variant="destructive"
               onClick={() => signOut({ callbackUrl: '/' })}
-              className="btn-danger account-signout-btn"
+              className="account-signout-btn w-full"
             >
               Sign Out
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="account-signin">
             <p className="account-signin-desc">
               Sign in with your Discord account to save preferences and sync your mod profiles.
             </p>
-            <button
+            <Button
+              variant="discord"
               onClick={() => signIn('discord', { callbackUrl: '/account' })}
-              className="btn-discord"
             >
               <Icon svg={discordIconRaw as string} size={20} />
               Sign in with Discord
-            </button>
+            </Button>
           </div>
         )}
       </div>
