@@ -54,8 +54,8 @@ This project uses a special script that automatically optimizes the development 
 - 📄 **[Vercel へのデプロイ](./docs/Vercel_Deployment.md)**  
   Next.js との親和性が高く、最も手軽にデプロイできます。
 
-- 📄 **[Cloudflare Pages へのデプロイ](./docs/CFPages_Deployment.md)**  
-  帯域幅が無制限（フェアユースポリシーあり）で、画像やファイルダウンロードを多用するサイトに適しています。
+- 📄 **[Cloudflare Workers へのデプロイ](./docs/CFPages_Deployment.md)**  
+  帯域幅が無制限（フェアユースポリシーあり）で、画像やファイルダウンロードを多用するサイトに適しています。`@opennextjs/cloudflare` を使用します。
 
 ---
 

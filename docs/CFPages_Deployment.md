@@ -1,6 +1,6 @@
-# Cloudflare Pages へのデプロイ手順
+# Cloudflare Workers へのデプロイ手順
 
-Cloudflare Pages は画像配信やファイルダウンロードを多用するサイトに適したホスティングサービスです。
+Cloudflare Workers は画像配信やファイルダウンロードを多用するサイトに適したホスティングサービスです。
 無料プランでも帯域幅が **無制限**（フェアユースポリシーあり）であり、Vercel と比べて大量のアクセスに対応しやすい利点があります。
 
 ## 必要なもの
@@ -11,15 +11,13 @@ Cloudflare Pages は画像配信やファイルダウンロードを多用する
 
 ---
 
-## Cloudflare Pages で Next.js を動かす仕組み
+## Cloudflare Workers で Next.js を動かす仕組み
 
-Cloudflare Pages では **`@cloudflare/next-on-pages`** アダプターを使って Next.js アプリを Cloudflare の Workers エッジランタイム上で動かします。
-このリポジトリに含まれる `wrangler.toml` および `next.config.mjs` は Cloudflare Pages 向けに設定済みです。
+Cloudflare Workers では **[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)** アダプターを使って Next.js アプリを Cloudflare Workers 上で動かします。
+このアダプターは Next.js の **Node.js ランタイムをネイティブにサポート**しており、各ルートに `export const runtime = 'edge'` を追加する必要はありません。
 
-> ⚠️ **非推奨のお知らせ**: `@cloudflare/next-on-pages` は Cloudflare により **非推奨（deprecated）** となりました。  
-> 現在 Cloudflare が公式に推奨するアダプターは **[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)** です。  
-> OpenNext アダプターは Next.js の **Node.js ランタイム**を Cloudflare Workers 上でネイティブにサポートしており、Edge ランタイムへの制限が不要になります。  
-> 新規プロジェクトでは `@opennextjs/cloudflare` の使用を強く推奨します。本ガイドは既存ユーザー向けに `@cloudflare/next-on-pages` の手順を記載していますが、将来的には OpenNext ベースのガイドに移行予定です。
+> **`@opennextjs/cloudflare` について**  
+> Cloudflare が現在公式に推奨するアダプターです。旧来の `@cloudflare/next-on-pages` と異なり、Edge ランタイム宣言なしで Next.js の全機能（API Routes、Server Actions、Middleware 等）を利用できます。
 
 ---
 
@@ -28,7 +26,7 @@ Cloudflare Pages では **`@cloudflare/next-on-pages`** アダプターを使っ
 ローカルで以下を実行してアダプターをインストールします。
 
 ```bash
-pnpm add -D @cloudflare/next-on-pages wrangler
+pnpm add -D @opennextjs/cloudflare wrangler
 ```
 
 ---
@@ -39,79 +37,57 @@ pnpm add -D @cloudflare/next-on-pages wrangler
 
 ```toml
 name = "m2d"
+main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
 ```
 
-> **`nodejs_compat` フラグについて**  
-> このプロジェクトの `/api/revalidate` エンドポイントは Node.js の `crypto` モジュール（`timingSafeEqual`）を使用しています。  
-> `nodejs_compat` フラグを有効にすることで、Cloudflare Workers 上でも Node.js 互換の API が利用できます。
+> **互換性フラグについて**  
+> `nodejs_compat`: Node.js 互換 API（`crypto`、`stream` 等）を Cloudflare Workers 上で利用するために必要です。  
+> `global_fetch_strictly_public`: fetch API のセキュリティポリシーを強化するために推奨されます。
 
 ---
 
-## 手順 3 — 各ルートにエッジランタイムを宣言する
-
-`next.config.mjs` への `experimental.runtime` オプションは Next.js v13.3 以降で削除されました。代わりに、**ルートファイルに**エッジランタイムを宣言してください。
-
-`@cloudflare/next-on-pages` を使う場合、`runtime = 'nodejs'` のルートはサポートされていません。Next.js App Router では、**ルートレイアウト（`app/layout.tsx`）に追加するだけでアプリ全体に Edge ランタイムが適用されます**。個別の API ルートなど一部だけ Edge ランタイムにしたい場合は、そのファイルにも追加してください。先頭に以下を追加します。
-
-```ts
-export const runtime = 'edge';
-```
-
-> **注意**: `@cloudflare/next-on-pages` は Node.js ランタイム（`runtime = 'nodejs'`）のルートを**サポートしていません**。  
-> `nodejs_compat` フラグにより Node.js 標準ライブラリは利用できますが、ランタイム宣言は `'edge'` にしてください。
-
----
-
-## 手順 4 — package.json にビルドスクリプトを追加する
+## 手順 3 — package.json にビルドスクリプトを追加する
 
 `package.json` の `scripts` に以下を追加します。
 
 ```json
 {
   "scripts": {
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "preview": "pnpm pages:build && wrangler pages dev"
+    "build:worker": "npx opennextjs-cloudflare build",
+    "deploy": "npx opennextjs-cloudflare build && wrangler deploy",
+    "preview": "npx opennextjs-cloudflare build && wrangler dev"
   }
 }
 ```
 
 ---
 
-## 手順 5 — Cloudflare Pages プロジェクトを作成する
+## 手順 4 — Cloudflare Workers プロジェクトを作成する
 
 1. [Cloudflare Dashboard](https://dash.cloudflare.com/) にサインイン。
 2. 左メニューの **"Workers & Pages"** を開く。
-3. **"Create application"** → **"Pages"** → **"Connect to Git"** を選択。
-4. GitHub アカウントと連携して M2D リポジトリを選択し **"Begin setup"** をクリック。
+3. **"Create"** → **"Workers"** → **"Create Worker"** を選択。
+4. Worker の名前（例: `m2d`）を入力して **"Deploy"** をクリック。
 
 ---
 
-## 手順 6 — ビルド設定を構成する
+## 手順 5 — 環境変数を設定する
 
-| 設定項目 | 値 |
-|---|---|
-| **Framework preset** | `Next.js` |
-| **Build command** | `pnpm run pages:build` |
-| **Build output directory** | `.vercel/output/static` |
-| **Node.js version** | `20` 以上 |
-
----
-
-## 手順 7 — 環境変数を設定する
-
-**"Environment variables (advanced)"** セクションで以下の変数をすべて追加します。
-**"Production"** と **"Preview"** の両方の環境に設定することを推奨します。
+**"Settings → Variables and Secrets"** セクションで以下の変数をすべて追加します。
 
 | 変数名 | 値 | 備考 |
 |---|---|---|
-| `DISCORD_CLIENT_ID` | Discord アプリのクライアント ID | 手順 9 を参照 |
-| `DISCORD_CLIENT_SECRET` | Discord アプリのクライアントシークレット | 手順 9 を参照 |
+| `DISCORD_CLIENT_ID` | Discord アプリのクライアント ID | 手順 7 を参照 |
+| `DISCORD_CLIENT_SECRET` | Discord アプリのクライアントシークレット | 手順 7 を参照 |
 | `AUTH_SECRET` | ランダムな 32 バイトの base64 文字列 | `openssl rand -base64 32` で生成 |
-| `AUTH_TRUST_HOST` | `true` | Cloudflare のエッジ経由で NextAuth が正常動作するために必須 |
-| `NEXT_PUBLIC_BASE_URL` | `https://your-project.pages.dev` | Pages が発行する URL（デプロイ後に確認可能） |
+| `AUTH_TRUST_HOST` | `true` | Cloudflare 経由で NextAuth が正常動作するために必須 |
+| `NEXT_PUBLIC_BASE_URL` | `https://your-worker-name.your-account.workers.dev` | Workers が発行する URL（デプロイ後に確認可能） |
 | `REVALIDATE_SECRET` | ランダムな 32 バイトの base64 文字列 | ISR のオンデマンド再検証を使う場合のみ必要 |
 
 > **ヒント**: シークレットの生成コマンド:
@@ -119,18 +95,37 @@ export const runtime = 'edge';
 > openssl rand -base64 32
 > ```
 
+または `wrangler.toml` の `[vars]` セクションに非シークレットな変数を記述し、シークレットは `wrangler secret put` コマンドで設定することもできます。
+
+```toml
+[vars]
+AUTH_TRUST_HOST = "true"
+NEXT_PUBLIC_BASE_URL = "https://your-worker-name.your-account.workers.dev"
+```
+
+```bash
+wrangler secret put DISCORD_CLIENT_SECRET
+wrangler secret put AUTH_SECRET
+wrangler secret put REVALIDATE_SECRET
+```
+
 ---
 
-## 手順 8 — デプロイを実行する
+## 手順 6 — デプロイを実行する
 
-**"Save and Deploy"** をクリックします。
-初回デプロイが完了すると、`https://your-project.pages.dev` のような URL が発行されます。
+以下のコマンドでビルドしてデプロイします。
 
-以降は main ブランチに push するたびに自動的に再デプロイされます。
+```bash
+pnpm deploy
+```
+
+または GitHub Actions などの CI/CD で自動デプロイする場合は、`wrangler.toml` と `CLOUDFLARE_API_TOKEN` シークレットを設定してください。
+
+初回デプロイが完了すると、`https://your-worker-name.your-account.workers.dev` のような URL が発行されます。
 
 ---
 
-## 手順 9 — Discord OAuth の設定
+## 手順 7 — Discord OAuth の設定
 
 ### Discord アプリケーションを作成する
 
@@ -140,17 +135,17 @@ export const runtime = 'edge';
 ### クライアント ID とシークレットを取得する
 
 1. 左サイドバーの **"OAuth2"** を開く。
-2. **"Client information"** の **Client ID** をコピー → Cloudflare Pages の `DISCORD_CLIENT_ID` に設定。
-3. **"Reset Secret"** をクリックして **Client Secret** をコピー → Cloudflare Pages の `DISCORD_CLIENT_SECRET` に設定。
+2. **"Client information"** の **Client ID** をコピー → `DISCORD_CLIENT_ID` に設定。
+3. **"Reset Secret"** をクリックして **Client Secret** をコピー → `DISCORD_CLIENT_SECRET` に設定。
 
 ### リダイレクト URI を追加する
 
 1. **"OAuth2"** セクションの **"Redirects"** までスクロール。
 2. **"Add Redirect"** をクリックして以下の URL を追加:
    ```
-   https://your-project.pages.dev/api/auth/callback/discord
+   https://your-worker-name.your-account.workers.dev/api/auth/callback/discord
    ```
-   （`your-project` はデプロイ後に発行された実際のサブドメインに置き換えてください）
+   （`your-worker-name.your-account.workers.dev` はデプロイ後に発行された実際の URL に置き換えてください）
 3. **"Save Changes"** をクリック。
 
 ### AUTH_SECRET を生成する
@@ -159,14 +154,14 @@ export const runtime = 'edge';
 openssl rand -base64 32
 ```
 
-出力された文字列を Cloudflare Pages の `AUTH_SECRET` に設定します。
+出力された文字列を `AUTH_SECRET` に設定します。
 
 ---
 
-## 手順 10 — カスタムドメインを設定する（任意）
+## 手順 8 — カスタムドメインを設定する（任意）
 
-1. Cloudflare Pages プロジェクトの **"Custom domains"** タブを開く。
-2. **"Set up a custom domain"** をクリックしてドメインを入力。
+1. Cloudflare Workers プロジェクトの **"Settings → Domains & Routes"** タブを開く。
+2. **"Add"** をクリックしてカスタムドメインを入力。
 3. Cloudflare でドメインを管理している場合は DNS が自動設定されます。外部レジストラの場合は表示された CNAME レコードを手動で設定してください。
 4. `NEXT_PUBLIC_BASE_URL` をカスタムドメインの URL に更新。
 5. Discord Developer Portal のリダイレクト URI にもカスタムドメインの URL を追加:
@@ -176,42 +171,41 @@ openssl rand -base64 32
 
 ---
 
-## Cloudflare Pages 無料プランの主な特徴
+## Cloudflare Workers 無料プランの主な特徴
 
 | 項目 | 無料プラン |
 |---|---|
 | 帯域幅 | **無制限**（フェアユースポリシーあり） |
-| リクエスト数 | Workers: 10 万リクエスト / 日 |
-| ビルド数 | 500 ビルド / 月 |
-| 同時ビルド | 1 |
+| リクエスト数 | 10 万リクエスト / 日 |
+| CPU 時間 | 10ms / リクエスト |
 | カスタムドメイン | 無制限 |
 
-> 画像やModファイルのダウンロードを多用するサイトでは、帯域無制限の Cloudflare Pages が特に有利です。
+> 画像やModファイルのダウンロードを多用するサイトでは、帯域無制限の Cloudflare Workers が特に有利です。
 
 ---
 
 ## トラブルシューティング
 
-### ビルドが `next-on-pages` のエラーで失敗する
+### ビルドが失敗する
 
-`@cloudflare/next-on-pages` は Node.js ランタイム（`runtime = 'nodejs'`）のルートをサポートしていません。
-各 API ルートファイル（`route.ts`）に以下の行が含まれているか確認してください。
+`@opennextjs/cloudflare` が正しくインストールされているか確認してください。
 
-```ts
-export const runtime = 'edge';
+```bash
+pnpm add -D @opennextjs/cloudflare wrangler
 ```
 
-### `timingSafeEqual` がエラーになる
-
-`wrangler.toml` の `compatibility_flags` に `"nodejs_compat"` が設定されているか確認してください。
-また、Cloudflare Pages ダッシュボードの **"Settings → Functions → Compatibility flags"** でも同じフラグが有効になっているか確認してください。
+また、`wrangler.toml` の `main` と `[assets]` の設定が正しいか確認してください。
 
 ### ログインが `http://localhost:3000` にリダイレクトされる
 
 `NEXT_PUBLIC_BASE_URL` が正しく設定されていない可能性があります。
-Cloudflare Pages の環境変数を確認し、デプロイ済みの URL（`https://your-project.pages.dev`）が設定されているか確認してください。
+環境変数を確認し、デプロイ済みの URL（例: `https://your-worker-name.your-account.workers.dev`）が設定されているか確認してください。
 
 ### デプロイ後に画像が表示されない
 
 `next.config.mjs` の `images.remotePatterns` に必要なホスト名が含まれているか確認してください。
 現在は `cdn.modrinth.com`、`*.modrinth.com`、`cdn.discordapp.com` が許可されています。
+
+### `AUTH_TRUST_HOST` を設定していないのに認証が失敗する
+
+Cloudflare Workers 経由でリクエストが転送されるため、NextAuth がホストを信頼するよう `AUTH_TRUST_HOST=true` を設定してください。
