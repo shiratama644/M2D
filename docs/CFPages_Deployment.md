@@ -16,6 +16,11 @@ Cloudflare Pages は画像配信やファイルダウンロードを多用する
 Cloudflare Pages では **`@cloudflare/next-on-pages`** アダプターを使って Next.js アプリを Cloudflare の Workers エッジランタイム上で動かします。
 このリポジトリに含まれる `wrangler.toml` および `next.config.mjs` は Cloudflare Pages 向けに設定済みです。
 
+> ⚠️ **非推奨のお知らせ**: `@cloudflare/next-on-pages` は Cloudflare により **非推奨（deprecated）** となりました。  
+> 現在 Cloudflare が公式に推奨するアダプターは **[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)** です。  
+> OpenNext アダプターは Next.js の **Node.js ランタイム**を Cloudflare Workers 上でネイティブにサポートしており、Edge ランタイムへの制限が不要になります。  
+> 新規プロジェクトでは `@opennextjs/cloudflare` の使用を強く推奨します。本ガイドは既存ユーザー向けに `@cloudflare/next-on-pages` の手順を記載していますが、将来的には OpenNext ベースのガイドに移行予定です。
+
 ---
 
 ## 手順 1 — 依存パッケージを追加する
@@ -45,23 +50,17 @@ pages_build_output_dir = ".vercel/output/static"
 
 ---
 
-## 手順 3 — next.config.mjs にエッジランタイム設定を追加する
+## 手順 3 — 各ルートにエッジランタイムを宣言する
 
-`next.config.mjs` に以下のオプションを追加します。
+`next.config.mjs` への `experimental.runtime` オプションは Next.js v13.3 以降で削除されました。代わりに、**各ルートファイルに個別に**エッジランタイムを宣言してください。
 
-```js
-const nextConfig = {
-  // 既存の設定はそのまま ...
+`@cloudflare/next-on-pages` を使う場合、`runtime = 'nodejs'` のルートはサポートされていません。Edge ランタイムで動作させる必要があるすべてのルートファイル（`app/layout.tsx`、`app/api/.../route.ts` など）の先頭に以下を追加します。
 
-  // Cloudflare Pages (next-on-pages) 向け
-  experimental: {
-    runtime: 'edge', // または各 route.ts ファイルで個別指定
-  },
-};
+```ts
+export const runtime = 'edge';
 ```
 
-> **注意**: 各 API ルートに `export const runtime = 'edge';` を個別に追加する方法でも構いません。  
-> `@cloudflare/next-on-pages` は Node.js ランタイム（`runtime = 'nodejs'`）のルートを**サポートしていません**。  
+> **注意**: `@cloudflare/next-on-pages` は Node.js ランタイム（`runtime = 'nodejs'`）のルートを**サポートしていません**。  
 > `nodejs_compat` フラグにより Node.js 標準ライブラリは利用できますが、ランタイム宣言は `'edge'` にしてください。
 
 ---
@@ -95,7 +94,7 @@ const nextConfig = {
 | 設定項目 | 値 |
 |---|---|
 | **Framework preset** | `Next.js` |
-| **Build command** | `npx @cloudflare/next-on-pages@1` |
+| **Build command** | `npm run pages:build` |
 | **Build output directory** | `.vercel/output/static` |
 | **Node.js version** | `20` 以上 |
 
