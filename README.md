@@ -47,6 +47,18 @@ This project uses a special script that automatically optimizes the development 
 - 💻 **On PC (Windows, macOS, Linux):** It launches using **Turbopack**, Next.js's high-speed engine, for the fastest possible development experience.
 - 📱 **On Termux (Android):** It automatically switches to **Webpack** and disables the file system cache to prevent errors common in the Termux environment.
 
+## Deployment
+
+デプロイ先ごとの詳細な手順は以下のガイドを参照してください。
+
+- 📄 **[Vercel へのデプロイ](./docs/Vercel_Deployment.md)**  
+  Next.js との親和性が高く、最も手軽にデプロイできます。
+
+- 📄 **[Cloudflare Pages へのデプロイ](./docs/CFPages_Deployment.md)**  
+  帯域幅が無制限（フェアユースポリシーあり）で、画像やファイルダウンロードを多用するサイトに適しています。
+
+---
+
 ## How to get Discord OAuth credentials
 
 M2D uses Discord OAuth for user login. Follow these steps to obtain the required credentials:
