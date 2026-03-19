@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import Icon from '../ui/Icon';
 import { FALLBACK_ICON } from '../../lib/helpers';
 import gitGraphIconRaw from '../../assets/icons/git-graph.svg';
@@ -18,6 +19,7 @@ interface DepModalProps {
 export default function DependencyModal({ issues, onClose }: DepModalProps) {
   const { selectedMods, addMod, removeMod, modDataMap } = useApp();
   const [activeTab, setActiveTab] = useState<'required' | 'optional' | 'conflict'>('required');
+  useScrollLock();
 
   if (!issues) return null;
 

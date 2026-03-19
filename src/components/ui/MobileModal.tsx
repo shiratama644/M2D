@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import Icon from './Icon';
 import xIconRaw from '../../assets/icons/x.svg';
 
@@ -17,6 +18,7 @@ interface MobileModalProps {
 }
 
 export default function MobileModal({ title, titleIcon, onClose, size, children, footer }: MobileModalProps) {
+  useScrollLock();
   if (typeof document === 'undefined') return null;
 
   const content = (

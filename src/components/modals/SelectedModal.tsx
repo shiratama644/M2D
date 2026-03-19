@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { API } from '../../lib/api';
 import { FALLBACK_ICON } from '../../lib/helpers';
 import Icon from '../ui/Icon';
@@ -14,6 +15,7 @@ export default function SelectedModal() {
     selectedMods, removeMod, modDataMap, updateModDataMap,
   } = useApp();
   const [loadingDetails, setLoadingDetails] = useState(false);
+  useScrollLock(selectedModalOpen);
 
   useEffect(() => {
     if (!selectedModalOpen) return;
