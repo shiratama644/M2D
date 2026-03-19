@@ -227,7 +227,7 @@ export default function SideMenu() {
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Icon svg={bookmarkIconRaw} size={20} /> My Profiles
           </span>
-          <button onClick={closeMenu} className="icon-btn side-menu-close-btn">
+          <button onClick={closeMenu} className="btn icon-only-btn side-menu-close-btn">
             <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
