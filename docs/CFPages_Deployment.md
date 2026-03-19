@@ -52,9 +52,9 @@ pages_build_output_dir = ".vercel/output/static"
 
 ## 手順 3 — 各ルートにエッジランタイムを宣言する
 
-`next.config.mjs` への `experimental.runtime` オプションは Next.js v13.3 以降で削除されました。代わりに、**各ルートファイルに個別に**エッジランタイムを宣言してください。
+`next.config.mjs` への `experimental.runtime` オプションは Next.js v13.3 以降で削除されました。代わりに、**ルートファイルに**エッジランタイムを宣言してください。
 
-`@cloudflare/next-on-pages` を使う場合、`runtime = 'nodejs'` のルートはサポートされていません。Edge ランタイムで動作させる必要があるすべてのルートファイル（`app/layout.tsx`、`app/api/.../route.ts` など）の先頭に以下を追加します。
+`@cloudflare/next-on-pages` を使う場合、`runtime = 'nodejs'` のルートはサポートされていません。Next.js App Router では、**ルートレイアウト（`app/layout.tsx`）に追加するだけでアプリ全体に Edge ランタイムが適用されます**。個別の API ルートなど一部だけ Edge ランタイムにしたい場合は、そのファイルにも追加してください。先頭に以下を追加します。
 
 ```ts
 export const runtime = 'edge';
@@ -94,7 +94,7 @@ export const runtime = 'edge';
 | 設定項目 | 値 |
 |---|---|
 | **Framework preset** | `Next.js` |
-| **Build command** | `npm run pages:build` |
+| **Build command** | `pnpm run pages:build` |
 | **Build output directory** | `.vercel/output/static` |
 | **Node.js version** | `20` 以上 |
 
