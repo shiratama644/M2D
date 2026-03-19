@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { Button } from './button';
 import Icon from './Icon';
 import circleAlertIconRaw from '../../assets/icons/circle-alert.svg';
@@ -12,6 +13,7 @@ import xIconRaw from '../../assets/icons/x.svg';
 export default function CustomDialog() {
   const { dialog, closeDialog } = useApp();
   const okRef = useRef<HTMLButtonElement | null>(null);
+  useScrollLock(!!dialog);
 
   useEffect(() => {
     if (dialog) okRef.current?.focus();

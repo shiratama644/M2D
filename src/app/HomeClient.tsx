@@ -75,10 +75,9 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   }, [theme]);
 
   useEffect(() => {
-    const isOpen =
-      menuOpen || selectedModalOpen || depModalOpen || settingsOpen || mobileDetailOpen || !!dialog;
+    const isOpen = menuOpen || mobileDetailOpen;
     document.body.classList.toggle('modal-open', isOpen);
-  }, [menuOpen, selectedModalOpen, depModalOpen, settingsOpen, mobileDetailOpen, dialog]);
+  }, [menuOpen, mobileDetailOpen]);
 
   const handleSearch = ({ query, sort, filters }: SearchParams) => {
     setSearchParams({ query, sort, filters });
