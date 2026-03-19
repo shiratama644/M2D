@@ -47,6 +47,78 @@ This project uses a special script that automatically optimizes the development 
 - 💻 **On PC (Windows, macOS, Linux):** It launches using **Turbopack**, Next.js's high-speed engine, for the fastest possible development experience.
 - 📱 **On Termux (Android):** It automatically switches to **Webpack** and disables the file system cache to prevent errors common in the Termux environment.
 
+## Deployment
+
+### Vercel (recommended)
+
+Vercel has first-class Next.js support and is the easiest way to deploy M2D for free.
+
+#### 1. Import the repository
+
+1. Go to [vercel.com](https://vercel.com/) and sign in (or sign up for a free account).
+2. Click **"Add New… → Project"** and import your GitHub repository.
+3. Vercel will automatically detect Next.js — no framework settings need to be changed.
+
+#### 2. Configure environment variables
+
+In the Vercel project settings, add the following **Environment Variables**:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `DISCORD_CLIENT_ID` | your Discord app client ID | |
+| `DISCORD_CLIENT_SECRET` | your Discord app client secret | |
+| `AUTH_SECRET` | random 32-byte base64 string | `openssl rand -base64 32` |
+| `AUTH_TRUST_HOST` | `true` | required for Vercel |
+| `NEXT_PUBLIC_BASE_URL` | `https://your-project.vercel.app` | your deployment URL |
+| `REVALIDATE_SECRET` | random 32-byte base64 string | only if you use on-demand ISR |
+
+#### 3. Update the Discord redirect URI
+
+In the [Discord Developer Portal](https://discord.com/developers/applications), add the production redirect URI:
+```
+https://your-project.vercel.app/api/auth/callback/discord
+```
+
+#### 4. Deploy
+
+Click **"Deploy"**. Subsequent pushes to the main branch will redeploy automatically.
+
+---
+
+### Cloudflare Pages (alternative)
+
+Cloudflare Pages also supports Next.js through their build system.
+
+#### 1. Create a new Pages project
+
+1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/) and navigate to **Workers & Pages**.
+2. Click **"Create application → Pages → Connect to Git"** and import your repository.
+
+#### 2. Configure the build settings
+
+| Setting | Value |
+|---|---|
+| **Framework preset** | Next.js |
+| **Build command** | `pnpm build` |
+| **Build output directory** | `.next` |
+| **Node.js version** | `20` (or later) |
+
+#### 3. Configure environment variables
+
+Add the same variables as the Vercel table above, replacing the base URL with your Pages URL:
+```
+NEXT_PUBLIC_BASE_URL=https://your-project.pages.dev
+```
+
+#### 4. Update the Discord redirect URI
+
+Add the production redirect URI in the Discord Developer Portal:
+```
+https://your-project.pages.dev/api/auth/callback/discord
+```
+
+---
+
 ## How to get Discord OAuth credentials
 
 M2D uses Discord OAuth for user login. Follow these steps to obtain the required credentials:
