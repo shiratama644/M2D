@@ -49,73 +49,13 @@ This project uses a special script that automatically optimizes the development 
 
 ## Deployment
 
-### Vercel (recommended)
+デプロイ先ごとの詳細な手順は以下のガイドを参照してください。
 
-Vercel has first-class Next.js support and is the easiest way to deploy M2D for free.
+- 📄 **[Vercel へのデプロイ](./docs/Vercel_Deployment.md)**  
+  Next.js との親和性が高く、最も手軽にデプロイできます。
 
-#### 1. Import the repository
-
-1. Go to [vercel.com](https://vercel.com/) and sign in (or sign up for a free account).
-2. Click **"Add New… → Project"** and import your GitHub repository.
-3. Vercel will automatically detect Next.js — no framework settings need to be changed.
-
-#### 2. Configure environment variables
-
-In the Vercel project settings, add the following **Environment Variables**:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `DISCORD_CLIENT_ID` | your Discord app client ID | |
-| `DISCORD_CLIENT_SECRET` | your Discord app client secret | |
-| `AUTH_SECRET` | random 32-byte base64 string | `openssl rand -base64 32` |
-| `AUTH_TRUST_HOST` | `true` | required for Vercel |
-| `NEXT_PUBLIC_BASE_URL` | `https://your-project.vercel.app` | your deployment URL |
-| `REVALIDATE_SECRET` | random 32-byte base64 string | only if you use on-demand ISR |
-
-#### 3. Update the Discord redirect URI
-
-In the [Discord Developer Portal](https://discord.com/developers/applications), add the production redirect URI:
-```
-https://your-project.vercel.app/api/auth/callback/discord
-```
-
-#### 4. Deploy
-
-Click **"Deploy"**. Subsequent pushes to the main branch will redeploy automatically.
-
----
-
-### Cloudflare Pages (alternative)
-
-Cloudflare Pages also supports Next.js through their build system.
-
-#### 1. Create a new Pages project
-
-1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/) and navigate to **Workers & Pages**.
-2. Click **"Create application → Pages → Connect to Git"** and import your repository.
-
-#### 2. Configure the build settings
-
-| Setting | Value |
-|---|---|
-| **Framework preset** | Next.js |
-| **Build command** | `pnpm build` |
-| **Build output directory** | `.next` |
-| **Node.js version** | `20` (or later) |
-
-#### 3. Configure environment variables
-
-Add the same variables as the Vercel table above, replacing the base URL with your Pages URL:
-```
-NEXT_PUBLIC_BASE_URL=https://your-project.pages.dev
-```
-
-#### 4. Update the Discord redirect URI
-
-Add the production redirect URI in the Discord Developer Portal:
-```
-https://your-project.pages.dev/api/auth/callback/discord
-```
+- 📄 **[Cloudflare Pages へのデプロイ](./docs/CFPages_Deployment.md)**  
+  帯域幅が無制限（フェアユースポリシーあり）で、画像やファイルダウンロードを多用するサイトに適しています。
 
 ---
 
