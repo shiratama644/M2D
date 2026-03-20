@@ -55,6 +55,7 @@ export const FAVORITES_KEY = 'mod_manager_favorites';
 export const SEARCH_HISTORY_KEY = 'mod_manager_search_history';
 export const SHOW_CARD_DESCRIPTION_KEY = 'mod_manager_show_card_description';
 export const ADVANCED_CONSOLE_KEY = 'mod_manager_advanced_console';
+export const DISCOVER_TYPE_KEY = 'mod_manager_discover_type';
 
 // ---------------------------------------------------------------------------
 // App-wide constants

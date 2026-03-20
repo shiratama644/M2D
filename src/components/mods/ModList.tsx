@@ -15,8 +15,8 @@ interface SearchFilters {
   version?: string;
 }
 
-function buildFacets(filters: SearchFilters | null | undefined): string[][] {
-  const facets: string[][] = [['project_type:mod']];
+function buildFacets(filters: SearchFilters | null | undefined, projectType: string): string[][] {
+  const facets: string[][] = [[`project_type:${projectType}`]];
   if (!filters) return facets;
 
   const included = Object.entries(filters.loaders || {})
@@ -63,7 +63,7 @@ interface ModListProps {
 }
 
 export default function ModList({ searchParams, isDesktop, initialMods }: ModListProps) {
-  const { updateModDataMap, addDebugLog } = useApp();
+  const { updateModDataMap, addDebugLog, discoverType } = useApp();
   const [mods, setMods] = useState<ModHit[]>(() => initialMods ?? []);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
@@ -91,7 +91,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     loadingRef.current = true;
     setLoading(true);
 
-    const facets = buildFacets(p.filters);
+    const facets = buildFacets(p.filters, discoverType);
     let index: string;
     if (!p.sort || p.sort === 'relevance') {
       index = (p.query || '').trim() === '' ? 'downloads' : 'relevance';
@@ -127,7 +127,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
         setLoading(false);
       }
     }
-  }, [searchParams, updateModDataMap, addDebugLog]);
+  }, [searchParams, discoverType, updateModDataMap, addDebugLog]);
 
   useEffect(() => {
     if (initialDataRef.current !== null) {

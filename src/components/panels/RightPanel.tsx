@@ -54,6 +54,7 @@ export default function RightPanel({ onHistorySearch }: RightPanelProps) {
             title={label}
           >
             <Icon svg={icon} size={16} />
+            <span className="rp-tab-label">{label}</span>
           </button>
         ))}
       </div>
