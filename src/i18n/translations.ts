@@ -97,6 +97,13 @@ const translations = {
       translate: 'Translate',
       translated: 'Translated',
     },
+    discover: {
+      title: 'Discover',
+      mod: 'Mod',
+      modpack: 'Modpack',
+      texture: 'Texture',
+      shader: 'Shader',
+    },
     history: {
       clear: 'Clear All',
       noHistory: 'No search history.',
@@ -204,6 +211,13 @@ const translations = {
       translating: '翻訳中...',
       translate: '翻訳',
       translated: '翻訳済み',
+    },
+    discover: {
+      title: 'Discover',
+      mod: 'Mod',
+      modpack: 'Modpack',
+      texture: 'テクスチャ',
+      shader: 'シェーダー',
     },
     history: {
       clear: 'すべて削除',

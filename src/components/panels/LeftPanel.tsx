@@ -7,7 +7,14 @@ import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
+import Icon from '../ui/Icon';
 import type { SearchParams } from '../../hooks/useDependencyCheck';
+import type { DiscoverType } from '../../store/useAppStore';
+
+import cubeIconRaw from '../../assets/icons/cube.svg';
+import packageIconRaw from '../../assets/icons/package.svg';
+import imageIconRaw from '../../assets/icons/image.svg';
+import sparklesIconRaw from '../../assets/icons/sparkles.svg';
 
 interface LeftPanelProps {
   onFilterChange: (filters: SearchParams['filters']) => void;
@@ -26,7 +33,7 @@ function makeInitialFilters(modVersion: string): Filters {
 }
 
 export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
-  const { t, modVersion, updateModVersion } = useApp();
+  const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
   const gameVersions = useGameVersions();
   const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion));
 
@@ -35,6 +42,13 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
     setPrevModVersion(modVersion);
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
   }
+
+  const DISCOVER_OPTIONS: Array<{ type: DiscoverType; label: string; icon: string }> = [
+    { type: 'mod', label: t.discover.mod, icon: cubeIconRaw },
+    { type: 'modpack', label: t.discover.modpack, icon: packageIconRaw },
+    { type: 'resourcepack', label: t.discover.texture, icon: imageIconRaw },
+    { type: 'shader', label: t.discover.shader, icon: sparklesIconRaw },
+  ];
 
   const emit = (newFilters: Filters) => {
     setFilters(newFilters);
@@ -71,6 +85,21 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
 
   return (
     <div className="left-panel">
+      <div className="lp-discover-section">
+        <h4 className="lp-filter-title">{t.discover.title}</h4>
+        <div className="lp-discover-btns">
+          {DISCOVER_OPTIONS.map(({ type, label, icon }) => (
+            <button
+              key={type}
+              className={`lp-discover-btn${discoverType === type ? ' active' : ''}`}
+              onClick={() => setDiscoverType(type)}
+            >
+              <Icon svg={icon} size={14} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="left-panel-filters">
       <div className="lp-filter-section">
         <h4 className="lp-filter-title">{t.filters.version}</h4>

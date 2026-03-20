@@ -14,6 +14,7 @@ import {
   SEARCH_HISTORY_KEY,
   SHOW_CARD_DESCRIPTION_KEY,
   ADVANCED_CONSOLE_KEY,
+  DISCOVER_TYPE_KEY,
   MAX_SEARCH_HISTORY,
 } from '../lib/helpers';
 
@@ -34,6 +35,8 @@ let dialogResolver: ((result?: boolean) => void) | null = null;
 
 // Locale mapping for debug log timestamps.
 const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
+
+export type DiscoverType = 'mod' | 'modpack' | 'resourcepack' | 'shader';
 
 export interface Profile {
   name: string;
@@ -126,6 +129,11 @@ export interface AppState {
   removeMod: (id: string) => void;
   replaceSelectedMods: (mods: string[]) => void;
 
+  // Discover type (project type selector)
+  discoverType: DiscoverType;
+  setDiscoverType: (type: DiscoverType) => void;
+  selectedModsByType: Record<DiscoverType, Set<string>>;
+
   // Mod data map (id -> mod metadata)
   modDataMap: Record<string, unknown>;
   updateModDataMap: (updates: Record<string, unknown>) => void;
@@ -199,9 +207,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     ls.set(VERSION_KEY, value);
   },
 
-  // ── Derived ───────────────────────────────────────────────────────────────
+  // ── Discover type ─────────────────────────────────────────────────────────
 
-  // `t` is kept as reactive state so components can subscribe and re-render on language changes.
+  discoverType: (ls.get(DISCOVER_TYPE_KEY) as DiscoverType | null) || 'mod',
+
+  selectedModsByType: {
+    mod: new Set<string>(),
+    modpack: new Set<string>(),
+    resourcepack: new Set<string>(),
+    shader: new Set<string>(),
+  },
+
+  setDiscoverType: (type) => {
+    set((state) => ({
+      discoverType: type,
+      selectedMods: state.selectedModsByType[type],
+    }));
+    ls.set(DISCOVER_TYPE_KEY, type);
+  },
+
+  // ── Derived ───────────────────────────────────────────────────────────────
   t: translations[(ls.get(LANGUAGE_KEY) || 'en') as keyof typeof translations] ?? translations.en,
 
   // ── UI State ──────────────────────────────────────────────────────────────
@@ -317,26 +342,47 @@ export const useAppStore = create<AppState>((set, get) => ({
       const next = new Set(state.selectedMods);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return { selectedMods: next };
+      return {
+        selectedMods: next,
+        selectedModsByType: { ...state.selectedModsByType, [state.discoverType]: next },
+      };
     });
   },
 
-  clearMods: () => set({ selectedMods: new Set<string>() }),
+  clearMods: () => set((state) => ({
+    selectedMods: new Set<string>(),
+    selectedModsByType: { ...state.selectedModsByType, [state.discoverType]: new Set<string>() },
+  })),
 
   addMod: (id) => {
-    set((state) => ({ selectedMods: new Set([...state.selectedMods, id]) }));
+    set((state) => {
+      const next = new Set([...state.selectedMods, id]);
+      return {
+        selectedMods: next,
+        selectedModsByType: { ...state.selectedModsByType, [state.discoverType]: next },
+      };
+    });
   },
 
   removeMod: (id) => {
     set((state) => {
       const next = new Set(state.selectedMods);
       next.delete(id);
-      return { selectedMods: next };
+      return {
+        selectedMods: next,
+        selectedModsByType: { ...state.selectedModsByType, [state.discoverType]: next },
+      };
     });
   },
 
   replaceSelectedMods: (mods) => {
-    set({ selectedMods: new Set(mods) });
+    set((state) => {
+      const next = new Set(mods);
+      return {
+        selectedMods: next,
+        selectedModsByType: { ...state.selectedModsByType, [state.discoverType]: next },
+      };
+    });
   },
 
   // ── Mod data map ──────────────────────────────────────────────────────────
