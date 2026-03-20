@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
 import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
-import { useCategories, useCategoryGroups } from '../../hooks/useCategories';
+import { useCategoryGroups } from '../../hooks/useCategories';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import MobileModal from '../ui/MobileModal';
@@ -25,7 +25,7 @@ interface FilterModalProps {
 export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod' }: FilterModalProps) {
   const { t, modVersion, updateModVersion } = useApp();
   const gameVersions = useGameVersions();
-  const categories = useCategories(projectType);
+  const categoryGroups = useCategoryGroups(projectType);
   const [localFilters, setLocalFilters] = useState(filters);
 
   const emit = (newFilters: typeof localFilters) => {
@@ -115,11 +115,11 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
         </div>
       </div>
 
-      {categories.length > 0 && (
-        <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-          <h4 className="lp-filter-title">{t.filters.categories}</h4>
+      {categoryGroups.length > 0 && categoryGroups.map(({ header, items }) => (
+        <div className="lp-filter-section" key={header} style={{ marginBottom: '1rem' }}>
+          <h4 className="lp-filter-title">{getCategoryHeaderLabel(header, t.filters.categoryHeaders)}</h4>
           <div className="lp-filter-items">
-            {categories.map(({ name }) => (
+            {items.map(({ name }) => (
               <FilterRow
                 key={name}
                 label={getCategoryLabel(name, t.categories)}
@@ -131,7 +131,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
             ))}
           </div>
         </div>
-      )}
+      ))}
 
       <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
         <h4 className="lp-filter-title">{t.filters.environment}</h4>

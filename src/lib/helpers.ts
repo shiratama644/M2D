@@ -149,11 +149,16 @@ export function getCategoryHeaderLabel(
   const direct = categoryHeaders[header];
   if (typeof direct === 'string') return direct;
   // Try camelCase lookup (e.g. 'performance_impact' -> 'performanceImpact')
-  const camel = header.replace(/[-_]([a-z0-9])/gi, (_, c: string) => c.toUpperCase());
+  const camel = header.replace(/[-_]([a-z0-9])/g, (_, c: string) => c.toUpperCase());
   const camelVal = categoryHeaders[camel];
   if (typeof camelVal === 'string') return camelVal;
   return formatCategoryName(header);
 }
+
+/**
+ * Returns the localised label for a category name.
+ * Falls back to `formatCategoryName(name)` when no translation exists.
+ */
 export function getCategoryLabel(
   name: string,
   categories: Record<string, unknown>,

@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { LOADER_OPTIONS, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
 import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
-import { useCategories, useCategoryGroups } from '../../hooks/useCategories';
+import { useCategoryGroups } from '../../hooks/useCategories';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import Icon from '../ui/Icon';
@@ -36,7 +36,6 @@ function makeInitialFilters(modVersion: string): Filters {
 export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
   const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
   const gameVersions = useGameVersions();
-  const categories = useCategories(discoverType);
   const categoryGroups = useCategoryGroups(discoverType);
   const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion));
 
