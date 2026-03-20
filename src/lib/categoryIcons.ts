@@ -49,6 +49,8 @@ import reflectionsIconRaw from '../assets/icons/tags/categories/reflections.svg'
 import bloomIconRaw from '../assets/icons/tags/categories/bloom.svg';
 import coloredLightingIconRaw from '../assets/icons/tags/categories/colored-lighting.svg';
 import coreShadersIconRaw from '../assets/icons/tags/categories/core-shaders.svg';
+import potatoIconRaw from '../assets/icons/tags/categories/potato.svg';
+import fancyIconRaw from '../assets/icons/tags/categories/crown.svg';
 import highIconRaw from '../assets/icons/tags/categories/high.svg';
 import mediumIconRaw from '../assets/icons/tags/categories/medium.svg';
 import lowIconRaw from '../assets/icons/tags/categories/low.svg';
@@ -106,6 +108,8 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   bloom: bloomIconRaw,
   'colored-lighting': coloredLightingIconRaw,
   'core-shaders': coreShadersIconRaw,
+  potato: potatoIconRaw,
+  fancy: fancyIconRaw,
   high: highIconRaw,
   medium: mediumIconRaw,
   low: lowIconRaw,
