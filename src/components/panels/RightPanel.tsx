@@ -45,7 +45,7 @@ export default function RightPanel({ onHistorySearch }: RightPanelProps) {
 
   return (
     <div className="right-panel">
-      <div className="right-panel-tabs">
+      <div className="rp-tabs">
         {tabs.map(({ id, icon, label }) => (
           <button
             key={id}
@@ -58,29 +58,29 @@ export default function RightPanel({ onHistorySearch }: RightPanelProps) {
         ))}
       </div>
 
-      <div className="right-panel-body">
+      <div className="rp-panel-body">
         {tab === 'description' && <ModDetail />}
 
         {tab === 'history' && (
-          <div className="rp-section">
-            <div className="rp-section-header">
+          <div className="rp-history">
+            <div className="rp-history-header">
               <span>{t.rightPanel.history}</span>
               <button onClick={clearSearchHistory} className="btn-text-sm">{t.history.clear}</button>
             </div>
             {searchHistory.length === 0 ? (
               <div className="rp-empty">{t.history.noHistory}</div>
             ) : (
-              <div className="history-list">
+              <div className="rp-history-list">
                 {searchHistory.map((q) => (
-                  <div key={q} className="history-item">
+                  <div key={q} className="rp-history-item">
                     <button
-                      className="history-query-btn"
+                      className="rp-history-query"
                       onClick={() => onHistorySearch(q)}
                     >
                       {q}
                     </button>
                     <button
-                      className="history-remove-btn"
+                      className="rp-history-del"
                       onClick={() => removeSearchHistory(q)}
                     >
                       ✕

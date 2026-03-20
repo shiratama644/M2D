@@ -71,6 +71,7 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
 
   return (
     <div className="left-panel">
+      <div className="left-panel-filters">
       <div className="lp-filter-section">
         <h4 className="lp-filter-title">{t.filters.version}</h4>
         <CustomSelect
@@ -144,6 +145,7 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
             />
           ))}
         </div>
+      </div>
       </div>
     </div>
   );
