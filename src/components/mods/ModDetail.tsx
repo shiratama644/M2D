@@ -278,6 +278,17 @@ export default function ModDetail() {
               a: ({ href, children, ...props }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
               ),
+              iframe: ({ src, title, ...props }) => (
+                <span className="mod-detail-iframe-wrapper">
+                  <iframe
+                    src={src}
+                    title={title || 'Embedded video'}
+                    allowFullScreen
+                    loading="lazy"
+                    {...props}
+                  />
+                </span>
+              ),
             }}
           >
             {displayBody}

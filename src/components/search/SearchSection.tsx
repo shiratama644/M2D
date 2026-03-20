@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 import CustomSelect from '../ui/CustomSelect';
 import Icon from '../ui/Icon';
 import FilterModal from '../modals/FilterModal';
-import { LOADER_OPTIONS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../../lib/helpers';
+import { LOADER_OPTIONS, OTHER_FILTER_OPTIONS } from '../../lib/helpers';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
 import type { SearchParams } from '../../hooks/useDependencyCheck';
 
@@ -13,14 +13,13 @@ import searchIconRaw from '../../assets/icons/search.svg';
 import filterIconRaw from '../../assets/icons/filter.svg';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>;
-const INITIAL_CATEGORY_STATE = Object.fromEntries(CATEGORY_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>;
 const INITIAL_ENVIRONMENT_STATE = { client_side: null as string | null, server_side: null as string | null };
 const INITIAL_OTHER_STATE = Object.fromEntries(OTHER_FILTER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>;
 
 function makeInitialFilters(modVersion: string): SearchParams['filters'] {
   return {
     loaders: INITIAL_LOADER_STATE,
-    categories: INITIAL_CATEGORY_STATE,
+    categories: {},
     environment: INITIAL_ENVIRONMENT_STATE,
     other: INITIAL_OTHER_STATE,
     version: modVersion || '',
@@ -42,7 +41,7 @@ interface SearchSectionProps {
 }
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
-  const { fastSearch, t, modVersion } = useApp();
+  const { fastSearch, t, modVersion, discoverType } = useApp();
   const isDesktop = useIsDesktop();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
@@ -54,6 +53,13 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
   if (prevModVersion !== modVersion) {
     setPrevModVersion(modVersion);
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
+  }
+
+  // Reset category filters when project type changes
+  const [prevDiscoverType, setPrevDiscoverType] = useState(discoverType);
+  if (prevDiscoverType !== discoverType) {
+    setPrevDiscoverType(discoverType);
+    setFilters((prev) => ({ ...prev, categories: {} }));
   }
 
   const sortOptions = [
@@ -163,6 +169,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           onClose={() => setFilterOpen(false)}
+          projectType={discoverType}
         />
       )}
     </section>

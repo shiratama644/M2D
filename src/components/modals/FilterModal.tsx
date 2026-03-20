@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../../lib/helpers';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel } from '../../lib/helpers';
 import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
+import { useCategories } from '../../hooks/useCategories';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import MobileModal from '../ui/MobileModal';
@@ -18,11 +19,13 @@ interface FilterModalProps {
   filters: SearchParams['filters'];
   onFiltersChange: (filters: SearchParams['filters']) => void;
   onClose: () => void;
+  projectType?: string;
 }
 
-export default function FilterModal({ filters, onFiltersChange, onClose }: FilterModalProps) {
+export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod' }: FilterModalProps) {
   const { t, modVersion, updateModVersion } = useApp();
   const gameVersions = useGameVersions();
+  const categories = useCategories(projectType);
   const [localFilters, setLocalFilters] = useState(filters);
 
   const emit = (newFilters: typeof localFilters) => {
@@ -112,21 +115,23 @@ export default function FilterModal({ filters, onFiltersChange, onClose }: Filte
         </div>
       </div>
 
-      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-        <h4 className="lp-filter-title">{t.filters.categories}</h4>
-        <div className="lp-filter-items">
-          {CATEGORY_OPTIONS.map(({ value, labelKey }) => (
-            <FilterRow
-              key={value}
-              label={t.categories[labelKey as keyof typeof t.categories]}
-              iconSvg={CATEGORY_ICON_MAP[value]}
-              iconClassName="category-icon-img"
-              state={((localFilters.categories ?? {})[value] ?? null) as string | null}
-              onToggle={(s) => toggleCategory(value, s)}
-            />
-          ))}
+      {categories.length > 0 && (
+        <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+          <h4 className="lp-filter-title">{t.filters.categories}</h4>
+          <div className="lp-filter-items">
+            {categories.map(({ name }) => (
+              <FilterRow
+                key={name}
+                label={getCategoryLabel(name, t.categories)}
+                iconSvg={CATEGORY_ICON_MAP[name]}
+                iconClassName="category-icon-img"
+                state={((localFilters.categories ?? {})[name] ?? null) as string | null}
+                onToggle={(s) => toggleCategory(name, s)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
         <h4 className="lp-filter-title">{t.filters.environment}</h4>
