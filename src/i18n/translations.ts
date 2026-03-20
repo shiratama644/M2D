@@ -51,6 +51,12 @@ const translations = {
       other: 'Other',
       openSource: 'Open Source',
       license: 'License',
+      categoryHeaders: {
+        categories: 'Categories',
+        resolutions: 'Resolutions',
+        features: 'Features',
+        performance_impact: 'Performance Impact',
+      },
     },
     categories: {
       optimization: 'Optimization',
@@ -106,9 +112,11 @@ const translations = {
       bloom: 'Bloom',
       'colored-lighting': 'Colored Lighting',
       'core-shaders': 'Core Shaders',
-      high: 'High',
-      medium: 'Medium',
+      potato: 'Potato',
       low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      fancy: 'Fancy',
       screenshots: 'Screenshots',
     },
     environment: {
@@ -210,6 +218,12 @@ const translations = {
       other: 'その他',
       openSource: 'オープンソース',
       license: 'ライセンス',
+      categoryHeaders: {
+        categories: 'カテゴリー',
+        resolutions: '解像度',
+        features: '機能',
+        performance_impact: 'パフォーマンス影響',
+      },
     },
     categories: {
       optimization: '最適化',
@@ -265,9 +279,11 @@ const translations = {
       bloom: 'ブルーム',
       'colored-lighting': 'カラード照明',
       'core-shaders': 'コアシェーダー',
-      high: '高品質',
-      medium: '中品質',
+      potato: 'ポテト',
       low: '低品質',
+      medium: '中品質',
+      high: '高品質',
+      fancy: 'ファンシー',
       screenshots: 'スクリーンショット',
     },
     environment: {
