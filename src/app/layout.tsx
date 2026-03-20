@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { AppProvider } from '../context/AppContext';
 import SessionProvider from '../components/auth/SessionProvider';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </AppProvider>
         </SessionProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
