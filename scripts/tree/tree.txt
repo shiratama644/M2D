@@ -1,4 +1,6 @@
 M2D
+├── .env.local
+├── .env.local.example
 ├── .git
 ├── .gitignore
 ├── .next
@@ -7,6 +9,7 @@ M2D
 ├── docs
 │   └── screenshot.png
 ├── eslint.config.js
+├── next-env.d.ts
 ├── next.config.mjs
 ├── node_modules
 ├── package-lock.json
@@ -41,434 +44,486 @@ M2D
 │   ├── generate_tree.sh
 │   └── tree
 │       └── tree.txt
-└── src
-    ├── app
-    │   ├── globals.css
-    │   ├── layout.jsx
-    │   └── page.jsx
-    ├── assets
-    │   ├── icons
-    │   │   ├── affiliate.svg
-    │   │   ├── align-left.svg
-    │   │   ├── archive.svg
-    │   │   ├── arrow-big-right-dash.svg
-    │   │   ├── arrow-big-up-dash.svg
-    │   │   ├── arrow-down-left.svg
-    │   │   ├── arrow-down.svg
-    │   │   ├── arrow-left-right.svg
-    │   │   ├── arrow-left.svg
-    │   │   ├── arrow-up-down.svg
-    │   │   ├── arrow-up-right.svg
-    │   │   ├── arrow-up.svg
-    │   │   ├── asterisk.svg
-    │   │   ├── badge-check.svg
-    │   │   ├── badge-dollar-sign.svg
-    │   │   ├── ban.svg
-    │   │   ├── bell-ring.svg
-    │   │   ├── bell.svg
-    │   │   ├── blend.svg
-    │   │   ├── blocks.svg
-    │   │   ├── bold.svg
-    │   │   ├── book-open.svg
-    │   │   ├── book-text.svg
-    │   │   ├── book.svg
-    │   │   ├── bookmark.svg
-    │   │   ├── bot.svg
-    │   │   ├── box-import.svg
-    │   │   ├── box.svg
-    │   │   ├── boxes.svg
-    │   │   ├── braces.svg
-    │   │   ├── brush-cleaning.svg
-    │   │   ├── bug.svg
-    │   │   ├── calendar.svg
-    │   │   ├── card.svg
-    │   │   ├── change-skin.svg
-    │   │   ├── chart.svg
-    │   │   ├── check-check.svg
-    │   │   ├── check-circle.svg
-    │   │   ├── check.svg
-    │   │   ├── chevron-down.svg
-    │   │   ├── chevron-left.svg
-    │   │   ├── chevron-right.svg
-    │   │   ├── chevron-up.svg
-    │   │   ├── circle-alert.svg
-    │   │   ├── circle-user.svg
-    │   │   ├── clear.svg
-    │   │   ├── client.svg
-    │   │   ├── clipboard-copy.svg
-    │   │   ├── clock.svg
-    │   │   ├── cloud.svg
-    │   │   ├── code.svg
-    │   │   ├── coffee.svg
-    │   │   ├── cog.svg
-    │   │   ├── coins.svg
-    │   │   ├── collapse.svg
-    │   │   ├── collection.svg
-    │   │   ├── compass.svg
-    │   │   ├── component.svg
-    │   │   ├── contract.svg
-    │   │   ├── copy.svg
-    │   │   ├── copyright.svg
-    │   │   ├── cpu.svg
-    │   │   ├── crown.svg
-    │   │   ├── cube.svg
-    │   │   ├── currency.svg
-    │   │   ├── dashboard.svg
-    │   │   ├── database-backup.svg
-    │   │   ├── database.svg
-    │   │   ├── download.svg
-    │   │   ├── dropdown.svg
-    │   │   ├── edit.svg
-    │   │   ├── ellipsis-vertical.svg
-    │   │   ├── expand.svg
-    │   │   ├── external.svg
-    │   │   ├── eye-off.svg
-    │   │   ├── eye.svg
-    │   │   ├── file-archive.svg
-    │   │   ├── file-code.svg
-    │   │   ├── file-image.svg
-    │   │   ├── file-plus.svg
-    │   │   ├── file-text.svg
-    │   │   ├── file.svg
-    │   │   ├── filter-x.svg
-    │   │   ├── filter.svg
-    │   │   ├── folder-archive.svg
-    │   │   ├── folder-cog.svg
-    │   │   ├── folder-open.svg
-    │   │   ├── folder-search.svg
-    │   │   ├── folder-up.svg
-    │   │   ├── folder.svg
-    │   │   ├── game.svg
-    │   │   ├── gap.svg
-    │   │   ├── gauge.svg
-    │   │   ├── generic-list.svg
-    │   │   ├── gift.svg
-    │   │   ├── git-graph.svg
-    │   │   ├── glasses.svg
-    │   │   ├── globe.svg
-    │   │   ├── grid.svg
-    │   │   ├── hamburger.svg
-    │   │   ├── hammer.svg
-    │   │   ├── hand-helping.svg
-    │   │   ├── hash.svg
-    │   │   ├── heading-1.svg
-    │   │   ├── heading-2.svg
-    │   │   ├── heading-3.svg
-    │   │   ├── heart-handshake.svg
-    │   │   ├── heart-minus.svg
-    │   │   ├── heart.svg
-    │   │   ├── history.svg
-    │   │   ├── home.svg
-    │   │   ├── image.svg
-    │   │   ├── images.svg
-    │   │   ├── import.svg
-    │   │   ├── in-progress.svg
-    │   │   ├── info.svg
-    │   │   ├── issues.svg
-    │   │   ├── italic.svg
-    │   │   ├── key.svg
-    │   │   ├── keyboard.svg
-    │   │   ├── landmark.svg
-    │   │   ├── languages.svg
-    │   │   ├── layout-template.svg
-    │   │   ├── left-arrow.svg
-    │   │   ├── library.svg
-    │   │   ├── light-bulb.svg
-    │   │   ├── link.svg
-    │   │   ├── list-bulleted.svg
-    │   │   ├── list-end.svg
-    │   │   ├── list-ordered.svg
-    │   │   ├── list.svg
-    │   │   ├── loader-circle.svg
-    │   │   ├── loader.svg
-    │   │   ├── lock-open.svg
-    │   │   ├── lock.svg
-    │   │   ├── log-in.svg
-    │   │   ├── log-out.svg
-    │   │   ├── mail.svg
-    │   │   ├── manage.svg
-    │   │   ├── maximize.svg
-    │   │   ├── memory-stick.svg
-    │   │   ├── message.svg
-    │   │   ├── messages-square.svg
-    │   │   ├── microphone.svg
-    │   │   ├── minimize.svg
-    │   │   ├── minus.svg
-    │   │   ├── monitor-smartphone.svg
-    │   │   ├── monitor.svg
-    │   │   ├── moon.svg
-    │   │   ├── more-horizontal.svg
-    │   │   ├── more-vertical.svg
-    │   │   ├── newspaper.svg
-    │   │   ├── no-signal.svg
-    │   │   ├── notepad-text.svg
-    │   │   ├── omorphia.svg
-    │   │   ├── online-indicator.svg
-    │   │   ├── organization.svg
-    │   │   ├── package-closed.svg
-    │   │   ├── package-open.svg
-    │   │   ├── package-plus.svg
-    │   │   ├── package.svg
-    │   │   ├── paintbrush.svg
-    │   │   ├── palette.svg
-    │   │   ├── pencil.svg
-    │   │   ├── pickaxe.svg
-    │   │   ├── play.svg
-    │   │   ├── plug.svg
-    │   │   ├── plus.svg
-    │   │   ├── power-off.svg
-    │   │   ├── power.svg
-    │   │   ├── radio-button-checked.svg
-    │   │   ├── radio-button.svg
-    │   │   ├── receipt-text.svg
-    │   │   ├── redo.svg
-    │   │   ├── refresh-cw.svg
-    │   │   ├── reply.svg
-    │   │   ├── report.svg
-    │   │   ├── restore.svg
-    │   │   ├── right-arrow.svg
-    │   │   ├── rocket.svg
-    │   │   ├── rotate-clockwise.svg
-    │   │   ├── rotate-counter-clockwise.svg
-    │   │   ├── rss.svg
-    │   │   ├── save.svg
-    │   │   ├── scale.svg
-    │   │   ├── scan-eye.svg
-    │   │   ├── search.svg
-    │   │   ├── send.svg
-    │   │   ├── server-plus.svg
-    │   │   ├── server.svg
-    │   │   ├── settings.svg
-    │   │   ├── share.svg
-    │   │   ├── shield-alert.svg
-    │   │   ├── shield-check.svg
-    │   │   ├── shield.svg
-    │   │   ├── signal.svg
-    │   │   ├── skull.svg
-    │   │   ├── slash.svg
-    │   │   ├── sort-asc.svg
-    │   │   ├── sort-desc.svg
-    │   │   ├── sparkles.svg
-    │   │   ├── spinner.svg
-    │   │   ├── star.svg
-    │   │   ├── stop-circle.svg
-    │   │   ├── store.svg
-    │   │   ├── strikethrough.svg
-    │   │   ├── sun.svg
-    │   │   ├── sunrise.svg
-    │   │   ├── support-chat.svg
-    │   │   ├── tag.svg
-    │   │   ├── tags
-    │   │   │   ├── categories
-    │   │   │   │   ├── adventure.svg
-    │   │   │   │   ├── atmosphere.svg
-    │   │   │   │   ├── audio.svg
-    │   │   │   │   ├── backpack.svg
-    │   │   │   │   ├── badge-check.svg
-    │   │   │   │   ├── badge.svg
-    │   │   │   │   ├── bed-double.svg
-    │   │   │   │   ├── blocks.svg
-    │   │   │   │   ├── bloom.svg
-    │   │   │   │   ├── building-2.svg
-    │   │   │   │   ├── camera.svg
-    │   │   │   │   ├── cartoon.svg
-    │   │   │   │   ├── castle.svg
-    │   │   │   │   ├── challenging.svg
-    │   │   │   │   ├── clapperboard.svg
-    │   │   │   │   ├── cloud.svg
-    │   │   │   │   ├── colored-lighting.svg
-    │   │   │   │   ├── combat.svg
-    │   │   │   │   ├── compass.svg
-    │   │   │   │   ├── core-shaders.svg
-    │   │   │   │   ├── crown.svg
-    │   │   │   │   ├── cursed.svg
-    │   │   │   │   ├── decoration.svg
-    │   │   │   │   ├── dices.svg
-    │   │   │   │   ├── economy.svg
-    │   │   │   │   ├── entities.svg
-    │   │   │   │   ├── environment.svg
-    │   │   │   │   ├── equipment.svg
-    │   │   │   │   ├── fantasy.svg
-    │   │   │   │   ├── film.svg
-    │   │   │   │   ├── flag.svg
-    │   │   │   │   ├── foliage.svg
-    │   │   │   │   ├── fonts.svg
-    │   │   │   │   ├── food.svg
-    │   │   │   │   ├── footprints.svg
-    │   │   │   │   ├── game-mechanics.svg
-    │   │   │   │   ├── gamepad-2.svg
-    │   │   │   │   ├── gauge.svg
-    │   │   │   │   ├── globe.svg
-    │   │   │   │   ├── grid-3x3.svg
-    │   │   │   │   ├── gui.svg
-    │   │   │   │   ├── handshake.svg
-    │   │   │   │   ├── heart-crack.svg
-    │   │   │   │   ├── heart-pulse.svg
-    │   │   │   │   ├── high.svg
-    │   │   │   │   ├── house.svg
-    │   │   │   │   ├── items.svg
-    │   │   │   │   ├── kitchen-sink.svg
-    │   │   │   │   ├── library.svg
-    │   │   │   │   ├── lightweight.svg
-    │   │   │   │   ├── locale.svg
-    │   │   │   │   ├── lock.svg
-    │   │   │   │   ├── low.svg
-    │   │   │   │   ├── magic.svg
-    │   │   │   │   ├── management.svg
-    │   │   │   │   ├── map-pinned.svg
-    │   │   │   │   ├── medium.svg
-    │   │   │   │   ├── minigame.svg
-    │   │   │   │   ├── mobs.svg
-    │   │   │   │   ├── modded.svg
-    │   │   │   │   ├── models.svg
-    │   │   │   │   ├── multiplayer.svg
-    │   │   │   │   ├── network.svg
-    │   │   │   │   ├── optimization.svg
-    │   │   │   │   ├── palette.svg
-    │   │   │   │   ├── path-tracing.svg
-    │   │   │   │   ├── paw-print.svg
-    │   │   │   │   ├── pbr.svg
-    │   │   │   │   ├── pickaxe.svg
-    │   │   │   │   ├── potato.svg
-    │   │   │   │   ├── quests.svg
-    │   │   │   │   ├── realistic.svg
-    │   │   │   │   ├── reflections.svg
-    │   │   │   │   ├── refresh-ccw.svg
-    │   │   │   │   ├── screenshot.svg
-    │   │   │   │   ├── scroll-text.svg
-    │   │   │   │   ├── semi-realistic.svg
-    │   │   │   │   ├── shadows.svg
-    │   │   │   │   ├── shield.svg
-    │   │   │   │   ├── simplistic.svg
-    │   │   │   │   ├── skull.svg
-    │   │   │   │   ├── social.svg
-    │   │   │   │   ├── square.svg
-    │   │   │   │   ├── storage.svg
-    │   │   │   │   ├── sword.svg
-    │   │   │   │   ├── swords.svg
-    │   │   │   │   ├── target.svg
-    │   │   │   │   ├── technology.svg
-    │   │   │   │   ├── terminal.svg
-    │   │   │   │   ├── theater.svg
-    │   │   │   │   ├── themed.svg
-    │   │   │   │   ├── transportation.svg
-    │   │   │   │   ├── tree-pine.svg
-    │   │   │   │   ├── trophy.svg
-    │   │   │   │   ├── tweaks.svg
-    │   │   │   │   ├── users.svg
-    │   │   │   │   ├── utility.svg
-    │   │   │   │   ├── vanilla-like.svg
-    │   │   │   │   ├── wand-sparkles.svg
-    │   │   │   │   ├── wifi-off.svg
-    │   │   │   │   ├── worldgen.svg
-    │   │   │   │   └── zap.svg
-    │   │   │   └── loaders
-    │   │   │       ├── babric.svg
-    │   │   │       ├── bta-babric.svg
-    │   │   │       ├── bukkit.svg
-    │   │   │       ├── bungeecord.svg
-    │   │   │       ├── canvas.svg
-    │   │   │       ├── datapack.svg
-    │   │   │       ├── fabric.svg
-    │   │   │       ├── folia.svg
-    │   │   │       ├── forge.svg
-    │   │   │       ├── geyser.svg
-    │   │   │       ├── iris.svg
-    │   │   │       ├── java-agent.svg
-    │   │   │       ├── legacy-fabric.svg
-    │   │   │       ├── liteloader.svg
-    │   │   │       ├── minecraft.svg
-    │   │   │       ├── modloader.svg
-    │   │   │       ├── mrpack.svg
-    │   │   │       ├── neoforge.svg
-    │   │   │       ├── nilloader.svg
-    │   │   │       ├── optifine.svg
-    │   │   │       ├── ornithe.svg
-    │   │   │       ├── paper.svg
-    │   │   │       ├── purpur.svg
-    │   │   │       ├── quilt.svg
-    │   │   │       ├── rift.svg
-    │   │   │       ├── spigot.svg
-    │   │   │       ├── sponge.svg
-    │   │   │       ├── vanilla.svg
-    │   │   │       ├── velocity.svg
-    │   │   │       └── waterfall.svg
-    │   │   ├── tags.svg
-    │   │   ├── terminal-square.svg
-    │   │   ├── test.svg
-    │   │   ├── text-cursor-input.svg
-    │   │   ├── text-quote.svg
-    │   │   ├── timer.svg
-    │   │   ├── toggle-left.svg
-    │   │   ├── toggle-right.svg
-    │   │   ├── transfer.svg
-    │   │   ├── trash.svg
-    │   │   ├── triangle-alert.svg
-    │   │   ├── underline.svg
-    │   │   ├── undo.svg
-    │   │   ├── unknown-donation.svg
-    │   │   ├── unknown.svg
-    │   │   ├── unlink.svg
-    │   │   ├── unplug.svg
-    │   │   ├── updated.svg
-    │   │   ├── upload.svg
-    │   │   ├── user-cog.svg
-    │   │   ├── user-plus.svg
-    │   │   ├── user-round.svg
-    │   │   ├── user-search.svg
-    │   │   ├── user-x.svg
-    │   │   ├── user.svg
-    │   │   ├── users.svg
-    │   │   ├── version.svg
-    │   │   ├── wiki.svg
-    │   │   ├── window.svg
-    │   │   ├── world.svg
-    │   │   ├── wrench.svg
-    │   │   ├── x-circle.svg
-    │   │   ├── x.svg
-    │   │   ├── zoom-in.svg
-    │   │   └── zoom-out.svg
-    │   └── react.svg
-    ├── components
-    │   ├── debug
-    │   │   └── DebugPanel.jsx
-    │   ├── layout
-    │   │   ├── Header.jsx
-    │   │   └── SideMenu.jsx
-    │   ├── modals
-    │   │   ├── DependencyModal.jsx
-    │   │   ├── FilterModal.jsx
-    │   │   ├── SelectedModal.jsx
-    │   │   └── SettingsModal.jsx
-    │   ├── mods
-    │   │   ├── ModCard.jsx
-    │   │   ├── ModDetail.jsx
-    │   │   └── ModList.jsx
-    │   ├── panels
-    │   │   ├── LeftPanel.jsx
-    │   │   └── RightPanel.jsx
-    │   ├── search
-    │   │   ├── ActionBar.jsx
-    │   │   └── SearchSection.jsx
-    │   └── ui
-    │       ├── CustomDialog.jsx
-    │       ├── CustomSelect.jsx
-    │       ├── Icon.jsx
-    │       └── LoadingOverlay.jsx
-    ├── context
-    │   └── AppContext.jsx
-    ├── hooks
-    │   ├── useColumnResize.js
-    │   ├── useDependencyCheck.js
-    │   ├── useIsDesktop.js
-    │   ├── useLocalStorage.js
-    │   └── useModDownload.js
-    ├── i18n
-    │   └── translations.js
-    ├── index.css
-    └── lib
-        ├── api
-        │   ├── client.js
-        │   ├── index.js
-        │   └── modrinth.js
-        └── helpers.js
+├── src
+│   ├── app
+│   │   ├── HomeClient.tsx
+│   │   ├── account
+│   │   │   ├── AccountClient.tsx
+│   │   │   └── page.tsx
+│   │   ├── api
+│   │   │   ├── auth
+│   │   │   │   └── [...nextauth]
+│   │   │   │       └── route.ts
+│   │   │   ├── revalidate
+│   │   │   │   └── route.ts
+│   │   │   └── v2
+│   │   │       └── [...path]
+│   │   │           └── route.ts
+│   │   ├── error.tsx
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── mods
+│   │   │   └── [id]
+│   │   │       ├── ModPageClient.tsx
+│   │   │       └── page.tsx
+│   │   ├── not-found.tsx
+│   │   └── page.tsx
+│   ├── assets
+│   │   └── icons
+│   │       ├── affiliate.svg
+│   │       ├── align-left.svg
+│   │       ├── archive.svg
+│   │       ├── arrow-big-right-dash.svg
+│   │       ├── arrow-big-up-dash.svg
+│   │       ├── arrow-down-left.svg
+│   │       ├── arrow-down.svg
+│   │       ├── arrow-left-right.svg
+│   │       ├── arrow-left.svg
+│   │       ├── arrow-up-down.svg
+│   │       ├── arrow-up-right.svg
+│   │       ├── arrow-up.svg
+│   │       ├── asterisk.svg
+│   │       ├── badge-check.svg
+│   │       ├── badge-dollar-sign.svg
+│   │       ├── ban.svg
+│   │       ├── bell-ring.svg
+│   │       ├── bell.svg
+│   │       ├── blend.svg
+│   │       ├── blocks.svg
+│   │       ├── bold.svg
+│   │       ├── book-open.svg
+│   │       ├── book-text.svg
+│   │       ├── book.svg
+│   │       ├── bookmark.svg
+│   │       ├── bot.svg
+│   │       ├── box-import.svg
+│   │       ├── box.svg
+│   │       ├── boxes.svg
+│   │       ├── braces.svg
+│   │       ├── brush-cleaning.svg
+│   │       ├── bug.svg
+│   │       ├── calendar.svg
+│   │       ├── card.svg
+│   │       ├── change-skin.svg
+│   │       ├── chart.svg
+│   │       ├── check-check.svg
+│   │       ├── check-circle.svg
+│   │       ├── check.svg
+│   │       ├── chevron-down.svg
+│   │       ├── chevron-left.svg
+│   │       ├── chevron-right.svg
+│   │       ├── chevron-up.svg
+│   │       ├── circle-alert.svg
+│   │       ├── circle-user.svg
+│   │       ├── clear.svg
+│   │       ├── client.svg
+│   │       ├── clipboard-copy.svg
+│   │       ├── clock.svg
+│   │       ├── cloud.svg
+│   │       ├── code.svg
+│   │       ├── coffee.svg
+│   │       ├── cog.svg
+│   │       ├── coins.svg
+│   │       ├── collapse.svg
+│   │       ├── collection.svg
+│   │       ├── compass.svg
+│   │       ├── component.svg
+│   │       ├── contract.svg
+│   │       ├── copy.svg
+│   │       ├── copyright.svg
+│   │       ├── cpu.svg
+│   │       ├── crown.svg
+│   │       ├── cube.svg
+│   │       ├── currency.svg
+│   │       ├── dashboard.svg
+│   │       ├── database-backup.svg
+│   │       ├── database.svg
+│   │       ├── discord.svg
+│   │       ├── download.svg
+│   │       ├── dropdown.svg
+│   │       ├── edit.svg
+│   │       ├── ellipsis-vertical.svg
+│   │       ├── expand.svg
+│   │       ├── external.svg
+│   │       ├── eye-off.svg
+│   │       ├── eye.svg
+│   │       ├── file-archive.svg
+│   │       ├── file-code.svg
+│   │       ├── file-image.svg
+│   │       ├── file-plus.svg
+│   │       ├── file-text.svg
+│   │       ├── file.svg
+│   │       ├── filter-x.svg
+│   │       ├── filter.svg
+│   │       ├── folder-archive.svg
+│   │       ├── folder-cog.svg
+│   │       ├── folder-open.svg
+│   │       ├── folder-search.svg
+│   │       ├── folder-up.svg
+│   │       ├── folder.svg
+│   │       ├── game.svg
+│   │       ├── gap.svg
+│   │       ├── gauge.svg
+│   │       ├── generic-list.svg
+│   │       ├── gift.svg
+│   │       ├── git-graph.svg
+│   │       ├── glasses.svg
+│   │       ├── globe.svg
+│   │       ├── grid.svg
+│   │       ├── hamburger.svg
+│   │       ├── hammer.svg
+│   │       ├── hand-helping.svg
+│   │       ├── hash.svg
+│   │       ├── heading-1.svg
+│   │       ├── heading-2.svg
+│   │       ├── heading-3.svg
+│   │       ├── heart-handshake.svg
+│   │       ├── heart-minus.svg
+│   │       ├── heart.svg
+│   │       ├── history.svg
+│   │       ├── home.svg
+│   │       ├── image.svg
+│   │       ├── images.svg
+│   │       ├── import.svg
+│   │       ├── in-progress.svg
+│   │       ├── info.svg
+│   │       ├── issues.svg
+│   │       ├── italic.svg
+│   │       ├── key.svg
+│   │       ├── keyboard.svg
+│   │       ├── landmark.svg
+│   │       ├── languages.svg
+│   │       ├── layout-template.svg
+│   │       ├── left-arrow.svg
+│   │       ├── library.svg
+│   │       ├── light-bulb.svg
+│   │       ├── link.svg
+│   │       ├── list-bulleted.svg
+│   │       ├── list-end.svg
+│   │       ├── list-ordered.svg
+│   │       ├── list.svg
+│   │       ├── loader-circle.svg
+│   │       ├── loader.svg
+│   │       ├── lock-open.svg
+│   │       ├── lock.svg
+│   │       ├── log-in.svg
+│   │       ├── log-out.svg
+│   │       ├── mail.svg
+│   │       ├── manage.svg
+│   │       ├── maximize.svg
+│   │       ├── memory-stick.svg
+│   │       ├── message.svg
+│   │       ├── messages-square.svg
+│   │       ├── microphone.svg
+│   │       ├── minimize.svg
+│   │       ├── minus.svg
+│   │       ├── monitor-smartphone.svg
+│   │       ├── monitor.svg
+│   │       ├── moon.svg
+│   │       ├── more-horizontal.svg
+│   │       ├── more-vertical.svg
+│   │       ├── newspaper.svg
+│   │       ├── no-signal.svg
+│   │       ├── notepad-text.svg
+│   │       ├── omorphia.svg
+│   │       ├── online-indicator.svg
+│   │       ├── organization.svg
+│   │       ├── package-closed.svg
+│   │       ├── package-open.svg
+│   │       ├── package-plus.svg
+│   │       ├── package.svg
+│   │       ├── paintbrush.svg
+│   │       ├── palette.svg
+│   │       ├── pencil.svg
+│   │       ├── pickaxe.svg
+│   │       ├── play.svg
+│   │       ├── plug.svg
+│   │       ├── plus.svg
+│   │       ├── power-off.svg
+│   │       ├── power.svg
+│   │       ├── radio-button-checked.svg
+│   │       ├── radio-button.svg
+│   │       ├── receipt-text.svg
+│   │       ├── redo.svg
+│   │       ├── refresh-cw.svg
+│   │       ├── reply.svg
+│   │       ├── report.svg
+│   │       ├── restore.svg
+│   │       ├── right-arrow.svg
+│   │       ├── rocket.svg
+│   │       ├── rotate-clockwise.svg
+│   │       ├── rotate-counter-clockwise.svg
+│   │       ├── rss.svg
+│   │       ├── save.svg
+│   │       ├── scale.svg
+│   │       ├── scan-eye.svg
+│   │       ├── search.svg
+│   │       ├── send.svg
+│   │       ├── server-plus.svg
+│   │       ├── server.svg
+│   │       ├── settings.svg
+│   │       ├── share.svg
+│   │       ├── shield-alert.svg
+│   │       ├── shield-check.svg
+│   │       ├── shield.svg
+│   │       ├── signal.svg
+│   │       ├── skull.svg
+│   │       ├── slash.svg
+│   │       ├── sort-asc.svg
+│   │       ├── sort-desc.svg
+│   │       ├── sparkles.svg
+│   │       ├── spinner.svg
+│   │       ├── star.svg
+│   │       ├── stop-circle.svg
+│   │       ├── store.svg
+│   │       ├── strikethrough.svg
+│   │       ├── sun.svg
+│   │       ├── sunrise.svg
+│   │       ├── support-chat.svg
+│   │       ├── tag.svg
+│   │       ├── tags
+│   │       │   ├── categories
+│   │       │   │   ├── adventure.svg
+│   │       │   │   ├── atmosphere.svg
+│   │       │   │   ├── audio.svg
+│   │       │   │   ├── backpack.svg
+│   │       │   │   ├── badge-check.svg
+│   │       │   │   ├── badge.svg
+│   │       │   │   ├── bed-double.svg
+│   │       │   │   ├── blocks.svg
+│   │       │   │   ├── bloom.svg
+│   │       │   │   ├── building-2.svg
+│   │       │   │   ├── camera.svg
+│   │       │   │   ├── cartoon.svg
+│   │       │   │   ├── castle.svg
+│   │       │   │   ├── challenging.svg
+│   │       │   │   ├── clapperboard.svg
+│   │       │   │   ├── cloud.svg
+│   │       │   │   ├── colored-lighting.svg
+│   │       │   │   ├── combat.svg
+│   │       │   │   ├── compass.svg
+│   │       │   │   ├── core-shaders.svg
+│   │       │   │   ├── crown.svg
+│   │       │   │   ├── cursed.svg
+│   │       │   │   ├── decoration.svg
+│   │       │   │   ├── dices.svg
+│   │       │   │   ├── economy.svg
+│   │       │   │   ├── entities.svg
+│   │       │   │   ├── environment.svg
+│   │       │   │   ├── equipment.svg
+│   │       │   │   ├── fantasy.svg
+│   │       │   │   ├── film.svg
+│   │       │   │   ├── flag.svg
+│   │       │   │   ├── foliage.svg
+│   │       │   │   ├── fonts.svg
+│   │       │   │   ├── food.svg
+│   │       │   │   ├── footprints.svg
+│   │       │   │   ├── game-mechanics.svg
+│   │       │   │   ├── gamepad-2.svg
+│   │       │   │   ├── gauge.svg
+│   │       │   │   ├── globe.svg
+│   │       │   │   ├── grid-3x3.svg
+│   │       │   │   ├── gui.svg
+│   │       │   │   ├── handshake.svg
+│   │       │   │   ├── heart-crack.svg
+│   │       │   │   ├── heart-pulse.svg
+│   │       │   │   ├── high.svg
+│   │       │   │   ├── house.svg
+│   │       │   │   ├── items.svg
+│   │       │   │   ├── kitchen-sink.svg
+│   │       │   │   ├── library.svg
+│   │       │   │   ├── lightweight.svg
+│   │       │   │   ├── locale.svg
+│   │       │   │   ├── lock.svg
+│   │       │   │   ├── low.svg
+│   │       │   │   ├── magic.svg
+│   │       │   │   ├── management.svg
+│   │       │   │   ├── map-pinned.svg
+│   │       │   │   ├── medium.svg
+│   │       │   │   ├── minigame.svg
+│   │       │   │   ├── mobs.svg
+│   │       │   │   ├── modded.svg
+│   │       │   │   ├── models.svg
+│   │       │   │   ├── multiplayer.svg
+│   │       │   │   ├── network.svg
+│   │       │   │   ├── optimization.svg
+│   │       │   │   ├── palette.svg
+│   │       │   │   ├── path-tracing.svg
+│   │       │   │   ├── paw-print.svg
+│   │       │   │   ├── pbr.svg
+│   │       │   │   ├── pickaxe.svg
+│   │       │   │   ├── potato.svg
+│   │       │   │   ├── quests.svg
+│   │       │   │   ├── realistic.svg
+│   │       │   │   ├── reflections.svg
+│   │       │   │   ├── refresh-ccw.svg
+│   │       │   │   ├── screenshot.svg
+│   │       │   │   ├── scroll-text.svg
+│   │       │   │   ├── semi-realistic.svg
+│   │       │   │   ├── shadows.svg
+│   │       │   │   ├── shield.svg
+│   │       │   │   ├── simplistic.svg
+│   │       │   │   ├── skull.svg
+│   │       │   │   ├── social.svg
+│   │       │   │   ├── square.svg
+│   │       │   │   ├── storage.svg
+│   │       │   │   ├── sword.svg
+│   │       │   │   ├── swords.svg
+│   │       │   │   ├── target.svg
+│   │       │   │   ├── technology.svg
+│   │       │   │   ├── terminal.svg
+│   │       │   │   ├── theater.svg
+│   │       │   │   ├── themed.svg
+│   │       │   │   ├── transportation.svg
+│   │       │   │   ├── tree-pine.svg
+│   │       │   │   ├── trophy.svg
+│   │       │   │   ├── tweaks.svg
+│   │       │   │   ├── users.svg
+│   │       │   │   ├── utility.svg
+│   │       │   │   ├── vanilla-like.svg
+│   │       │   │   ├── wand-sparkles.svg
+│   │       │   │   ├── wifi-off.svg
+│   │       │   │   ├── worldgen.svg
+│   │       │   │   └── zap.svg
+│   │       │   └── loaders
+│   │       │       ├── babric.svg
+│   │       │       ├── bta-babric.svg
+│   │       │       ├── bukkit.svg
+│   │       │       ├── bungeecord.svg
+│   │       │       ├── canvas.svg
+│   │       │       ├── datapack.svg
+│   │       │       ├── fabric.svg
+│   │       │       ├── folia.svg
+│   │       │       ├── forge.svg
+│   │       │       ├── geyser.svg
+│   │       │       ├── iris.svg
+│   │       │       ├── java-agent.svg
+│   │       │       ├── legacy-fabric.svg
+│   │       │       ├── liteloader.svg
+│   │       │       ├── minecraft.svg
+│   │       │       ├── modloader.svg
+│   │       │       ├── mrpack.svg
+│   │       │       ├── neoforge.svg
+│   │       │       ├── nilloader.svg
+│   │       │       ├── optifine.svg
+│   │       │       ├── ornithe.svg
+│   │       │       ├── paper.svg
+│   │       │       ├── purpur.svg
+│   │       │       ├── quilt.svg
+│   │       │       ├── rift.svg
+│   │       │       ├── spigot.svg
+│   │       │       ├── sponge.svg
+│   │       │       ├── vanilla.svg
+│   │       │       ├── velocity.svg
+│   │       │       └── waterfall.svg
+│   │       ├── tags.svg
+│   │       ├── terminal-square.svg
+│   │       ├── test.svg
+│   │       ├── text-cursor-input.svg
+│   │       ├── text-quote.svg
+│   │       ├── timer.svg
+│   │       ├── toggle-left.svg
+│   │       ├── toggle-right.svg
+│   │       ├── transfer.svg
+│   │       ├── trash.svg
+│   │       ├── triangle-alert.svg
+│   │       ├── underline.svg
+│   │       ├── undo.svg
+│   │       ├── unknown-donation.svg
+│   │       ├── unknown.svg
+│   │       ├── unlink.svg
+│   │       ├── unplug.svg
+│   │       ├── updated.svg
+│   │       ├── upload.svg
+│   │       ├── user-cog.svg
+│   │       ├── user-plus.svg
+│   │       ├── user-round.svg
+│   │       ├── user-search.svg
+│   │       ├── user-x.svg
+│   │       ├── user.svg
+│   │       ├── users.svg
+│   │       ├── version.svg
+│   │       ├── wiki.svg
+│   │       ├── window.svg
+│   │       ├── world.svg
+│   │       ├── wrench.svg
+│   │       ├── x-circle.svg
+│   │       ├── x.svg
+│   │       ├── zoom-in.svg
+│   │       └── zoom-out.svg
+│   ├── auth.ts
+│   ├── components
+│   │   ├── auth
+│   │   │   └── SessionProvider.tsx
+│   │   ├── debug
+│   │   │   └── DebugPanel.tsx
+│   │   ├── layout
+│   │   │   ├── Header.tsx
+│   │   │   └── SideMenu.tsx
+│   │   ├── modals
+│   │   │   ├── DependencyModal.tsx
+│   │   │   ├── FilterModal.tsx
+│   │   │   ├── SelectedModal.tsx
+│   │   │   └── SettingsModal.tsx
+│   │   ├── mods
+│   │   │   ├── ModCard.tsx
+│   │   │   ├── ModDetail.tsx
+│   │   │   └── ModList.tsx
+│   │   ├── panels
+│   │   │   ├── LeftPanel.tsx
+│   │   │   └── RightPanel.tsx
+│   │   ├── search
+│   │   │   ├── ActionBar.tsx
+│   │   │   └── SearchSection.tsx
+│   │   ├── settings
+│   │   │   └── SettingsContent.tsx
+│   │   └── ui
+│   │       ├── CustomDialog.tsx
+│   │       ├── CustomSelect.tsx
+│   │       ├── FilterRow.tsx
+│   │       ├── Icon.tsx
+│   │       ├── LoadingOverlay.tsx
+│   │       ├── MobileModal.tsx
+│   │       ├── ToggleSwitch.tsx
+│   │       ├── button.tsx
+│   │       └── dialog.tsx
+│   ├── context
+│   │   └── AppContext.tsx
+│   ├── hooks
+│   │   ├── useColumnResize.ts
+│   │   ├── useDependencyCheck.ts
+│   │   ├── useGameVersions.ts
+│   │   ├── useIsDesktop.ts
+│   │   ├── useLocalStorage.ts
+│   │   └── useModDownload.ts
+│   ├── i18n
+│   │   └── translations.ts
+│   ├── index.css
+│   ├── lib
+│   │   ├── api
+│   │   │   ├── client.ts
+│   │   │   ├── index.ts
+│   │   │   └── modrinth.ts
+│   │   ├── categoryIcons.ts
+│   │   ├── helpers.ts
+│   │   └── utils.ts
+│   ├── store
+│   │   └── useAppStore.ts
+│   ├── styles
+│   │   ├── account.css
+│   │   ├── animations.css
+│   │   ├── base.css
+│   │   ├── cards.css
+│   │   ├── debug.css
+│   │   ├── filters.css
+│   │   ├── forms.css
+│   │   ├── layout.css
+│   │   ├── modals.css
+│   │   ├── panels.css
+│   │   ├── settings.css
+│   │   └── variables.css
+│   └── types
+│       ├── modrinth.ts
+│       └── svg.d.ts
+└── tsconfig.json
