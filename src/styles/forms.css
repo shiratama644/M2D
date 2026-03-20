@@ -34,6 +34,8 @@
 
 .btn-text-icon { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: bold; color: var(--accent-color); padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
 .btn-text-icon:hover { background-color: var(--glass-bg-hover); }
+.btn-text-sm { font-size: 0.75rem; color: var(--accent-color); padding: 0.25rem 0.5rem; border-radius: 0.25rem; transition: background-color 0.2s; }
+.btn-text-sm:hover { background-color: var(--glass-bg-hover); }
 
 .btn-icon-small { padding: 0.375rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; border: 1px solid transparent; }
 .btn-icon-small.blue { color: var(--accent-color); }
