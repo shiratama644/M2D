@@ -126,3 +126,32 @@ export const ENVIRONMENT_OPTIONS: string[] = ['required', 'optional', 'unsupport
 export const OTHER_FILTER_OPTIONS: OtherFilterOption[] = [
   { value: 'open_source', labelKey: 'openSource' },
 ];
+
+/**
+ * Converts a hyphenated or underscore-separated category name to Title Case.
+ * e.g. "path-tracing" -> "Path Tracing", "game-mechanics" -> "Game Mechanics"
+ */
+export function formatCategoryName(name: string): string {
+  return name
+    .split(/[-_]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Returns the localised label for a category name.
+ * Falls back to `formatCategoryName(name)` when no translation exists.
+ */
+export function getCategoryLabel(
+  name: string,
+  categories: Record<string, unknown>,
+): string {
+  // Try direct lookup first (e.g. 'optimization', 'path-tracing')
+  const direct = categories[name];
+  if (typeof direct === 'string') return direct;
+  // Try camelCase lookup for legacy keys (e.g. 'game-mechanics' -> 'gameMechanics')
+  const camel = name.replace(/[-_]([a-z0-9])/gi, (_, c: string) => c.toUpperCase());
+  const camelVal = categories[camel];
+  if (typeof camelVal === 'string') return camelVal;
+  return formatCategoryName(name);
+}

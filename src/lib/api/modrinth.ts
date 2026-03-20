@@ -67,7 +67,7 @@ export const modrinth = {
   getGameVersions: (signal?: AbortSignal): Promise<GameVersion[]> =>
     request('/tag/game_version', {}, signal) as Promise<GameVersion[]>,
 
-  /** Returns the full list of mod categories. */
-  getCategories: (signal?: AbortSignal): Promise<unknown[]> =>
-    request('/tag/category', {}, signal) as Promise<unknown[]>,
+  /** Returns the full list of project categories (all project types). */
+  getCategories: (signal?: AbortSignal): Promise<import('../../types/modrinth').ModCategory[]> =>
+    request('/tag/category', {}, signal) as Promise<import('../../types/modrinth').ModCategory[]>,
 };

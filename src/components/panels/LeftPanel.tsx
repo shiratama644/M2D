@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LOADER_OPTIONS, LOADER_ICON_PATHS, CATEGORY_OPTIONS, OTHER_FILTER_OPTIONS } from '../../lib/helpers';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel } from '../../lib/helpers';
 import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
+import { useCategories } from '../../hooks/useCategories';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import Icon from '../ui/Icon';
@@ -25,7 +26,7 @@ type Filters = SearchParams['filters'];
 function makeInitialFilters(modVersion: string): Filters {
   return {
     loaders: Object.fromEntries(LOADER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>,
-    categories: Object.fromEntries(CATEGORY_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>,
+    categories: {},
     environment: { client_side: null, server_side: null },
     other: Object.fromEntries(OTHER_FILTER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>,
     version: modVersion || '',
@@ -35,6 +36,7 @@ function makeInitialFilters(modVersion: string): Filters {
 export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
   const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
   const gameVersions = useGameVersions();
+  const categories = useCategories(discoverType);
   const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion));
 
   const [prevModVersion, setPrevModVersion] = useState(modVersion);
@@ -54,6 +56,19 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
+
+  // Reset category filters and notify parent when project type changes
+  const onFilterChangeRef = useRef(onFilterChange);
+  onFilterChangeRef.current = onFilterChange;
+  useEffect(() => {
+    setFilters((prev) => {
+      const reset = { ...prev, categories: {} };
+      onFilterChangeRef.current(reset);
+      return reset;
+    });
+  // Intentionally omit onFilterChange from deps – we use a ref to keep it stable
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discoverType]);
 
   const setVersion = (v: string) => {
     const newFilters = { ...filters, version: v };
@@ -129,21 +144,23 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
         </div>
       </div>
 
-      <div className="lp-filter-section">
-        <h4 className="lp-filter-title">{t.filters.categories}</h4>
-        <div className="lp-filter-items">
-          {CATEGORY_OPTIONS.map(({ value, labelKey }) => (
-            <FilterRow
-              key={value}
-              label={t.categories[labelKey as keyof typeof t.categories]}
-              iconSvg={CATEGORY_ICON_MAP[value]}
-              iconClassName="category-icon-img"
-              state={((filters.categories ?? {})[value] ?? null) as string | null}
-              onToggle={(s) => toggleCategory(value, s)}
-            />
-          ))}
+      {categories.length > 0 && (
+        <div className="lp-filter-section">
+          <h4 className="lp-filter-title">{t.filters.categories}</h4>
+          <div className="lp-filter-items">
+            {categories.map(({ name }) => (
+              <FilterRow
+                key={name}
+                label={getCategoryLabel(name, t.categories)}
+                iconSvg={CATEGORY_ICON_MAP[name]}
+                iconClassName="category-icon-img"
+                state={((filters.categories ?? {})[name] ?? null) as string | null}
+                onToggle={(s) => toggleCategory(name, s)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="lp-filter-section">
         <h4 className="lp-filter-title">{t.filters.environment}</h4>

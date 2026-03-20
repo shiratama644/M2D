@@ -107,6 +107,17 @@ export default function ModPageClient({ project }: { project: ModProject }) {
                       {children}
                     </a>
                   ),
+                  iframe: ({ src, title, ...props }) => (
+                    <span className="mod-detail-iframe-wrapper">
+                      <iframe
+                        src={src}
+                        title={title || 'Embedded video'}
+                        allowFullScreen
+                        loading="lazy"
+                        {...props}
+                      />
+                    </span>
+                  ),
                 }}
               >
                 {project.body}
