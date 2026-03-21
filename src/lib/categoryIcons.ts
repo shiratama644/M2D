@@ -25,6 +25,7 @@ import vanillaLikeIconRaw from '../assets/icons/tags/categories/vanilla-like.svg
 import skyblockIconRaw from '../assets/icons/tags/categories/globe.svg';
 import explorationIconRaw from '../assets/icons/tags/categories/compass.svg';
 import minigameIconRaw from '../assets/icons/tags/categories/minigame.svg';
+import challengingIconRaw from '../assets/icons/tags/categories/challenging.svg';
 // Resource pack categories
 import audioIconRaw from '../assets/icons/tags/categories/audio.svg';
 import blocksIconRaw from '../assets/icons/tags/categories/blocks.svg';
@@ -41,6 +42,7 @@ import realisticIconRaw from '../assets/icons/tags/categories/realistic.svg';
 import screenshotIconRaw from '../assets/icons/tags/categories/screenshot.svg';
 import simplisticIconRaw from '../assets/icons/tags/categories/simplistic.svg';
 import themedIconRaw from '../assets/icons/tags/categories/themed.svg';
+import tweaksIconRaw from '../assets/icons/tags/categories/tweaks.svg';
 // Shader categories
 import atmosphereIconRaw from '../assets/icons/tags/categories/atmosphere.svg';
 import cartoonIconRaw from '../assets/icons/tags/categories/cartoon.svg';
@@ -58,6 +60,7 @@ import fancyIconRaw from '../assets/icons/tags/categories/crown.svg';
 import highIconRaw from '../assets/icons/tags/categories/high.svg';
 import mediumIconRaw from '../assets/icons/tags/categories/medium.svg';
 import lowIconRaw from '../assets/icons/tags/categories/low.svg';
+import fantasyIconRaw from '../assets/icons/tags/categories/fantasy.svg';
 
 export const CATEGORY_ICON_MAP: Record<string, string> = {
   // Mod categories
@@ -88,6 +91,7 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   skyblock: skyblockIconRaw,
   exploration: explorationIconRaw,
   minigame: minigameIconRaw,
+  challenging: challengingIconRaw,
   // Resource pack categories
   audio: audioIconRaw,
   blocks: blocksIconRaw,
@@ -104,6 +108,7 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   'screenshot-utility': screenshotIconRaw,
   simplistic: simplisticIconRaw,
   themed: themedIconRaw,
+  tweaks: tweaksIconRaw,
   // Shader categories
   atmosphere: atmosphereIconRaw,
   cartoon: cartoonIconRaw,
@@ -121,4 +126,5 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   high: highIconRaw,
   medium: mediumIconRaw,
   low: lowIconRaw,
+  fantasy: fantasyIconRaw,
 };

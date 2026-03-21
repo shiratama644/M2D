@@ -278,7 +278,7 @@ export default function ModDetail() {
               a: ({ href, children, ...props }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
               ),
-              iframe: ({ src, title, ...props }) => (
+              iframe: ({ src, title, width: _w, height: _h, ...props }) => (
                 <span className="mod-detail-iframe-wrapper">
                   <iframe
                     src={src}
