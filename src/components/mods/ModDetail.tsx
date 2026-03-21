@@ -20,11 +20,13 @@ const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 async function translateChunk(text: string): Promise<string> {
   const preserved: string[] = [];
-  // Use an all-ASCII prefix+suffix that is distinctive enough to survive
-  // translation APIs without being treated as markdown or having special
-  // characters stripped.  The padded index keeps multi-digit indices
-  // unambiguous when restoring in reverse order.
-  const placeholder = (i: number) => `MDPH${String(i).padStart(4, '0')}MDPH`;
+  // Generate a per-call random 8-hex-digit nonce so that the placeholder
+  // is unique to this invocation and cannot collide with real content
+  // even if the mod description happens to contain the MDPH prefix.
+  // The nonce survives the MyMemory API round-trip because it consists
+  // only of uppercase hex digits (A-F, 0-9) with no special characters.
+  const nonce = Math.floor(Math.random() * 0x100000000).toString(16).toUpperCase().padStart(8, '0');
+  const placeholder = (i: number) => `MDPH${nonce}${String(i).padStart(4, '0')}MDPH`;
   const protect = (match: string) => {
     const idx = preserved.length;
     preserved.push(match);
