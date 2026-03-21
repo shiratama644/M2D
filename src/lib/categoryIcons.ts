@@ -11,6 +11,10 @@ import worldgenIconRaw from '../assets/icons/tags/categories/worldgen.svg';
 import foodIconRaw from '../assets/icons/tags/categories/food.svg';
 import storageIconRaw from '../assets/icons/tags/categories/storage.svg';
 import gameMechanicsIconRaw from '../assets/icons/tags/categories/game-mechanics.svg';
+import economyIconRaw from '../assets/icons/tags/categories/economy.svg';
+import managementIconRaw from '../assets/icons/tags/categories/management.svg';
+import socialIconRaw from '../assets/icons/tags/categories/social.svg';
+import transportationIconRaw from '../assets/icons/tags/categories/transportation.svg';
 // Modpack categories
 import combatIconRaw from '../assets/icons/tags/categories/combat.svg';
 import multiplayerIconRaw from '../assets/icons/tags/categories/multiplayer.svg';
@@ -62,13 +66,17 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   magic: magicIconRaw,
   adventure: adventureIconRaw,
   decoration: decorationIconRaw,
+  economy: economyIconRaw,
   equipment: equipmentIconRaw,
   mobs: mobsIconRaw,
   library: libraryIconRaw,
+  management: managementIconRaw,
   utility: utilityIconRaw,
   worldgen: worldgenIconRaw,
   food: foodIconRaw,
+  social: socialIconRaw,
   storage: storageIconRaw,
+  transportation: transportationIconRaw,
   'game-mechanics': gameMechanicsIconRaw,
   // Modpack categories
   combat: combatIconRaw,

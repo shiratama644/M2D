@@ -13,9 +13,19 @@ export interface CategoryGroup {
   items: ModCategory[];
 }
 
+// Preferred display order for category header groups (matches Modrinth's display order).
+// Headers not in this list are sorted after the listed ones by alphabetical order.
+const HEADER_ORDER = ['categories', 'resolutions', 'features', 'performance_impact'];
+
+function headerSortIndex(header: string): number {
+  const index = HEADER_ORDER.indexOf(header);
+  return index === -1 ? HEADER_ORDER.length : index;
+}
+
 /**
  * Fetches all Modrinth categories and returns those matching the given project type.
- * Results are sorted by header then name. Fetched data is cached in module scope.
+ * Results are sorted by predefined header order, then alphabetically by name within
+ * each header. Fetched data is cached in module scope.
  */
 export function useCategories(projectType: string): ModCategory[] {
   const { addDebugLog } = useApp();
@@ -35,7 +45,11 @@ export function useCategories(projectType: string): ModCategory[] {
     () =>
       allCategories
         .filter((c) => c.project_type === projectType)
-        .sort((a, b) => a.header.localeCompare(b.header) || a.name.localeCompare(b.name)),
+        .sort(
+          (a, b) =>
+            headerSortIndex(a.header) - headerSortIndex(b.header) ||
+            a.name.localeCompare(b.name),
+        ),
     [allCategories, projectType],
   );
 }
