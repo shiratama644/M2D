@@ -46,7 +46,9 @@ export async function GET(
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    const response = NextResponse.json(data);
+    response.headers.set('Cache-Control', `public, max-age=${revalidate}, s-maxage=${revalidate}, stale-while-revalidate=${revalidate * 2}`);
+    return response;
   } catch (err) {
     if ((err as { name?: string }).name === 'AbortError') {
       console.error('Modrinth proxy timeout:', upstreamUrl);
