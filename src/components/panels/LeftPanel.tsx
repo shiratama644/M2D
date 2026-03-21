@@ -57,15 +57,20 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
     onFilterChange(newFilters);
   };
 
-  // Reset category filters and notify parent when project type changes
+  // Keep refs so effects always see the latest values without re-running.
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
   const onFilterChangeRef = useRef(onFilterChange);
   onFilterChangeRef.current = onFilterChange;
+
+  // Reset category filters and notify parent when project type changes.
+  // Calling onFilterChange inside the setFilters updater would trigger a
+  // parent setState during render (React error), so we compute the reset
+  // value once and call both updates sequentially in the effect body.
   useEffect(() => {
-    setFilters((prev) => {
-      const reset = { ...prev, categories: {} };
-      onFilterChangeRef.current(reset);
-      return reset;
-    });
+    const reset = { ...filtersRef.current, categories: {} };
+    setFilters(reset);
+    onFilterChangeRef.current(reset);
   // Intentionally omit onFilterChange from deps – we use a ref to keep it stable
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discoverType]);
