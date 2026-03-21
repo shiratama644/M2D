@@ -124,7 +124,7 @@ const translations = {
       medium: 'Medium',
       high: 'High',
       fancy: 'Fancy',
-      screenshots: 'Screenshots',
+      screenshot: 'Screenshot',
     },
     environment: {
       any: 'Any',
@@ -298,7 +298,7 @@ const translations = {
       medium: '中品質',
       high: '高品質',
       fancy: 'ファンシー',
-      screenshots: 'スクリーンショット',
+      screenshot: 'スクリーンショット',
     },
     environment: {
       any: 'すべて',

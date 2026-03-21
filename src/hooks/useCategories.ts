@@ -23,7 +23,7 @@ function headerSortIndex(header: string): number {
 }
 
 // Logical sort order for performance_impact categories (lowest to highest impact).
-const PERFORMANCE_IMPACT_ORDER = ['potato', 'low', 'medium', 'high', 'fancy'];
+const PERFORMANCE_IMPACT_ORDER = ['potato', 'low', 'medium', 'high', 'screenshot', 'fancy'];
 
 function performanceImpactSortIndex(name: string): number {
   const index = PERFORMANCE_IMPACT_ORDER.indexOf(name);
@@ -50,7 +50,7 @@ function categoryItemComparator(a: ModCategory, b: ModCategory): number {
  * Fetches all Modrinth categories and returns those matching the given project type.
  * Results are sorted by predefined header order, then by a per-header sort rule:
  * - `resolutions` items are sorted numerically (e.g. 16x, 32x, 64x…).
- * - `performance_impact` items follow a logical low-to-high order (potato → fancy).
+ * - `performance_impact` items follow a logical low-to-high order (potato → screenshot → fancy).
  * - All other items are sorted alphabetically by name.
  * Fetched data is cached in module scope.
  */

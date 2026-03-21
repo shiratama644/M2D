@@ -106,6 +106,7 @@ export const CATEGORY_ICON_MAP: Record<string, string> = {
   models: modelsIconRaw,
   realistic: realisticIconRaw,
   'screenshot-utility': screenshotIconRaw,
+  screenshot: screenshotIconRaw,
   simplistic: simplisticIconRaw,
   themed: themedIconRaw,
   tweaks: tweaksIconRaw,
