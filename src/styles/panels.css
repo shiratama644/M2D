@@ -67,6 +67,15 @@
   margin-bottom: 0.5rem; padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--glass-border);
 }
+.lp-filter-title-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; background: none; text-transform: uppercase;
+  cursor: pointer; transition: color 0.15s;
+}
+.lp-filter-title-toggle:hover { color: var(--text-main); }
+.lp-filter-chevron { transition: transform 0.2s; }
+.lp-filter-chevron.open { transform: rotate(180deg); }
+.lp-filter-section-body { padding-top: 0.25rem; }
 .lp-filter-items { display: flex; flex-direction: column; gap: 0.25rem; }
 .lp-filter-row { display: flex; align-items: center; justify-content: space-between; padding: 0.125rem 0; gap: 0.375rem; }
 .lp-filter-label { font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.25rem; min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

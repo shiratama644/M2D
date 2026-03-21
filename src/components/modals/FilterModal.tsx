@@ -2,18 +2,20 @@
 
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LOADER_OPTIONS, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
+import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
 import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
 import { useGameVersions } from '../../hooks/useGameVersions';
 import { useCategoryGroups } from '../../hooks/useCategories';
 import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import MobileModal from '../ui/MobileModal';
+import Icon from '../ui/Icon';
 import type { SearchParams } from '../../hooks/useDependencyCheck';
 
 import filterIconRaw from '../../assets/icons/filter.svg';
 import clientIconRaw from '../../assets/icons/client.svg';
 import serverIconRaw from '../../assets/icons/server.svg';
+import chevronDownRaw from '../../assets/icons/chevron-down.svg';
 
 interface FilterModalProps {
   filters: SearchParams['filters'];
@@ -22,10 +24,41 @@ interface FilterModalProps {
   projectType?: string;
 }
 
+/** Collapsible section for the mobile filter modal. */
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
+      <button
+        className="lp-filter-title lp-filter-title-toggle"
+        onClick={() => setOpen((v) => !v)}
+        type="button"
+      >
+        <span>{title}</span>
+        <Icon
+          svg={chevronDownRaw}
+          size={12}
+          className={`lp-filter-chevron${open ? ' open' : ''}`}
+        />
+      </button>
+      {open && <div className="lp-filter-section-body">{children}</div>}
+    </div>
+  );
+}
+
 export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod' }: FilterModalProps) {
   const { t, modVersion, updateModVersion } = useApp();
   const gameVersions = useGameVersions();
   const categoryGroups = useCategoryGroups(projectType);
+  const loaderOptions = getLoaderOptions(projectType);
   const [localFilters, setLocalFilters] = useState(filters);
 
   const emit = (newFilters: typeof localFilters) => {
@@ -87,8 +120,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
       size="large"
       footer={<button onClick={onClose} className="btn-secondary">{t.settings.close}</button>}
     >
-      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-        <h4 className="lp-filter-title">{t.filters.version}</h4>
+      <CollapsibleSection title={t.filters.version}>
         <CustomSelect
           options={[
             { value: '', label: t.filters.versionAny },
@@ -97,27 +129,30 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
           value={localFilters.version ?? ''}
           onChange={setVersion}
         />
-      </div>
+      </CollapsibleSection>
 
-      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-        <h4 className="lp-filter-title">{t.filters.loader}</h4>
-        <div className="lp-filter-items">
-          {LOADER_OPTIONS.map(({ value, label }) => (
-            <FilterRow
-              key={value}
-              label={label}
-              iconSvg={LOADER_ICON_PATHS[value]}
-              iconClassName="loader-icon-img"
-              state={(localFilters.loaders[value] ?? null) as string | null}
-              onToggle={(s) => toggleLoader(value, s)}
-            />
-          ))}
-        </div>
-      </div>
+      {loaderOptions.length > 0 && (
+        <CollapsibleSection title={t.filters.loader}>
+          <div className="lp-filter-items">
+            {loaderOptions.map(({ value, label }) => (
+              <FilterRow
+                key={value}
+                label={label}
+                iconSvg={LOADER_ICON_PATHS[value]}
+                iconClassName="loader-icon-img"
+                state={(localFilters.loaders[value] ?? null) as string | null}
+                onToggle={(s) => toggleLoader(value, s)}
+              />
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
 
       {categoryGroups.length > 0 && categoryGroups.map(({ header, items }) => (
-        <div className="lp-filter-section" key={header} style={{ marginBottom: '1rem' }}>
-          <h4 className="lp-filter-title">{getCategoryHeaderLabel(header, t.filters.categoryHeaders)}</h4>
+        <CollapsibleSection
+          key={header}
+          title={getCategoryHeaderLabel(header, t.filters.categoryHeaders)}
+        >
           <div className="lp-filter-items">
             {items.map(({ name }) => (
               <FilterRow
@@ -130,11 +165,10 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
               />
             ))}
           </div>
-        </div>
+        </CollapsibleSection>
       ))}
 
-      <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-        <h4 className="lp-filter-title">{t.filters.environment}</h4>
+      <CollapsibleSection title={t.filters.environment}>
         <div className="lp-filter-items">
           {([
             { key: 'client_side' as const, label: t.filters.clientSide, iconSvg: clientIconRaw },
@@ -149,10 +183,9 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
             />
           ))}
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className="lp-filter-section">
-        <h4 className="lp-filter-title">{t.filters.other}</h4>
+      <CollapsibleSection title={t.filters.other}>
         <div className="lp-filter-items">
           {OTHER_FILTER_OPTIONS.map(({ value, labelKey }) => (
             <FilterRow
@@ -163,7 +196,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
             />
           ))}
         </div>
-      </div>
+      </CollapsibleSection>
     </MobileModal>
   );
 }
