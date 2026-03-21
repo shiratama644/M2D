@@ -23,7 +23,7 @@ function headerSortIndex(header: string): number {
 }
 
 // Logical sort order for performance_impact categories (lowest to highest impact).
-const PERFORMANCE_IMPACT_ORDER = ['potato', 'low', 'medium', 'high', 'screenshot', 'screenshots', 'fancy'];
+const PERFORMANCE_IMPACT_ORDER = ['potato', 'low', 'medium', 'high', 'screenshot', 'fancy'];
 
 function performanceImpactSortIndex(name: string): number {
   const index = PERFORMANCE_IMPACT_ORDER.indexOf(name);
