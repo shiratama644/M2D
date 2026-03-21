@@ -20,7 +20,10 @@ const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 async function translateChunk(text: string): Promise<string> {
   const preserved: string[] = [];
-  const placeholder = (i: number) => `\uE000${i}\uE001`;
+  // Use zero-padded index with distinctive underscores so that even if PUA
+  // boundary markers (\uE000 / \uE001) are stripped by the translation API
+  // the remaining token "_0000_" is still unique and can be restored.
+  const placeholder = (i: number) => `\uE000_${String(i).padStart(4, '0')}_\uE001`;
   const protect = (match: string) => {
     const idx = preserved.length;
     preserved.push(match);
@@ -51,9 +54,14 @@ async function translateChunk(text: string): Promise<string> {
     const data = await res.json();
     if (data.responseStatus === 200) {
       let result = data.responseData.translatedText as string;
-      preserved.forEach((original, i) => {
-        result = result.split(placeholder(i)).join(original);
-      });
+      // Process in reverse order to avoid partial replacements (e.g. "_0001_" inside "_0010_").
+      for (let i = preserved.length - 1; i >= 0; i--) {
+        const padded = String(i).padStart(4, '0');
+        result = result.split(placeholder(i)).join(preserved[i]);
+        // Fallback: if the translation API stripped PUA boundary markers, the
+        // placeholder is reduced to "_NNNN_".  Restore those as well.
+        result = result.split(`_${padded}_`).join(preserved[i]);
+      }
       return result;
     }
   } catch {

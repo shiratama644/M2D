@@ -3,6 +3,10 @@ import fabricIconRaw from '../assets/icons/tags/loaders/fabric.svg';
 import forgeIconRaw from '../assets/icons/tags/loaders/forge.svg';
 import neoforgeIconRaw from '../assets/icons/tags/loaders/neoforge.svg';
 import quiltIconRaw from '../assets/icons/tags/loaders/quilt.svg';
+import irisIconRaw from '../assets/icons/tags/loaders/iris.svg';
+import optifineIconRaw from '../assets/icons/tags/loaders/optifine.svg';
+import vanillaIconRaw from '../assets/icons/tags/loaders/vanilla.svg';
+import canvasIconRaw from '../assets/icons/tags/loaders/canvas.svg';
 
 // ---------------------------------------------------------------------------
 // Async concurrency utility
@@ -98,11 +102,29 @@ export const LOADER_OPTIONS: LoaderOption[] = [
   { value: 'quilt', label: 'Quilt' },
 ];
 
+export const SHADER_LOADER_OPTIONS: LoaderOption[] = [
+  { value: 'iris', label: 'Iris' },
+  { value: 'optifine', label: 'OptiFine' },
+  { value: 'vanilla-shader', label: 'Vanilla Shader' },
+  { value: 'canvas', label: 'Canvas' },
+];
+
+/** Returns the loader options appropriate for a given discover project type. */
+export function getLoaderOptions(projectType: string): LoaderOption[] {
+  if (projectType === 'shader') return SHADER_LOADER_OPTIONS;
+  if (projectType === 'resourcepack') return [];
+  return LOADER_OPTIONS;
+}
+
 export const LOADER_ICON_PATHS: Record<string, string> = {
   fabric: fabricIconRaw,
   forge: forgeIconRaw,
   neoforge: neoforgeIconRaw,
   quilt: quiltIconRaw,
+  iris: irisIconRaw,
+  optifine: optifineIconRaw,
+  'vanilla-shader': vanillaIconRaw,
+  canvas: canvasIconRaw,
 };
 
 export const CATEGORY_OPTIONS: CategoryOption[] = [
