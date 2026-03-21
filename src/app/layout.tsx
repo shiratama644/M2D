@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { AppProvider } from '../context/AppContext';
 import SessionProvider from '../components/auth/SessionProvider';
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -28,11 +29,18 @@ export const metadata: Metadata = {
 
 const themeScript = `(function(){try{var t=localStorage.getItem('mod_manager_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // The nonce is set by src/middleware.ts for each request and forwarded via
+  // the x-nonce request header. It enables the inline theme script to execute
+  // under the nonce-based Content-Security-Policy without needing 'unsafe-inline'.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <link rel="preconnect" href="https://cdn.modrinth.com" />
+        <link rel="dns-prefetch" href="https://cdn.modrinth.com" />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         <SessionProvider>

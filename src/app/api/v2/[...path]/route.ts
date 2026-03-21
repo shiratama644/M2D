@@ -46,7 +46,12 @@ export async function GET(
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    // All Modrinth v2 responses are fully public — no user-specific data is
+    // returned and no client auth headers are forwarded to the upstream.
+    // Cache-Control is therefore safe to set as public for both CDN and browser.
+    const response = NextResponse.json(data);
+    response.headers.set('Cache-Control', `public, max-age=${revalidate}, s-maxage=${revalidate}, stale-while-revalidate=${revalidate * 2}`);
+    return response;
   } catch (err) {
     if ((err as { name?: string }).name === 'AbortError') {
       console.error('Modrinth proxy timeout:', upstreamUrl);
