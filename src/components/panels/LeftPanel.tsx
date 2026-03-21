@@ -24,9 +24,9 @@ interface LeftPanelProps {
 
 type Filters = SearchParams['filters'];
 
-function makeInitialFilters(modVersion: string): Filters {
+function makeInitialFilters(modVersion: string, loaderOptions: { value: string }[]): Filters {
   return {
-    loaders: {},
+    loaders: Object.fromEntries(loaderOptions.map((o) => [o.value, null])) as Record<string, string | null>,
     categories: {},
     environment: { client_side: null, server_side: null },
     other: Object.fromEntries(OTHER_FILTER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>,
@@ -68,9 +68,8 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
   const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
   const gameVersions = useGameVersions();
   const categoryGroups = useCategoryGroups(discoverType);
-  const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion));
-
   const loaderOptions = getLoaderOptions(discoverType);
+  const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion, getLoaderOptions(discoverType)));
 
   const [prevModVersion, setPrevModVersion] = useState(modVersion);
   if (prevModVersion !== modVersion) {
@@ -98,7 +97,8 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
 
   // Reset category/loader filters and notify parent when project type changes.
   useEffect(() => {
-    const reset = { ...filtersRef.current, categories: {}, loaders: {} };
+    const newLoaders = Object.fromEntries(getLoaderOptions(discoverType).map((o) => [o.value, null])) as Record<string, string | null>;
+    const reset = { ...filtersRef.current, categories: {}, loaders: newLoaders };
     setFilters(reset);
     onFilterChangeRef.current(reset);
   // Intentionally omit onFilterChange from deps – we use a ref to keep it stable

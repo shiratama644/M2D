@@ -56,10 +56,11 @@ async function translateChunk(text: string): Promise<string> {
       let result = data.responseData.translatedText as string;
       // Process in reverse order to avoid partial replacements (e.g. "_0001_" inside "_0010_").
       for (let i = preserved.length - 1; i >= 0; i--) {
+        const padded = String(i).padStart(4, '0');
         result = result.split(placeholder(i)).join(preserved[i]);
         // Fallback: if the translation API stripped PUA boundary markers, the
         // placeholder is reduced to "_NNNN_".  Restore those as well.
-        result = result.split(`_${String(i).padStart(4, '0')}_`).join(preserved[i]);
+        result = result.split(`_${padded}_`).join(preserved[i]);
       }
       return result;
     }
