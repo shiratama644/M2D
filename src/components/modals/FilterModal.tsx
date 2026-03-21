@@ -168,24 +168,26 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
         </CollapsibleSection>
       ))}
 
-      <CollapsibleSection title={t.filters.environment}>
-        <div className="lp-filter-items">
-          {([
-            { key: 'client_side' as const, label: t.filters.clientSide, iconSvg: clientIconRaw },
-            { key: 'server_side' as const, label: t.filters.serverSide, iconSvg: serverIconRaw },
-          ]).map(({ key, label, iconSvg }) => (
-            <FilterRow
-              key={key}
-              label={label}
-              iconSvg={iconSvg}
-              state={((localFilters.environment ?? {})[key] ?? null) as string | null}
-              onToggle={(s) => toggleEnvironment(key, s)}
-            />
-          ))}
-        </div>
-      </CollapsibleSection>
+      {(projectType === 'mod' || projectType === 'modpack') && (
+        <CollapsibleSection title={t.filters.environment}>
+          <div className="lp-filter-items">
+            {([
+              { key: 'client_side' as const, label: t.filters.clientSide, iconSvg: clientIconRaw },
+              { key: 'server_side' as const, label: t.filters.serverSide, iconSvg: serverIconRaw },
+            ]).map(({ key, label, iconSvg }) => (
+              <FilterRow
+                key={key}
+                label={label}
+                iconSvg={iconSvg}
+                state={((localFilters.environment ?? {})[key] ?? null) as string | null}
+                onToggle={(s) => toggleEnvironment(key, s)}
+              />
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
 
-      <CollapsibleSection title={t.filters.other}>
+      <CollapsibleSection title={t.filters.license}>
         <div className="lp-filter-items">
           {OTHER_FILTER_OPTIONS.map(({ value, labelKey }) => (
             <FilterRow

@@ -52,9 +52,9 @@ const translations = {
       openSource: 'Open Source',
       license: 'License',
       categoryHeaders: {
-        categories: 'Categories',
-        resolutions: 'Resolutions',
-        features: 'Features',
+        categories: 'Category',
+        resolutions: 'Resolution',
+        features: 'Feature',
         performance_impact: 'Performance Impact',
       },
     },

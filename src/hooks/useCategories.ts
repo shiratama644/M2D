@@ -15,7 +15,7 @@ export interface CategoryGroup {
 
 // Preferred display order for category header groups (matches Modrinth's display order).
 // Headers not in this list are sorted after the listed ones by alphabetical order.
-const HEADER_ORDER = ['categories', 'resolutions', 'features', 'performance_impact'];
+const HEADER_ORDER = ['categories', 'features', 'resolutions', 'performance_impact'];
 
 function headerSortIndex(header: string): number {
   const index = HEADER_ORDER.indexOf(header);
