@@ -199,23 +199,25 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
           </CollapsibleSection>
         ))}
 
-        <CollapsibleSection title={t.filters.environment}>
-          <div className="lp-filter-items">
-            {([
-              { key: 'client_side' as const, label: t.filters.clientSide },
-              { key: 'server_side' as const, label: t.filters.serverSide },
-            ]).map(({ key, label }) => (
-              <FilterRow
-                key={key}
-                label={label}
-                state={((filters.environment ?? {})[key] ?? null) as string | null}
-                onToggle={(s) => toggleEnvironment(key, s)}
-              />
-            ))}
-          </div>
-        </CollapsibleSection>
+        {(discoverType === 'mod' || discoverType === 'modpack') && (
+          <CollapsibleSection title={t.filters.environment}>
+            <div className="lp-filter-items">
+              {([
+                { key: 'client_side' as const, label: t.filters.clientSide },
+                { key: 'server_side' as const, label: t.filters.serverSide },
+              ]).map(({ key, label }) => (
+                <FilterRow
+                  key={key}
+                  label={label}
+                  state={((filters.environment ?? {})[key] ?? null) as string | null}
+                  onToggle={(s) => toggleEnvironment(key, s)}
+                />
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
 
-        <CollapsibleSection title={t.filters.other}>
+        <CollapsibleSection title={t.filters.license}>
           <div className="lp-filter-items">
             {OTHER_FILTER_OPTIONS.map(({ value, labelKey }) => (
               <FilterRow
