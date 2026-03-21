@@ -1,12 +1,6 @@
 /* --- Base & Reset --- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Suppress all CSS transitions during initial page load to prevent jitter. */
-html.preload * {
-  -webkit-transition: none !important;
-  transition: none !important;
-}
-
 body {
   background-image: var(--bg-gradient);
   background-attachment: fixed;

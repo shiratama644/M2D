@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem('mod_manager_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}document.documentElement.classList.add('preload');window.addEventListener('load',function(){document.documentElement.classList.remove('preload');});})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem('mod_manager_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // The nonce is set by src/middleware.ts for each request and forwarded via
