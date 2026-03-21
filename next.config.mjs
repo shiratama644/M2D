@@ -18,6 +18,9 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=(), payment=()',
   },
   // Enforce HTTPS for 2 years and include subdomains in the preload list.
+  // Safe for both Vercel and Cloudflare deployments because both platforms
+  // provision HTTPS for every subdomain automatically. Submit the domain at
+  // https://hstspreload.org to be included in browser preload lists.
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',

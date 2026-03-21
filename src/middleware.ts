@@ -17,10 +17,16 @@ export function middleware(request: NextRequest) {
     // 'unsafe-inline' for styles is required because Framer Motion and
     // Tailwind utility classes apply inline style attributes at runtime.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' blob: data: https://cdn.modrinth.com https://*.modrinth.com https://cdn.discordapp.com",
-    "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+    // Mod body markdown and gallery images are rendered with unoptimized={true}
+    // (bypassing /_next/image) and can point to any HTTPS CDN, so 'https:' is
+    // required in addition to the known hostnames for the icon and avatar.
+    "img-src 'self' blob: data: https:",
+    // Translation API (ModDetail.tsx) calls MyMemory directly from the browser.
+    "connect-src 'self' https://api.mymemory.translated.net https://vitals.vercel-insights.com https://va.vercel-scripts.com",
     "font-src 'self'",
-    "frame-src 'none'",
+    // Mod descriptions can embed iframes (e.g. YouTube videos); allow any HTTPS
+    // frame source. frame-ancestors remains 'none' to block embedding of this site.
+    "frame-src https:",
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
