@@ -107,7 +107,7 @@ export default function ModPageClient({ project }: { project: ModProject }) {
                       {children}
                     </a>
                   ),
-                  iframe: ({ src, title, ...props }) => (
+                  iframe: ({ src, title, width: _w, height: _h, ...props }) => (
                     <span className="mod-detail-iframe-wrapper">
                       <iframe
                         src={src}
