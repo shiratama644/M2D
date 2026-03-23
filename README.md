@@ -5,13 +5,17 @@ A powerful and fast tool to search, manage, and download Minecraft mods from Mod
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/) 15 (with **React 19**)
+- **Language**: **TypeScript**
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations**: **Framer Motion**
+- **UI Primitives**: **Radix UI**
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand)
 - **Authentication**: [NextAuth.js v5](https://authjs.dev/) (Discord OAuth)
 - **Package Manager**: **pnpm**
 - **Downloading**: **JSZip** + **FileSaver.js**
 - **Markdown Rendering**: **react-markdown** + **rehype-raw** + **remark-gfm**
-- **Icons**: **FontAwesome** + Custom local SVGs (loaded as raw assets)
+- **Icons**: **FontAwesome** + **Lucide React** + Custom local SVGs (loaded as raw assets)
+- **Testing**: **Vitest** (jsdom environment)
 
 ## Development Setup
 
@@ -33,8 +37,14 @@ DISCORD_CLIENT_ID=your_discord_client_id_here
 DISCORD_CLIENT_SECRET=your_discord_client_secret_here
 AUTH_SECRET=your_nextauth_secret_here
 
+# Required for local dev and deployments behind a reverse proxy
+AUTH_TRUST_HOST=true
+
 # Optional: set when deploying to a custom domain
 # NEXT_PUBLIC_BASE_URL=https://your-domain.com
+
+# Optional: required only if using on-demand ISR cache revalidation
+# REVALIDATE_SECRET=your_revalidate_secret_here
 ```
 
 See [**How to get Discord OAuth credentials**](#how-to-get-discord-oauth-credentials) below for step-by-step instructions.
@@ -92,6 +102,18 @@ Paste the output as `AUTH_SECRET` in `.env.local`.
 
 ## Other Scripts
 
+#### Testing
+```bash
+# Run tests once
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage report
+pnpm test:coverage
+```
+
 #### Building for Production
 ```bash
 # Create an optimized production build
@@ -106,6 +128,18 @@ pnpm start
 pnpm lint
 ```
 
+#### Cloudflare Workers
+```bash
+# Build for Cloudflare Workers
+pnpm build:worker
+
+# Build and deploy to Cloudflare Workers
+pnpm deploy
+
+# Build and preview locally with Wrangler
+pnpm preview
+```
+
 #### Generating Directory Tree
 To get an overview of the project structure, you can generate a `tree.txt` file.
 ```bash
@@ -115,17 +149,19 @@ This command will create/update a file at `scripts/tree/tree.txt`, excluding lar
 
 ## Features
 
-- 🔍 Search Modrinth mods with loader & version filters
+- 🔍 Search Modrinth mods with loader, version, category, and environment filters
+- 📦 Browse by project type: mods, modpacks, resource packs, and shaders
 - ♾️ Infinite scroll mod list
 - ✅ Multi-mod selection with checkboxes
 - 💾 Profile save/load/export (TXT) and import from mod ZIP
 - 🔗 Dependency analysis (required/optional/conflict)
-- 📦 Download selected mods as ZIP
+- 📥 Download selected mods as ZIP
 - 🌙 Dark/Light theme toggle
 - 🌐 Multi-language support (English / Japanese)
 - ⭐ Favorites — bookmark mods for quick access
 - 🕒 Search history with one-click re-search
 - 📖 Mod detail page with full markdown description and gallery
+- 🃏 Toggleable mod card descriptions
 - 🔐 Discord login via OAuth (NextAuth v5) — sync preferences across devices
 - 🐛 Floating debug console for easy mobile development
 - 🚀 SSR + ISR — server-side rendering with incremental static regeneration for fast initial loads
