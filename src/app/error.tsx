@@ -1,6 +1,21 @@
 'use client';
 
-export default function Error({ reset }: { reset: () => void }) {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const router = useRouter();
+
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div
       style={{
@@ -20,9 +35,14 @@ export default function Error({ reset }: { reset: () => void }) {
       <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
         An unexpected error occurred. Please try again.
       </p>
-      <button className="btn-small green" onClick={reset}>
-        Try again
-      </button>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <button className="btn-small green" onClick={() => reset()}>
+          Try again
+        </button>
+        <button className="btn-small green" onClick={() => router.push('/')}>
+          Back to M2D
+        </button>
+      </div>
     </div>
   );
 }

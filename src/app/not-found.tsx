@@ -1,6 +1,10 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
 
 export default function NotFound() {
+  const router = useRouter();
+
   return (
     <div
       style={{
@@ -20,9 +24,9 @@ export default function NotFound() {
       <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
         The page you are looking for does not exist.
       </p>
-      <Link href="/" className="btn-small green">
+      <button className="btn-small green" onClick={() => router.push('/')}>
         Back to M2D
-      </Link>
+      </button>
     </div>
   );
 }
