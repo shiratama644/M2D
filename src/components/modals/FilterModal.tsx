@@ -10,18 +10,25 @@ import CustomSelect from '../ui/CustomSelect';
 import FilterRow from '../ui/FilterRow';
 import MobileModal from '../ui/MobileModal';
 import Icon from '../ui/Icon';
+import { cn } from '../../lib/utils';
 import type { SearchParams } from '../../hooks/useDependencyCheck';
+import type { DiscoverType } from '../../store/useAppStore';
 
 import filterIconRaw from '../../assets/icons/filter.svg';
 import clientIconRaw from '../../assets/icons/client.svg';
 import serverIconRaw from '../../assets/icons/server.svg';
 import chevronDownRaw from '../../assets/icons/chevron-down.svg';
+import cubeIconRaw from '../../assets/icons/cube.svg';
+import packageIconRaw from '../../assets/icons/package.svg';
+import imageIconRaw from '../../assets/icons/image.svg';
+import sparklesIconRaw from '../../assets/icons/sparkles.svg';
 
 interface FilterModalProps {
   filters: SearchParams['filters'];
   onFiltersChange: (filters: SearchParams['filters']) => void;
   onClose: () => void;
   projectType?: string;
+  onProjectTypeChange?: (type: DiscoverType) => void;
 }
 
 /** Collapsible section for the mobile filter modal. */
@@ -54,12 +61,31 @@ function CollapsibleSection({
   );
 }
 
-export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod' }: FilterModalProps) {
+export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod', onProjectTypeChange }: FilterModalProps) {
   const { t, modVersion, updateModVersion } = useApp();
   const gameVersions = useGameVersions();
-  const categoryGroups = useCategoryGroups(projectType);
-  const loaderOptions = getLoaderOptions(projectType);
+  const [localProjectType, setLocalProjectType] = useState<DiscoverType>(projectType as DiscoverType);
+  const categoryGroups = useCategoryGroups(localProjectType);
+  const loaderOptions = getLoaderOptions(localProjectType);
   const [localFilters, setLocalFilters] = useState(filters);
+
+  const DISCOVER_OPTIONS: Array<{ type: DiscoverType; label: string; icon: string }> = [
+    { type: 'mod', label: t.discover.mod, icon: cubeIconRaw },
+    { type: 'modpack', label: t.discover.modpack, icon: packageIconRaw },
+    { type: 'resourcepack', label: t.discover.texture, icon: imageIconRaw },
+    { type: 'shader', label: t.discover.shader, icon: sparklesIconRaw },
+  ];
+
+  const handleDiscoverTypeChange = (type: DiscoverType) => {
+    setLocalProjectType(type);
+    const newLoaders = Object.fromEntries(
+      getLoaderOptions(type).map((o) => [o.value, null])
+    ) as Record<string, string | null>;
+    const resetFilters = { ...localFilters, categories: {}, loaders: newLoaders };
+    setLocalFilters(resetFilters);
+    onFiltersChange(resetFilters);
+    onProjectTypeChange?.(type);
+  };
 
   const emit = (newFilters: typeof localFilters) => {
     setLocalFilters(newFilters);
@@ -120,6 +146,21 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
       size="large"
       footer={<button onClick={onClose} className="btn-secondary">{t.settings.close}</button>}
     >
+      <div className="fm-discover-section">
+        <div className="lp-discover-btns">
+          {DISCOVER_OPTIONS.map(({ type, label, icon }) => (
+            <button
+              key={type}
+              className={cn('lp-discover-btn', localProjectType === type && 'active')}
+              onClick={() => handleDiscoverTypeChange(type)}
+            >
+              <Icon svg={icon} size={14} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <CollapsibleSection title={t.filters.version}>
         <CustomSelect
           options={[
@@ -168,7 +209,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
         </CollapsibleSection>
       ))}
 
-      {(projectType === 'mod' || projectType === 'modpack') && (
+      {(localProjectType === 'mod' || localProjectType === 'modpack') && (
         <CollapsibleSection title={t.filters.environment}>
           <div className="lp-filter-items">
             {([

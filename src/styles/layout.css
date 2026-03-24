@@ -238,4 +238,5 @@
 
   /* Hide the mobile-only settings button in header */
   .header-settings-btn { display: none !important; }
+  .mobile-only-btn { display: none !important; }
 }

@@ -13,6 +13,8 @@ import RightPanel from '../components/panels/RightPanel';
 import SettingsModal from '../components/modals/SettingsModal';
 import DependencyModal from '../components/modals/DependencyModal';
 import SelectedModal from '../components/modals/SelectedModal';
+import HistoryModal from '../components/modals/HistoryModal';
+import FavoritesModal from '../components/modals/FavoritesModal';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import DebugPanel from '../components/debug/DebugPanel';
 import CustomDialog from '../components/ui/CustomDialog';
@@ -42,6 +44,10 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
     depModalOpen,
     setDepModalOpen,
     settingsOpen,
+    historyModalOpen,
+    setHistoryModalOpen,
+    favoritesModalOpen,
+    setFavoritesModalOpen,
     dialog,
     addDebugLog,
     addSearchHistory,
@@ -166,6 +172,15 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
         <DependencyModal issues={depIssues} onClose={() => setDepModalOpen(false)} />
       )}
       <SelectedModal />
+      {historyModalOpen && (
+        <HistoryModal
+          onContextRestore={handleContextRestore}
+          onClose={() => setHistoryModalOpen(false)}
+        />
+      )}
+      {favoritesModalOpen && (
+        <FavoritesModal onClose={() => setFavoritesModalOpen(false)} />
+      )}
       <LoadingOverlay />
       {!isDesktop && <DebugPanel />}
       <CustomDialog />
