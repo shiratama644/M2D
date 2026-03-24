@@ -5,9 +5,10 @@ import { useApp } from '../../context/AppContext';
 import CustomSelect from '../ui/CustomSelect';
 import Icon from '../ui/Icon';
 import FilterModal from '../modals/FilterModal';
-import { LOADER_OPTIONS, OTHER_FILTER_OPTIONS } from '../../lib/helpers';
+import { LOADER_OPTIONS, OTHER_FILTER_OPTIONS, getLoaderOptions } from '../../lib/helpers';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
 import type { SearchParams } from '../../hooks/useDependencyCheck';
+import type { DiscoverType } from '../../store/useAppStore';
 
 import searchIconRaw from '../../assets/icons/search.svg';
 import filterIconRaw from '../../assets/icons/filter.svg';
@@ -41,7 +42,7 @@ interface SearchSectionProps {
 }
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
-  const { fastSearch, t, modVersion, discoverType } = useApp();
+  const { fastSearch, t, modVersion, discoverType, setDiscoverType } = useApp();
   const isDesktop = useIsDesktop();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
@@ -55,12 +56,25 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
   }
 
-  // Reset category filters when project type changes
+  // Reset category AND loader filters when project type changes
   const [prevDiscoverType, setPrevDiscoverType] = useState(discoverType);
   if (prevDiscoverType !== discoverType) {
     setPrevDiscoverType(discoverType);
-    setFilters((prev) => ({ ...prev, categories: {} }));
+    const newLoaders = Object.fromEntries(getLoaderOptions(discoverType).map((o) => [o.value, null])) as Record<string, string | null>;
+    setFilters((prev) => ({ ...prev, categories: {}, loaders: newLoaders }));
   }
+
+  const makeResetFilters = (type: DiscoverType, base: SearchParams['filters']): SearchParams['filters'] => {
+    const newLoaders = Object.fromEntries(getLoaderOptions(type).map((o) => [o.value, null])) as Record<string, string | null>;
+    return { ...base, categories: {}, loaders: newLoaders };
+  };
+
+  const handleDiscoverTypeChange = (type: DiscoverType) => {
+    setDiscoverType(type);
+    const newFilters = makeResetFilters(type, filters);
+    setFilters(newFilters);
+    doSearch(query, sort, newFilters);
+  };
 
   const sortOptions = [
     { value: 'relevance', label: t.sort.relevance },
@@ -170,6 +184,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           onFiltersChange={handleFiltersChange}
           onClose={() => setFilterOpen(false)}
           projectType={discoverType}
+          onProjectTypeChange={handleDiscoverTypeChange}
         />
       )}
     </section>

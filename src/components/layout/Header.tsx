@@ -8,9 +8,11 @@ import { useSession } from 'next-auth/react';
 import hamburgerIconRaw from '../../assets/icons/hamburger.svg';
 import settingsIconRaw from '../../assets/icons/settings.svg';
 import userIconRaw from '../../assets/icons/user.svg';
+import historyIconRaw from '../../assets/icons/history.svg';
+import starIconRaw from '../../assets/icons/star.svg';
 
 export default function Header() {
-  const { setMenuOpen, setSettingsOpen } = useApp();
+  const { setMenuOpen, setSettingsOpen, setHistoryModalOpen, setFavoritesModalOpen } = useApp();
   const { data: session } = useSession();
 
   return (
@@ -20,6 +22,20 @@ export default function Header() {
       </button>
       <h1>Mod Manager</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <button
+          onClick={() => setHistoryModalOpen(true)}
+          className="btn icon-only-btn mobile-only-btn"
+          aria-label="History"
+        >
+          <Icon svg={historyIconRaw} size={24} />
+        </button>
+        <button
+          onClick={() => setFavoritesModalOpen(true)}
+          className="btn icon-only-btn mobile-only-btn"
+          aria-label="Favorites"
+        >
+          <Icon svg={starIconRaw} size={24} />
+        </button>
         <Link href="/account" className="btn icon-only-btn" aria-label="Account">
           {session?.user?.image ? (
             <Image

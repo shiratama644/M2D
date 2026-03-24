@@ -114,6 +114,10 @@ export interface AppState {
   setActiveModId: (v: string | null) => void;
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
+  historyModalOpen: boolean;
+  setHistoryModalOpen: (v: boolean) => void;
+  favoritesModalOpen: boolean;
+  setFavoritesModalOpen: (v: boolean) => void;
   depModalOpen: boolean;
   setDepModalOpen: (v: boolean) => void;
   selectedModalOpen: boolean;
@@ -261,6 +265,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   settingsOpen: false,
   setSettingsOpen: (v) => set({ settingsOpen: v }),
+
+  historyModalOpen: false,
+  setHistoryModalOpen: (v) => set({ historyModalOpen: v }),
+
+  favoritesModalOpen: false,
+  setFavoritesModalOpen: (v) => set({ favoritesModalOpen: v }),
 
   depModalOpen: false,
   setDepModalOpen: (v) => set({ depModalOpen: v }),
