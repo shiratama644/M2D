@@ -153,8 +153,9 @@ const translations = {
       openModrinth: 'Open on Modrinth',
       share: 'Share',
       translating: 'Translating...',
-      translate: 'Translate',
+      translate: 'Translate to JP',
       translated: 'Translated',
+      revertTranslation: 'Show Original',
     },
     discover: {
       title: 'Discover',
@@ -332,8 +333,9 @@ const translations = {
       openModrinth: 'Modrinthで開く',
       share: '共有',
       translating: '翻訳中...',
-      translate: '翻訳',
+      translate: '日本語に翻訳',
       translated: '翻訳済み',
+      revertTranslation: '原文に戻す',
     },
     discover: {
       title: 'Discover',

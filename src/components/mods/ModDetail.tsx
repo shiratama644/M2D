@@ -122,12 +122,12 @@ interface TranslatedContent {
   body: string | null;
 }
 
+const EMPTY_TRANSLATION: TranslatedContent = { id: null, lang: null, description: null, body: null };
+
 export default function ModDetail() {
-  const { activeModId, modDataMap, t, language } = useApp();
+  const { activeModId, modDataMap, t } = useApp();
   const [state, setState] = useState<{ id: string | null; detail: ModProject | null }>({ id: null, detail: null });
-  const [translatedContent, setTranslatedContent] = useState<TranslatedContent>({
-    id: null, lang: null, description: null, body: null,
-  });
+  const [translatedContent, setTranslatedContent] = useState<TranslatedContent>(EMPTY_TRANSLATION);
   const [translating, setTranslating] = useState(false);
   const [iconError, setIconError] = useState<{ id: string | null; errored: boolean }>({ id: null, errored: false });
   const galleryRef = useRef<HTMLDivElement | null>(null);
@@ -148,7 +148,7 @@ export default function ModDetail() {
 
   const handleTranslate = () => {
     if (!projectDetail || !activeModId || translatingRef.current) return;
-    const cacheKey = `${activeModId}:${language}`;
+    const cacheKey = `${activeModId}:ja`;
     if (translationCache.current[cacheKey]) {
       setTranslatedContent(translationCache.current[cacheKey]);
       return;
@@ -163,7 +163,7 @@ export default function ModDetail() {
       .then(([description, body]) => {
         translatingRef.current = false;
         if (modId !== activeModId) return;
-        const result: TranslatedContent = { id: modId, lang: language, description, body };
+        const result: TranslatedContent = { id: modId, lang: 'ja', description, body };
         translationCache.current[cacheKey] = result;
         setTranslatedContent(result);
         setTranslating(false);
@@ -173,6 +173,10 @@ export default function ModDetail() {
         console.error('Translation failed:', err);
         setTranslating(false);
       });
+  };
+
+  const handleRevertTranslation = () => {
+    setTranslatedContent(EMPTY_TRANSLATION);
   };
 
   if (!activeModId) {
@@ -201,7 +205,7 @@ export default function ModDetail() {
   const scrollToGallery = () => galleryRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   const hasTranslation =
-    translatedContent.id === activeModId && translatedContent.lang === language;
+    translatedContent.id === activeModId && translatedContent.body !== null;
   const displayDescription = hasTranslation && translatedContent.description
     ? translatedContent.description
     : projectDetail.description;
@@ -250,21 +254,24 @@ export default function ModDetail() {
       </div>
 
       <div className="mod-detail-body">
-        {language === 'ja' && (
-          <div className="mod-detail-translate-bar">
+        <div className="mod-detail-translate-bar">
+          {hasTranslation ? (
+            <button
+              className="btn-small"
+              onClick={handleRevertTranslation}
+            >
+              {t.rightPanel.revertTranslation}
+            </button>
+          ) : (
             <button
               className="btn-small green"
               onClick={handleTranslate}
-              disabled={translating || hasTranslation}
+              disabled={translating}
             >
-              {translating
-                ? t.rightPanel.translating
-                : hasTranslation
-                  ? t.rightPanel.translated
-                  : t.rightPanel.translate}
+              {translating ? t.rightPanel.translating : t.rightPanel.translate}
             </button>
-          </div>
-        )}
+          )}
+        </div>
         {displayBody ? (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

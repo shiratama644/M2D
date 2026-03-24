@@ -60,7 +60,7 @@
 .btn-filters {
   display: flex; align-items: center; gap: 0.4rem; padding: 0 0.875rem;
   height: 2.75rem; background: var(--glass-bg-hover); border: 1px solid var(--glass-border);
-  border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold; transition: all 0.2s;
+  border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold; transition: background-color 0.2s;
   white-space: nowrap; flex-shrink: 0; position: relative;
 }
 .btn-filters:hover { background: var(--glass-bg-solid); }
@@ -87,14 +87,14 @@
 .btn-clear { font-size: 0.75rem; color: var(--text-muted); transition: color 0.2s; }
 .btn-clear:hover { color: var(--danger-color); }
 .action-buttons { display: flex; gap: 0.75rem; }
-.btn-action { border-radius: 0.75rem; font-weight: bold; font-size: 0.875rem; height: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
+.btn-action { border-radius: 0.75rem; font-weight: bold; font-size: 0.875rem; height: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background-color 0.2s; }
 .btn-check { flex: 1; background: var(--glass-bg-hover); border: 1px solid var(--glass-border); color: var(--text-main); }
 .btn-check:hover { background: var(--glass-bg-solid); }
 .btn-download { flex: 2; }
 
 /* Loading overlay */
 .loading-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 1rem; }
-.spinner { width: 3rem; height: 3rem; border: 4px solid rgba(255, 255, 255, 0.2); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+.spinner { width: 3rem; height: 3rem; border: 4px solid rgba(255, 255, 255, 0.2); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; will-change: transform; }
 .loading-text { color: white; font-weight: bold; font-size: 1.125rem; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: center; }
 
 .progress-container { display: flex; flex-direction: column; align-items: center; width: 16rem; max-width: 100%; }
@@ -105,7 +105,7 @@
 /* Loader dots */
 .loader-sentinel { height: 5rem; display: flex; align-items: center; justify-content: center; margin-top: 1rem; opacity: 0; transition: opacity 0.3s; }
 .loader-dots { position: relative; width: 5rem; height: 1.25rem; }
-.loader-dots div { position: absolute; top: 0; width: 0.75rem; height: 0.75rem; border-radius: 50%; background-color: var(--primary-color); animation-timing-function: cubic-bezier(0, 1, 1, 0); }
+.loader-dots div { position: absolute; top: 0; width: 0.75rem; height: 0.75rem; border-radius: 50%; background-color: var(--primary-color); animation-timing-function: cubic-bezier(0, 1, 1, 0); will-change: transform; }
 .loader-dots div:nth-child(1) { left: 0.5rem; animation: loader-dots1 0.6s infinite; }
 .loader-dots div:nth-child(2) { left: 0.5rem; animation: loader-dots2 0.6s infinite; }
 .loader-dots div:nth-child(3) { left: 2rem; animation: loader-dots2 0.6s infinite; }
