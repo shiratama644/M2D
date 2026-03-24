@@ -7,7 +7,11 @@ import SettingsContent from '../settings/SettingsContent';
 import DebugPanel from '../debug/DebugPanel';
 import { useGameVersions } from '../../hooks/useGameVersions';
 import Icon from '../ui/Icon';
-import { FALLBACK_ICON } from '../../lib/helpers';
+import { FALLBACK_ICON, countActiveFilters } from '../../lib/helpers';
+import type { SearchContextEntry } from '../../store/useAppStore';
+
+/** Maps store language keys to BCP-47 locale strings for Intl formatting. */
+const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
 
 import fileTextIconRaw from '../../assets/icons/file-text.svg';
 import historyIconRaw from '../../assets/icons/history.svg';
@@ -19,16 +23,35 @@ import terminalIconRaw from '../../assets/icons/terminal-square.svg';
 type Tab = 'description' | 'history' | 'settings' | 'selected' | 'favorites' | 'console';
 
 interface RightPanelProps {
-  onHistorySearch: (query: string) => void;
+  onContextRestore: (entry: SearchContextEntry) => void;
 }
 
-export default function RightPanel({ onHistorySearch }: RightPanelProps) {
+/** Format a Unix timestamp for display in the history list. */
+function formatHistoryTime(timestamp: number, locale: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (isToday) {
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  return (
+    date.toLocaleDateString(locale, { month: 'short', day: 'numeric' }) +
+    ' ' +
+    date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })
+  );
+}
+
+export default function RightPanel({ onContextRestore }: RightPanelProps) {
   const {
     selectedMods, removeMod,
     favorites, toggleFavorite, addMod,
     searchHistory, removeSearchHistory, clearSearchHistory,
+    contextHistory, removeContextEntry, clearContextHistory,
     setSelectedModalOpen, modDataMap,
-    debugMode,
+    debugMode, language,
     t,
   } = useApp();
   const gameVersions = useGameVersions();
@@ -66,28 +89,51 @@ export default function RightPanel({ onHistorySearch }: RightPanelProps) {
           <div className="rp-history">
             <div className="rp-history-header">
               <span>{t.rightPanel.history}</span>
-              <button onClick={clearSearchHistory} className="btn-text-sm">{t.history.clear}</button>
+              <button onClick={clearContextHistory} className="btn-text-sm">{t.history.clear}</button>
             </div>
-            {searchHistory.length === 0 ? (
+            {contextHistory.length === 0 ? (
               <div className="rp-empty">{t.history.noHistory}</div>
             ) : (
               <div className="rp-history-list">
-                {searchHistory.map((q) => (
-                  <div key={q} className="rp-history-item">
-                    <button
-                      className="rp-history-query"
-                      onClick={() => onHistorySearch(q)}
-                    >
-                      {q}
-                    </button>
-                    <button
-                      className="rp-history-del"
-                      onClick={() => removeSearchHistory(q)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                {[...contextHistory].reverse().map((entry) => {
+                  const filterCount = countActiveFilters(entry.filters);
+                  const projectTypeLabel: Record<string, string> = {
+                    mod: t.discover.mod,
+                    modpack: t.discover.modpack,
+                    resourcepack: t.discover.texture,
+                    shader: t.discover.shader,
+                  };
+                  return (
+                    <div key={entry.id} className="rp-history-item">
+                      <button
+                        className="rp-history-query"
+                        onClick={() => onContextRestore(entry)}
+                        title={t.history.restore}
+                      >
+                        <span className="rp-history-badge">
+                          {projectTypeLabel[entry.projectType] ?? entry.projectType}
+                        </span>
+                        <span className="rp-history-text">
+                          {entry.query || <em>{t.history.emptyQuery}</em>}
+                        </span>
+                        <span className="rp-history-meta">
+                          {filterCount > 0
+                            ? t.history.filterCount.replace('%n', String(filterCount))
+                            : t.history.noFilters}
+                          {' · '}
+                          {formatHistoryTime(entry.timestamp, LOCALE_MAP[language] ?? 'en-US')}
+                        </span>
+                      </button>
+                      <button
+                        className="rp-history-del"
+                        onClick={() => removeContextEntry(entry.id)}
+                        title={t.history.deleteEntry}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

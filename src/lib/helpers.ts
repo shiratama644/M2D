@@ -60,12 +60,14 @@ export const SEARCH_HISTORY_KEY = 'mod_manager_search_history';
 export const SHOW_CARD_DESCRIPTION_KEY = 'mod_manager_show_card_description';
 export const ADVANCED_CONSOLE_KEY = 'mod_manager_advanced_console';
 export const DISCOVER_TYPE_KEY = 'mod_manager_discover_type';
+export const CONTEXT_HISTORY_KEY = 'mod_manager_context_history';
 
 // ---------------------------------------------------------------------------
 // App-wide constants
 // ---------------------------------------------------------------------------
 
 export const MAX_SEARCH_HISTORY = 50;
+export const MAX_CONTEXT_HISTORY = 50;
 export const CONCURRENCY_LIMIT = 15;
 export const FALLBACK_ICON = 'https://cdn.modrinth.com/assets/unknown_server.png';
 
@@ -193,4 +195,27 @@ export function getCategoryLabel(
   const camelVal = categories[camel];
   if (typeof camelVal === 'string') return camelVal;
   return formatCategoryName(name);
+}
+
+// ---------------------------------------------------------------------------
+// Search filters (shared between store, hooks, and components)
+// ---------------------------------------------------------------------------
+
+/** Filter state captured from the search UI. All values are nullable strings. */
+export interface SearchFilters {
+  loaders: Record<string, string | null>;
+  categories?: Record<string, string | null>;
+  environment?: { client_side: string | null; server_side: string | null };
+  other?: Record<string, string | null>;
+  version?: string;
+}
+
+/** Returns the number of filter controls that have a non-null selection. */
+export function countActiveFilters(filters: SearchFilters): number {
+  let count = 0;
+  if (filters.loaders) count += Object.values(filters.loaders).filter(Boolean).length;
+  if (filters.categories) count += Object.values(filters.categories).filter(Boolean).length;
+  if (filters.environment) count += Object.values(filters.environment).filter(Boolean).length;
+  if (filters.other) count += Object.values(filters.other).filter(Boolean).length;
+  return count;
 }

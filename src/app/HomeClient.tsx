@@ -23,6 +23,7 @@ import { useDependencyCheck } from '../hooks/useDependencyCheck';
 import { LOADER_OPTIONS } from '../lib/helpers';
 import type { ModHit } from '../types/modrinth';
 import type { DepIssues, SearchParams } from '../hooks/useDependencyCheck';
+import type { SearchContextEntry } from '../store/useAppStore';
 
 const DEFAULT_SEARCH: SearchParams = {
   query: '',
@@ -45,6 +46,9 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
     addDebugLog,
     addSearchHistory,
     activeModId,
+    discoverType,
+    setDiscoverType,
+    addContextHistory,
     t,
   } = useApp();
 
@@ -83,15 +87,21 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
     setSearchParams({ query, sort, filters });
     addDebugLog('info', `Search: query="${query}" sort=${sort}`);
     if (query?.trim()) addSearchHistory(query.trim());
+    // Write a committed search context snapshot (dedup handled in store).
+    addContextHistory({ query, sort, filters, projectType: discoverType });
   };
 
   const handleLeftPanelFilter = (filters: SearchParams['filters']) => {
-    setSearchParams((prev) => ({ ...prev, filters }));
+    const next = { ...searchParams, filters };
+    setSearchParams(next);
+    // Filter change is a committed action — record a snapshot.
+    addContextHistory({ query: next.query, sort: next.sort, filters: next.filters, projectType: discoverType });
   };
 
-  const handleHistorySearch = (query: string) => {
-    setSearchParams((prev) => ({ ...prev, query }));
-    addSearchHistory(query);
+  // Constraint 3: restoring from history is a full overwrite — no partial merges.
+  const handleContextRestore = (entry: SearchContextEntry) => {
+    setSearchParams({ query: entry.query, sort: entry.sort, filters: entry.filters });
+    setDiscoverType(entry.projectType);
   };
 
   return (
@@ -120,7 +130,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
             onMouseDown={(e) => onColResizeStart('right', e)}
           />
           <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
-            <RightPanel onHistorySearch={handleHistorySearch} />
+            <RightPanel onContextRestore={handleContextRestore} />
           </aside>
         </div>
       ) : (

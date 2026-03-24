@@ -3,15 +3,9 @@
 import { useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { API } from '../lib/api';
-import { asyncPool, CONCURRENCY_LIMIT } from '../lib/helpers';
+import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '../lib/helpers';
 
-export interface SearchFilters {
-  loaders: Record<string, string | null>;
-  categories?: Record<string, string | null>;
-  environment?: { client_side: string | null; server_side: string | null };
-  other?: Record<string, string | null>;
-  version?: string;
-}
+export type { SearchFilters };
 
 export interface SearchParams {
   query: string;

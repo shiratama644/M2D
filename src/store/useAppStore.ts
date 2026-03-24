@@ -15,7 +15,10 @@ import {
   SHOW_CARD_DESCRIPTION_KEY,
   ADVANCED_CONSOLE_KEY,
   DISCOVER_TYPE_KEY,
+  CONTEXT_HISTORY_KEY,
   MAX_SEARCH_HISTORY,
+  MAX_CONTEXT_HISTORY,
+  type SearchFilters,
 } from '../lib/helpers';
 
 // Safe localStorage helpers — no-op on the server during SSR.
@@ -37,6 +40,19 @@ let dialogResolver: ((result?: boolean) => void) | null = null;
 const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
 
 export type DiscoverType = 'mod' | 'modpack' | 'resourcepack' | 'shader';
+
+/**
+ * An immutable snapshot of the full search context at the moment a search was
+ * committed. Entries are append-only and never mutated after creation.
+ */
+export interface SearchContextEntry {
+  readonly id: string;
+  readonly timestamp: number;
+  readonly query: string;
+  readonly sort: string;
+  readonly filters: SearchFilters;
+  readonly projectType: DiscoverType;
+}
 
 export interface Profile {
   name: string;
@@ -148,6 +164,12 @@ export interface AppState {
   addSearchHistory: (query: string) => void;
   removeSearchHistory: (query: string) => void;
   clearSearchHistory: () => void;
+
+  // Context history — immutable snapshots of committed search contexts (persisted)
+  contextHistory: SearchContextEntry[];
+  addContextHistory: (entry: { query: string; sort: string; filters: SearchFilters; projectType: DiscoverType }) => void;
+  removeContextEntry: (id: string) => void;
+  clearContextHistory: () => void;
 
   // Debug logs
   debugLogs: DebugLog[];
@@ -449,6 +471,57 @@ export const useAppStore = create<AppState>((set, get) => ({
   clearSearchHistory: () => {
     set({ searchHistory: [] });
     ls.remove(SEARCH_HISTORY_KEY);
+  },
+
+  // ── Context history ───────────────────────────────────────────────────────
+
+  contextHistory: (() => {
+    try {
+      return JSON.parse(ls.get(CONTEXT_HISTORY_KEY) || '[]') as SearchContextEntry[];
+    } catch {
+      return [];
+    }
+  })(),
+
+  addContextHistory: (entry) => {
+    const { contextHistory } = get();
+    // Constraint 1 & 4: append-only, deduplicated — compare against the last entry only.
+    const last = contextHistory[contextHistory.length - 1];
+    if (
+      last &&
+      last.query === entry.query &&
+      last.sort === entry.sort &&
+      last.projectType === entry.projectType &&
+      JSON.stringify(last.filters) === JSON.stringify(entry.filters)
+    ) return;
+
+    const newEntry: SearchContextEntry = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      query: entry.query,
+      sort: entry.sort,
+      filters: entry.filters,
+      projectType: entry.projectType,
+    };
+
+    // Constraint 2: entry is treated as immutable once stored.
+    // Constraint 5: this array is derived from searchContext, never the other way.
+    const next = [...contextHistory, newEntry].slice(-MAX_CONTEXT_HISTORY);
+    ls.set(CONTEXT_HISTORY_KEY, JSON.stringify(next));
+    set({ contextHistory: next });
+  },
+
+  removeContextEntry: (id) => {
+    set((state) => {
+      const next = state.contextHistory.filter((e) => e.id !== id);
+      ls.set(CONTEXT_HISTORY_KEY, JSON.stringify(next));
+      return { contextHistory: next };
+    });
+  },
+
+  clearContextHistory: () => {
+    set({ contextHistory: [] });
+    ls.remove(CONTEXT_HISTORY_KEY);
   },
 
   // ── Debug logs ────────────────────────────────────────────────────────────
