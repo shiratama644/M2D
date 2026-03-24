@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { API } from '../../lib/api';
 import ModDetail from '../mods/ModDetail';
 import SettingsContent from '../settings/SettingsContent';
 import DebugPanel from '../debug/DebugPanel';
@@ -50,12 +51,35 @@ export default function RightPanel({ onContextRestore }: RightPanelProps) {
     favorites, toggleFavorite, addMod,
     searchHistory, removeSearchHistory, clearSearchHistory,
     contextHistory, removeContextEntry, clearContextHistory,
-    setSelectedModalOpen, modDataMap,
+    setSelectedModalOpen, modDataMap, updateModDataMap,
     debugMode, language,
     t,
   } = useApp();
   const gameVersions = useGameVersions();
   const [tab, setTab] = useState<Tab>('description');
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+
+  useEffect(() => {
+    if (tab !== 'favorites') return;
+    const ids = Array.from(favorites);
+    const missing = ids.filter((id) => !modDataMap[id]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    setLoadingFavorites(true);
+    API.getProjects(missing)
+      .then((data) => {
+        if (cancelled) return;
+        const map: Record<string, unknown> = {};
+        data.forEach((p) => { map[p.id] = p; });
+        updateModDataMap(map);
+      })
+      .catch(console.error)
+      .finally(() => { if (!cancelled) setLoadingFavorites(false); });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, favorites]);
 
   const tabs: Array<{ id: Tab; icon: string; label: string }> = [
     { id: 'description', icon: fileTextIconRaw, label: t.rightPanel.description },
@@ -183,6 +207,8 @@ export default function RightPanel({ onContextRestore }: RightPanelProps) {
             </div>
             {favorites.size === 0 ? (
               <div className="rp-empty">{t.favorites.noFavorites}</div>
+            ) : loadingFavorites ? (
+              <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
             ) : (
               <div className="selected-list">
                 {Array.from(favorites).map((id) => {

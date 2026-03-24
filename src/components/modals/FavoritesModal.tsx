@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { API } from '../../lib/api';
 import MobileModal from '../ui/MobileModal';
 import { FALLBACK_ICON } from '../../lib/helpers';
 
@@ -14,9 +16,32 @@ export default function FavoritesModal({ onClose }: FavoritesModalProps) {
   const {
     favorites, toggleFavorite,
     selectedMods, addMod, removeMod,
-    modDataMap,
+    modDataMap, updateModDataMap,
     t,
   } = useApp();
+
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  useEffect(() => {
+    const ids = Array.from(favorites);
+    const missing = ids.filter((id) => !modDataMap[id]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    setLoadingDetails(true);
+    API.getProjects(missing)
+      .then((data) => {
+        if (cancelled) return;
+        const map: Record<string, unknown> = {};
+        data.forEach((p) => { map[p.id] = p; });
+        updateModDataMap(map);
+      })
+      .catch(console.error)
+      .finally(() => { if (!cancelled) setLoadingDetails(false); });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favorites]);
 
   return (
     <MobileModal
@@ -34,6 +59,8 @@ export default function FavoritesModal({ onClose }: FavoritesModalProps) {
         </div>
         {favorites.size === 0 ? (
           <div className="rp-empty">{t.favorites.noFavorites}</div>
+        ) : loadingDetails ? (
+          <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
         ) : (
           <div className="selected-list">
             {Array.from(favorites).map((id) => {
