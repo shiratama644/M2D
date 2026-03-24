@@ -36,6 +36,7 @@ function resetStore() {
   s.clearMods();
   s.clearFavorites();
   s.clearSearchHistory();
+  s.clearContextHistory();
   s.clearDebugLogs();
   s.hideLoading();
   s.closeDialog();
@@ -460,5 +461,123 @@ describe('discoverType', () => {
     useAppStore.getState().setDiscoverType('mod');
     expect(useAppStore.getState().selectedMods.has('sodium')).toBe(true);
     expect(useAppStore.getState().selectedMods.has('iris-shader')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// contextHistory
+// ---------------------------------------------------------------------------
+
+const baseFilters = {
+  loaders: { fabric: null, forge: null },
+  categories: {},
+  environment: { client_side: null, server_side: null },
+  other: {},
+  version: '1.21.1',
+};
+
+const baseEntry = {
+  query: 'sodium',
+  sort: 'relevance',
+  filters: baseFilters,
+  projectType: 'mod' as const,
+};
+
+describe('contextHistory', () => {
+  it('addContextHistory appends a new entry with id and timestamp', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    const { contextHistory } = useAppStore.getState();
+    expect(contextHistory.length).toBe(1);
+    expect(contextHistory[0].query).toBe('sodium');
+    expect(contextHistory[0].sort).toBe('relevance');
+    expect(contextHistory[0].projectType).toBe('mod');
+    expect(contextHistory[0].id).toBeTruthy();
+    expect(contextHistory[0].timestamp).toBeGreaterThan(0);
+  });
+
+  it('addContextHistory deduplicates identical consecutive entries', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory(baseEntry);
+    expect(useAppStore.getState().contextHistory.length).toBe(1);
+  });
+
+  it('addContextHistory does NOT deduplicate if entries are different', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory({ ...baseEntry, query: 'lithium' });
+    expect(useAppStore.getState().contextHistory.length).toBe(2);
+  });
+
+  it('addContextHistory does NOT deduplicate non-consecutive identical entries', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory({ ...baseEntry, query: 'lithium' });
+    useAppStore.getState().addContextHistory(baseEntry);
+    expect(useAppStore.getState().contextHistory.length).toBe(3);
+  });
+
+  it('addContextHistory caps at MAX_CONTEXT_HISTORY (50) entries', () => {
+    for (let i = 0; i < 55; i++) {
+      useAppStore.getState().addContextHistory({ ...baseEntry, query: `query-${i}` });
+    }
+    expect(useAppStore.getState().contextHistory.length).toBe(50);
+  });
+
+  it('addContextHistory keeps the most recent entries when capped', () => {
+    for (let i = 0; i < 55; i++) {
+      useAppStore.getState().addContextHistory({ ...baseEntry, query: `query-${i}` });
+    }
+    const { contextHistory } = useAppStore.getState();
+    expect(contextHistory[contextHistory.length - 1].query).toBe('query-54');
+  });
+
+  it('addContextHistory persists to localStorage', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    const raw = localStorageMock.getItem('mod_manager_context_history');
+    const parsed = JSON.parse(raw!);
+    expect(parsed.length).toBe(1);
+    expect(parsed[0].query).toBe('sodium');
+  });
+
+  it('removeContextEntry removes an entry by id', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    const { contextHistory } = useAppStore.getState();
+    const id = contextHistory[0].id;
+    useAppStore.getState().removeContextEntry(id);
+    expect(useAppStore.getState().contextHistory.length).toBe(0);
+  });
+
+  it('removeContextEntry does not affect other entries', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory({ ...baseEntry, query: 'lithium' });
+    const first = useAppStore.getState().contextHistory[0];
+    useAppStore.getState().removeContextEntry(first.id);
+    const { contextHistory } = useAppStore.getState();
+    expect(contextHistory.length).toBe(1);
+    expect(contextHistory[0].query).toBe('lithium');
+  });
+
+  it('clearContextHistory empties the array and removes from localStorage', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().clearContextHistory();
+    expect(useAppStore.getState().contextHistory).toEqual([]);
+    expect(localStorageMock.getItem('mod_manager_context_history')).toBeNull();
+  });
+
+  it('deduplication compares projectType', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory({ ...baseEntry, projectType: 'shader' });
+    expect(useAppStore.getState().contextHistory.length).toBe(2);
+  });
+
+  it('deduplication compares sort field', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    useAppStore.getState().addContextHistory({ ...baseEntry, sort: 'downloads' });
+    expect(useAppStore.getState().contextHistory.length).toBe(2);
+  });
+
+  it('deduplication compares filters', () => {
+    useAppStore.getState().addContextHistory(baseEntry);
+    const modified = { ...baseEntry, filters: { ...baseFilters, version: '1.20.1' } };
+    useAppStore.getState().addContextHistory(modified);
+    expect(useAppStore.getState().contextHistory.length).toBe(2);
   });
 });

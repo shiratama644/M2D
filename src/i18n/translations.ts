@@ -166,6 +166,11 @@ const translations = {
     history: {
       clear: 'Clear All',
       noHistory: 'No search history.',
+      restore: 'Restore this context',
+      deleteEntry: 'Delete entry',
+      emptyQuery: 'empty query',
+      noFilters: 'no filters',
+      filterCount: '%n filter(s)',
     },
     favorites: {
       noFavorites: 'No favorites yet.',
@@ -340,6 +345,11 @@ const translations = {
     history: {
       clear: 'すべて削除',
       noHistory: '検索履歴がありません。',
+      restore: 'このコンテキストを復元',
+      deleteEntry: 'エントリを削除',
+      emptyQuery: '空の検索',
+      noFilters: 'フィルターなし',
+      filterCount: '%n 個のフィルター',
     },
     favorites: {
       noFavorites: 'お気に入りがありません。',
