@@ -66,6 +66,11 @@ describe('ApiError', () => {
 // ---------------------------------------------------------------------------
 
 describe('request', () => {
+  /**
+   * A dedicated mock function replaces the global `fetch` for every test
+   * in this block. Using vi.stubGlobal ensures the module-level reference
+   * is patched; vi.unstubAllGlobals restores it afterwards.
+   */
   const mockFetch = vi.fn();
 
   beforeEach(() => {
@@ -74,17 +79,20 @@ describe('request', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    mockFetch.mockReset();
+    vi.clearAllMocks();
+    // Safety net: ensure real timers are always restored so one test
+    // cannot bleed fake-timer state into the next test.
+    vi.useRealTimers();
   });
 
+  // ── URL construction tests ────────────────────────────────────────────────
+
   it('calls fetch with correct URL when no params', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: 'ok' }),
-    });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: 'ok' }) });
 
     const result = await request('/project/sodium');
 
+    expect(mockFetch).toHaveBeenCalledOnce();
     expect(mockFetch).toHaveBeenCalledWith('/api/v2/project/sodium', expect.any(Object));
     expect(result).toEqual({ data: 'ok' });
   });
@@ -121,25 +129,6 @@ describe('request', () => {
     expect(calledUrl).toContain('limit=5');
   });
 
-  it('throws ApiError on non-ok HTTP response', async () => {
-    // 404 is not retryable, so this resolves immediately.
-    mockFetch.mockResolvedValue({ ok: false, status: 404, json: async () => ({}) });
-
-    await expect(request('/project/nonexistent')).rejects.toBeInstanceOf(ApiError);
-  });
-
-  it('ApiError from failed request has correct status', async () => {
-    // 400 Bad Request is not retryable; thrown immediately with the correct status code.
-    mockFetch.mockResolvedValue({ ok: false, status: 400, json: async () => ({}) });
-
-    try {
-      await request('/search');
-      expect.fail('Expected ApiError to be thrown');
-    } catch (err) {
-      expect((err as ApiError).status).toBe(400);
-    }
-  });
-
   it('forwards AbortSignal to fetch', async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
 
@@ -152,55 +141,120 @@ describe('request', () => {
     );
   });
 
-  it('propagates network errors (fetch rejects)', async () => {
-    // Use fake timers so the exponential back-off delays are skipped.
-    vi.useFakeTimers();
-    mockFetch.mockRejectedValue(new TypeError('Network error'));
+  // ── Non-retryable error tests (no fake timers needed) ─────────────────────
 
-    try {
-      // Attach the rejection handler before advancing timers to avoid
-      // "PromiseRejectionHandledWarning" from Node.js.
-      let caughtError: unknown;
-      const p = request('/project/sodium').catch((e) => { caughtError = e; });
+  it('throws ApiError on non-ok HTTP response (4xx)', async () => {
+    // 404 is a client error — not retried, exactly one fetch call.
+    mockFetch.mockResolvedValue({ ok: false, status: 404, json: async () => ({}) });
 
-      await vi.runAllTimersAsync();
-      await p;
-
-      expect(caughtError).toBeInstanceOf(TypeError);
-      expect((caughtError as TypeError).message).toBe('Network error');
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect(request('/project/nonexistent')).rejects.toBeInstanceOf(ApiError);
+    expect(mockFetch).toHaveBeenCalledOnce();
   });
 
-  it('retries on 5xx and eventually throws the ApiError', async () => {
-    // Use fake timers to skip back-off delays.
-    vi.useFakeTimers();
-    mockFetch.mockResolvedValue({ ok: false, status: 503, json: async () => ({}) });
+  it('ApiError preserves the upstream HTTP status code', async () => {
+    // 400 Bad Request is not retryable.
+    mockFetch.mockResolvedValue({ ok: false, status: 400, json: async () => ({}) });
 
-    try {
-      let caughtError: unknown;
-      const p = request('/search').catch((e) => { caughtError = e; });
-
-      await vi.runAllTimersAsync();
-      await p;
-
-      // Should have retried MAX_RETRIES (3) times = 4 total fetch calls.
-      expect(mockFetch).toHaveBeenCalledTimes(4);
-      expect(caughtError).toBeInstanceOf(ApiError);
-      expect((caughtError as ApiError).status).toBe(503);
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect(request('/search')).rejects.toMatchObject({ status: 400 });
+    expect(mockFetch).toHaveBeenCalledOnce();
   });
 
   it('does not retry on 4xx client errors', async () => {
-    // 403 Forbidden is a client error and should not be retried.
+    // 403 Forbidden — client error, no retries.
     mockFetch.mockResolvedValue({ ok: false, status: 403, json: async () => ({}) });
 
     await expect(request('/project/secret')).rejects.toBeInstanceOf(ApiError);
+    expect(mockFetch).toHaveBeenCalledOnce();
+  });
 
-    // Exactly one fetch call – no retries.
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+  // ── Retry / back-off tests ────────────────────────────────────────────────
+  //
+  // These tests use fake timers so that the exponential back-off delays
+  // (500 ms → 1 s → 2 s) are advanced instantly without slowing the suite.
+  //
+  // Pattern used in every retry test:
+  //   1. Attach .catch() immediately after calling request() — before any await —
+  //      to prevent a PromiseRejectionHandledWarning from Node.js.
+  //   2. Call vi.runAllTimersAsync() to drain all pending setTimeout timers
+  //      AND the microtasks they schedule (retries, rejection propagation).
+  //   3. Await the .catch()-wrapped promise; it resolves once request() settles.
+  //   4. Assert on the captured error and call count.
+
+  describe('retry back-off', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('retries on 503 Service Unavailable and eventually throws ApiError', async () => {
+      expect.assertions(3);
+      mockFetch.mockResolvedValue({ ok: false, status: 503, json: async () => ({}) });
+
+      let caught: unknown;
+      const done = request('/search').catch((e) => { caught = e; });
+
+      await vi.runAllTimersAsync();
+      await done;
+
+      // 1 initial attempt + 3 retries = 4 total fetch calls.
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(caught).toBeInstanceOf(ApiError);
+      expect((caught as ApiError).status).toBe(503);
+    });
+
+    it('retries on 429 Too Many Requests and eventually throws ApiError', async () => {
+      expect.assertions(3);
+      mockFetch.mockResolvedValue({ ok: false, status: 429, json: async () => ({}) });
+
+      let caught: unknown;
+      const done = request('/search').catch((e) => { caught = e; });
+
+      await vi.runAllTimersAsync();
+      await done;
+
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(caught).toBeInstanceOf(ApiError);
+      expect((caught as ApiError).status).toBe(429);
+    });
+
+    it('retries on network-level TypeError and eventually rethrows', async () => {
+      // mockRejectedValue makes fetch() return Promise.reject(TypeError) on each call.
+      // Inside request(), `await fetch(...)` sits inside a try block, so each
+      // individual rejection is immediately caught there — never unhandled.
+      // The outer .catch() guards against the *final* rejection of request()
+      // leaking before runAllTimersAsync() fully settles the promise.
+      // This is the standard pattern for all retry tests in this block.
+      expect.assertions(3);
+      mockFetch.mockRejectedValue(new TypeError('Network error'));
+
+      let caught: unknown;
+      const done = request('/project/sodium').catch((e) => { caught = e; });
+
+      await vi.runAllTimersAsync();
+      await done;
+
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(caught).toBeInstanceOf(TypeError);
+      expect((caught as TypeError).message).toBe('Network error');
+    });
+
+    it('succeeds on the second attempt after an initial 503', async () => {
+      expect.assertions(2);
+      mockFetch
+        .mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) })
+        .mockResolvedValue({ ok: true, json: async () => ({ id: 'sodium' }) });
+
+      const done = request('/project/sodium');
+
+      await vi.runAllTimersAsync();
+      const result = await done;
+
+      // First call failed, second succeeded — no more calls.
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({ id: 'sodium' });
+    });
   });
 });

@@ -37,6 +37,7 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
     activeModId, setActiveModId,
     favorites, toggleFavorite,
     showCardDescription,
+    t,
   } = useApp();
 
   const isSelected = selectedMods.has(mod.project_id);
@@ -75,7 +76,7 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
           className="mod-checkbox"
           checked={isSelected}
           onChange={handleCheckboxChange}
-          aria-label={`${mod.title} を選択`}
+          aria-label={t.modList.selectMod.replace('%s', mod.title)}
         />
       </div>
       <img

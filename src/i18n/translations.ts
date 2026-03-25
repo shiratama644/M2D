@@ -178,6 +178,11 @@ const translations = {
       addToSelected: 'Add to Selected',
       removeFromSelected: 'Remove',
     },
+    modList: {
+      fetchError: 'Failed to fetch mods.',
+      retry: 'Retry',
+      selectMod: 'Select %s',
+    },
   },
   ja: {
     settings: {
@@ -357,6 +362,11 @@ const translations = {
       noFavorites: 'お気に入りがありません。',
       addToSelected: '選択に追加',
       removeFromSelected: '削除',
+    },
+    modList: {
+      fetchError: 'Modの取得に失敗しました。',
+      retry: '再試行',
+      selectMod: '%sを選択',
     },
   },
 } as const;

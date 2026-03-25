@@ -66,7 +66,7 @@ interface ModListProps {
 }
 
 export default function ModList({ searchParams, isDesktop, initialMods }: ModListProps) {
-  const { updateModDataMap, addDebugLog, discoverType } = useApp();
+  const { updateModDataMap, addDebugLog, discoverType, t } = useApp();
   const [mods, setMods] = useState<ModHit[]>(() => initialMods ?? []);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
@@ -129,7 +129,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       if ((err as { name?: string }).name === 'AbortError') return;
       addDebugLog('error', `Search error: ${err}`);
       hasMoreRef.current = false;
-      setError('モッドの取得に失敗しました。');
+      setError(t.modList.fetchError);
     } finally {
       if (!controller.signal.aborted) {
         loadingRef.current = false;
@@ -212,7 +212,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
           <div className="mod-list-error" role="alert">
             <p>{error}</p>
             <button className="btn-retry" onClick={handleRetry} type="button">
-              再試行
+              {t.modList.retry}
             </button>
           </div>
         )}
