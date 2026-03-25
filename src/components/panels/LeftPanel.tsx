@@ -45,12 +45,15 @@ function CollapsibleSection({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const contentId = `lp-section-${title.replace(/\s+/g, '-').toLowerCase()}`;
   return (
     <div className="lp-filter-section">
       <button
         className="lp-filter-title lp-filter-title-toggle"
         onClick={() => setOpen((v) => !v)}
         type="button"
+        aria-expanded={open}
+        aria-controls={contentId}
       >
         <span>{title}</span>
         <Icon
@@ -59,7 +62,11 @@ function CollapsibleSection({
           className={`lp-filter-chevron${open ? ' open' : ''}`}
         />
       </button>
-      {open && <div className="lp-filter-section-body">{children}</div>}
+      {open && (
+        <div id={contentId} className="lp-filter-section-body">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

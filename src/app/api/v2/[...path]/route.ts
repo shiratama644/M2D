@@ -4,6 +4,9 @@ const MODRINTH_BASE = 'https://api.modrinth.com/v2';
 
 const UPSTREAM_TIMEOUT_MS = parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '', 10) || 8_000;
 
+/** Modrinth asks third-party clients to identify themselves. */
+const USER_AGENT = 'M2D/1.0 (https://github.com/shiratama644/M2D)';
+
 function getRevalidate(pathStr: string): number {
   if (pathStr.startsWith('tag/')) return 3600;
   if (pathStr.startsWith('version_file/')) return 60;
@@ -38,6 +41,7 @@ export async function GET(
     const res = await fetch(upstreamUrl, {
       next: { revalidate },
       signal: controller.signal,
+      headers: { 'User-Agent': USER_AGENT },
     });
 
     if (!res.ok) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import ModCard from '@/components/mods/ModCard';
+import SkeletonCard from '@/components/mods/SkeletonCard';
 import { API } from '@/lib/api';
 import { useApp } from '@/context/AppContext';
 import type { ModHit } from '@/types/modrinth';
@@ -55,6 +56,8 @@ function buildFacets(filters: SearchFilters | null | undefined, projectType: str
 }
 
 const LIMIT = 12;
+/** Number of skeleton cards to show while the initial page loads. */
+const SKELETON_COUNT = 6;
 
 interface ModListProps {
   searchParams: SearchParams;
@@ -67,6 +70,9 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
   const [mods, setMods] = useState<ModHit[]>(() => initialMods ?? []);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  /** True only during the very first load (mods list is empty). */
+  const [initialLoading, setInitialLoading] = useState(false);
 
   const offsetRef = useRef(initialMods?.length ?? 0);
   const loadingRef = useRef(false);
@@ -90,6 +96,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
     loadingRef.current = true;
     setLoading(true);
+    if (offset === 0) setInitialLoading(true);
 
     const facets = buildFacets(p.filters, discoverType);
     let index: string;
@@ -101,6 +108,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
     try {
       const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index, controller.signal);
+      setError(null);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;
         if (offset === 0) {
@@ -121,13 +129,22 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       if ((err as { name?: string }).name === 'AbortError') return;
       addDebugLog('error', `Search error: ${err}`);
       hasMoreRef.current = false;
+      setError('モッドの取得に失敗しました。');
     } finally {
       if (!controller.signal.aborted) {
         loadingRef.current = false;
         setLoading(false);
+        setInitialLoading(false);
       }
     }
   }, [searchParams, discoverType, updateModDataMap, addDebugLog]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setNoResults(false);
+    hasMoreRef.current = true;
+    loadMore();
+  }, [loadMore]);
 
   useEffect(() => {
     if (initialDataRef.current !== null) {
@@ -146,6 +163,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     }
     setMods([]);
     setNoResults(false);
+    setError(null);
     offsetRef.current = 0;
     loadingRef.current = false;
     hasMoreRef.current = true;
@@ -170,13 +188,35 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
   }, [loadMore]);
 
   return (
-    <main className="main-content">
-      <div className="mod-list">
-        {noResults && (
+    <main className="main-content" aria-busy={loading} aria-label="Mod list">
+      <div
+        className="mod-list"
+        role="list"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-relevant="additions"
+      >
+        {/* Skeleton cards shown on initial load before any results arrive */}
+        {initialLoading &&
+          Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <SkeletonCard key={`skeleton-${i}`} />
+          ))}
+
+        {!initialLoading && noResults && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2.5rem' }}>
             No mods found.
           </div>
         )}
+
+        {!initialLoading && error && (
+          <div className="mod-list-error" role="alert">
+            <p>{error}</p>
+            <button className="btn-retry" onClick={handleRetry} type="button">
+              再試行
+            </button>
+          </div>
+        )}
+
         {mods.map((mod) => (
           <ModCard key={mod.project_id} mod={mod} isDesktop={isDesktop} />
         ))}
@@ -184,7 +224,8 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       <div
         ref={sentinelRef}
         className="loader-sentinel"
-        style={{ opacity: loading ? 1 : 0 }}
+        aria-hidden="true"
+        style={{ opacity: loading && !initialLoading ? 1 : 0 }}
       >
         <div className="loader-dots">
           <div /><div /><div /><div />

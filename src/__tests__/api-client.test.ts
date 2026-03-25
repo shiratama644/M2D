@@ -122,19 +122,21 @@ describe('request', () => {
   });
 
   it('throws ApiError on non-ok HTTP response', async () => {
+    // 404 is not retryable, so this resolves immediately.
     mockFetch.mockResolvedValue({ ok: false, status: 404, json: async () => ({}) });
 
     await expect(request('/project/nonexistent')).rejects.toBeInstanceOf(ApiError);
   });
 
   it('ApiError from failed request has correct status', async () => {
-    mockFetch.mockResolvedValue({ ok: false, status: 429, json: async () => ({}) });
+    // 400 Bad Request is not retryable; thrown immediately with the correct status code.
+    mockFetch.mockResolvedValue({ ok: false, status: 400, json: async () => ({}) });
 
     try {
       await request('/search');
       expect.fail('Expected ApiError to be thrown');
     } catch (err) {
-      expect((err as ApiError).status).toBe(429);
+      expect((err as ApiError).status).toBe(400);
     }
   });
 
@@ -151,8 +153,54 @@ describe('request', () => {
   });
 
   it('propagates network errors (fetch rejects)', async () => {
+    // Use fake timers so the exponential back-off delays are skipped.
+    vi.useFakeTimers();
     mockFetch.mockRejectedValue(new TypeError('Network error'));
 
-    await expect(request('/project/sodium')).rejects.toThrow('Network error');
+    try {
+      // Attach the rejection handler before advancing timers to avoid
+      // "PromiseRejectionHandledWarning" from Node.js.
+      let caughtError: unknown;
+      const p = request('/project/sodium').catch((e) => { caughtError = e; });
+
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(caughtError).toBeInstanceOf(TypeError);
+      expect((caughtError as TypeError).message).toBe('Network error');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retries on 5xx and eventually throws the ApiError', async () => {
+    // Use fake timers to skip back-off delays.
+    vi.useFakeTimers();
+    mockFetch.mockResolvedValue({ ok: false, status: 503, json: async () => ({}) });
+
+    try {
+      let caughtError: unknown;
+      const p = request('/search').catch((e) => { caughtError = e; });
+
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Should have retried MAX_RETRIES (3) times = 4 total fetch calls.
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(caughtError).toBeInstanceOf(ApiError);
+      expect((caughtError as ApiError).status).toBe(503);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not retry on 4xx client errors', async () => {
+    // 403 Forbidden is a client error and should not be retried.
+    mockFetch.mockResolvedValue({ ok: false, status: 403, json: async () => ({}) });
+
+    await expect(request('/project/secret')).rejects.toBeInstanceOf(ApiError);
+
+    // Exactly one fetch call – no retries.
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
