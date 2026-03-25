@@ -6,6 +6,7 @@ import {
   getCategoryLabel,
   getCategoryHeaderLabel,
   getLoaderOptions,
+  countActiveFilters,
   LOADER_OPTIONS,
   SHADER_LOADER_OPTIONS,
   MAX_SEARCH_HISTORY,
@@ -261,5 +262,63 @@ describe('constants', () => {
     expect(values).toContain('optifine');
     expect(values).toContain('vanilla-shader');
     expect(values).toContain('canvas');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// countActiveFilters
+// ---------------------------------------------------------------------------
+
+describe('countActiveFilters', () => {
+  it('returns 0 for all-null filters', () => {
+    expect(countActiveFilters({ loaders: { fabric: null, forge: null } })).toBe(0);
+  });
+
+  it('counts non-null loader values', () => {
+    expect(
+      countActiveFilters({ loaders: { fabric: 'include', forge: null, quilt: 'exclude' } }),
+    ).toBe(2);
+  });
+
+  it('counts non-null category values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        categories: { optimization: 'include', technology: null },
+      }),
+    ).toBe(1);
+  });
+
+  it('counts non-null environment values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        environment: { client_side: 'include', server_side: null },
+      }),
+    ).toBe(1);
+  });
+
+  it('counts non-null "other" values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        other: { open_source: 'include' },
+      }),
+    ).toBe(1);
+  });
+
+  it('sums counts across all filter groups', () => {
+    expect(
+      countActiveFilters({
+        loaders: { fabric: 'include' },
+        categories: { optimization: 'include', technology: 'exclude' },
+        environment: { client_side: 'include', server_side: 'include' },
+        other: { open_source: null },
+      }),
+    ).toBe(5);
+  });
+
+  it('returns 0 when no optional groups are present', () => {
+    expect(countActiveFilters({ loaders: {} })).toBe(0);
   });
 });

@@ -12,8 +12,12 @@ export default defineConfig({
       // meaningful (a broad include with untested files would mask regressions).
       include: [
         'src/lib/helpers.ts',
+        'src/lib/utils.ts',
         'src/lib/api/client.ts',
+        'src/lib/api/modrinth.ts',
         'src/store/useAppStore.ts',
+        'src/app/api/v2/[...path]/route.ts',
+        'src/app/api/revalidate/route.ts',
       ],
       thresholds: {
         lines: 95,
