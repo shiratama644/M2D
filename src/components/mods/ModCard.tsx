@@ -2,14 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { cva } from 'class-variance-authority';
-import { formatNum, FALLBACK_ICON } from '../../lib/helpers';
-import { useApp } from '../../context/AppContext';
-import { cn } from '../../lib/utils';
-import Icon from '../ui/Icon';
-import userIconRaw from '../../assets/icons/user.svg';
-import downloadIconRaw from '../../assets/icons/download.svg';
-import starIconRaw from '../../assets/icons/star.svg';
-import type { ModHit } from '../../types/modrinth';
+import { formatNum, FALLBACK_ICON } from '@/lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import Icon from '@/components/ui/Icon';
+import userIconRaw from '@/assets/icons/user.svg';
+import downloadIconRaw from '@/assets/icons/download.svg';
+import starIconRaw from '@/assets/icons/star.svg';
+import type { ModHit } from '@/types/modrinth';
 
 const modCardVariants = cva('mod-card', {
   variants: {

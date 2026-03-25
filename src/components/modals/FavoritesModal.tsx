@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { API } from '../../lib/api';
-import MobileModal from '../ui/MobileModal';
-import { FALLBACK_ICON } from '../../lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { API } from '@/lib/api';
+import MobileModal from '@/components/ui/MobileModal';
+import { FALLBACK_ICON } from '@/lib/helpers';
 
-import starIconRaw from '../../assets/icons/star.svg';
+import starIconRaw from '@/assets/icons/star.svg';
 
 interface FavoritesModalProps {
   onClose: () => void;

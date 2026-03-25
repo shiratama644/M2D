@@ -2,23 +2,23 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApp } from '../../context/AppContext';
-import { cn } from '../../lib/utils';
-import { CONCURRENCY_LIMIT, asyncPool } from '../../lib/helpers';
-import { API } from '../../lib/api';
+import { useApp } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import { CONCURRENCY_LIMIT, asyncPool } from '@/lib/helpers';
+import { API } from '@/lib/api';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import Icon from '../ui/Icon';
+import Icon from '@/components/ui/Icon';
 
-import xIconRaw from '../../assets/icons/x.svg';
-import bookmarkIconRaw from '../../assets/icons/bookmark.svg';
-import fileArchiveIconRaw from '../../assets/icons/file-archive.svg';
-import importIconRaw from '../../assets/icons/import.svg';
-import uploadIconRaw from '../../assets/icons/upload.svg';
-import shareIconRaw from '../../assets/icons/share.svg';
-import trashIconRaw from '../../assets/icons/trash.svg';
-import pencilIconRaw from '../../assets/icons/pencil.svg';
-import checkIconRaw from '../../assets/icons/check.svg';
+import xIconRaw from '@/assets/icons/x.svg';
+import bookmarkIconRaw from '@/assets/icons/bookmark.svg';
+import fileArchiveIconRaw from '@/assets/icons/file-archive.svg';
+import importIconRaw from '@/assets/icons/import.svg';
+import uploadIconRaw from '@/assets/icons/upload.svg';
+import shareIconRaw from '@/assets/icons/share.svg';
+import trashIconRaw from '@/assets/icons/trash.svg';
+import pencilIconRaw from '@/assets/icons/pencil.svg';
+import checkIconRaw from '@/assets/icons/check.svg';
 
 export default function SideMenu() {
   const {

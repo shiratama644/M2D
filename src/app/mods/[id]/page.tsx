@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { API_BASE } from '../../../lib/api';
-import ModPageClient from './ModPageClient';
-import type { ModProject } from '../../../types/modrinth';
+import { API_BASE } from '@/lib/api';
+import ModPageClient from '@/app/mods/[id]/ModPageClient';
+import type { ModProject } from '@/types/modrinth';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

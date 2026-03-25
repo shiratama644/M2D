@@ -1,22 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useApp } from '../../context/AppContext';
-import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
-import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
-import { useGameVersions } from '../../hooks/useGameVersions';
-import { useCategoryGroups } from '../../hooks/useCategories';
-import CustomSelect from '../ui/CustomSelect';
-import FilterRow from '../ui/FilterRow';
-import Icon from '../ui/Icon';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
-import type { DiscoverType } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '@/lib/helpers';
+import { CATEGORY_ICON_MAP } from '@/lib/categoryIcons';
+import { useGameVersions } from '@/hooks/useGameVersions';
+import { useCategoryGroups } from '@/hooks/useCategories';
+import CustomSelect from '@/components/ui/CustomSelect';
+import FilterRow from '@/components/ui/FilterRow';
+import Icon from '@/components/ui/Icon';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
+import type { DiscoverType } from '@/store/useAppStore';
 
-import cubeIconRaw from '../../assets/icons/cube.svg';
-import packageIconRaw from '../../assets/icons/package.svg';
-import imageIconRaw from '../../assets/icons/image.svg';
-import sparklesIconRaw from '../../assets/icons/sparkles.svg';
-import chevronDownRaw from '../../assets/icons/chevron-down.svg';
+import cubeIconRaw from '@/assets/icons/cube.svg';
+import packageIconRaw from '@/assets/icons/package.svg';
+import imageIconRaw from '@/assets/icons/image.svg';
+import sparklesIconRaw from '@/assets/icons/sparkles.svg';
+import chevronDownRaw from '@/assets/icons/chevron-down.svg';
 
 interface LeftPanelProps {
   onFilterChange: (filters: SearchParams['filters']) => void;

@@ -1,13 +1,13 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import Icon from '../ui/Icon';
-import { LEVEL_COLORS } from '../../lib/helpers';
-import terminalIconRaw from '../../assets/icons/terminal-square.svg';
-import trashIconRaw from '../../assets/icons/trash.svg';
-import chevronDownIconRaw from '../../assets/icons/chevron-down.svg';
-import copyIconRaw from '../../assets/icons/copy.svg';
+import { useApp } from '@/context/AppContext';
+import Icon from '@/components/ui/Icon';
+import { LEVEL_COLORS } from '@/lib/helpers';
+import terminalIconRaw from '@/assets/icons/terminal-square.svg';
+import trashIconRaw from '@/assets/icons/trash.svg';
+import chevronDownIconRaw from '@/assets/icons/chevron-down.svg';
+import copyIconRaw from '@/assets/icons/copy.svg';
 
 const LEVELS = ['all', 'log', 'info', 'warn', 'error'];
 const LEVEL_LABELS: Record<string, string> = { all: 'All', log: 'Log', info: 'Info', warn: 'Warn', error: 'Err' };

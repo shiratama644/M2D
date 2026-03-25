@@ -13,7 +13,7 @@ import {
   FALLBACK_ICON,
   LEVEL_COLORS,
   ENVIRONMENT_OPTIONS,
-} from '../lib/helpers';
+} from '@/lib/helpers';
 
 // ---------------------------------------------------------------------------
 // asyncPool

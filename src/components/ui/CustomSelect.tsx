@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, ReactNode } from 'react';
-import Icon from './Icon';
-import chevronDownIconRaw from '../../assets/icons/chevron-down.svg';
+import Icon from '@/components/ui/Icon';
+import chevronDownIconRaw from '@/assets/icons/chevron-down.svg';
 
 interface SelectOption {
   value: string;

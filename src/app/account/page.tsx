@@ -1,5 +1,5 @@
-import { auth } from '../../auth';
-import AccountClient from './AccountClient';
+import { auth } from '@/auth';
+import AccountClient from '@/app/account/AccountClient';
 
 export const metadata = {
   title: 'Account',

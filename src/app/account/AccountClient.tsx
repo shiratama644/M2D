@@ -5,10 +5,10 @@ import { signIn, signOut } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
-import Icon from '../../components/ui/Icon';
-import { Button } from '../../components/ui/button';
-import discordIconRaw from '../../assets/icons/discord.svg';
-import userIconRaw from '../../assets/icons/user.svg';
+import Icon from '@/components/ui/Icon';
+import { Button } from '@/components/ui/button';
+import discordIconRaw from '@/assets/icons/discord.svg';
+import userIconRaw from '@/assets/icons/user.svg';
 
 interface Props {
   session: Session | null;

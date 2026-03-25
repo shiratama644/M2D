@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import ModCard from './ModCard';
-import { API } from '../../lib/api';
-import { useApp } from '../../context/AppContext';
-import type { ModHit } from '../../types/modrinth';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
+import ModCard from '@/components/mods/ModCard';
+import { API } from '@/lib/api';
+import { useApp } from '@/context/AppContext';
+import type { ModHit } from '@/types/modrinth';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
 
 interface SearchFilters {
   loaders: Record<string, string | null>;

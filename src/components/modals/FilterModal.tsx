@@ -1,27 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
-import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
-import { useGameVersions } from '../../hooks/useGameVersions';
-import { useCategoryGroups } from '../../hooks/useCategories';
-import CustomSelect from '../ui/CustomSelect';
-import FilterRow from '../ui/FilterRow';
-import MobileModal from '../ui/MobileModal';
-import Icon from '../ui/Icon';
-import { cn } from '../../lib/utils';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
-import type { DiscoverType } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '@/lib/helpers';
+import { CATEGORY_ICON_MAP } from '@/lib/categoryIcons';
+import { useGameVersions } from '@/hooks/useGameVersions';
+import { useCategoryGroups } from '@/hooks/useCategories';
+import CustomSelect from '@/components/ui/CustomSelect';
+import FilterRow from '@/components/ui/FilterRow';
+import MobileModal from '@/components/ui/MobileModal';
+import Icon from '@/components/ui/Icon';
+import { cn } from '@/lib/utils';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
+import type { DiscoverType } from '@/store/useAppStore';
 
-import filterIconRaw from '../../assets/icons/filter.svg';
-import clientIconRaw from '../../assets/icons/client.svg';
-import serverIconRaw from '../../assets/icons/server.svg';
-import chevronDownRaw from '../../assets/icons/chevron-down.svg';
-import cubeIconRaw from '../../assets/icons/cube.svg';
-import packageIconRaw from '../../assets/icons/package.svg';
-import imageIconRaw from '../../assets/icons/image.svg';
-import sparklesIconRaw from '../../assets/icons/sparkles.svg';
+import filterIconRaw from '@/assets/icons/filter.svg';
+import clientIconRaw from '@/assets/icons/client.svg';
+import serverIconRaw from '@/assets/icons/server.svg';
+import chevronDownRaw from '@/assets/icons/chevron-down.svg';
+import cubeIconRaw from '@/assets/icons/cube.svg';
+import packageIconRaw from '@/assets/icons/package.svg';
+import imageIconRaw from '@/assets/icons/image.svg';
+import sparklesIconRaw from '@/assets/icons/sparkles.svg';
 
 interface FilterModalProps {
   filters: SearchParams['filters'];

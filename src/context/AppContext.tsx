@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
 
-export { useAppStore as useApp } from '../store/useAppStore';
-export { useAppStore } from '../store/useAppStore';
+export { useAppStore as useApp } from '@/store/useAppStore';
+export { useAppStore } from '@/store/useAppStore';
 
 function StoreHydrator() {
   const hydrate = useAppStore((state) => state.hydrate);

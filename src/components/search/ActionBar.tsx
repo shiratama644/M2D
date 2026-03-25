@@ -1,9 +1,9 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import Icon from '../ui/Icon';
-import shieldCheckIconRaw from '../../assets/icons/shield-check.svg';
-import downloadIconRaw from '../../assets/icons/download.svg';
+import { useApp } from '@/context/AppContext';
+import Icon from '@/components/ui/Icon';
+import shieldCheckIconRaw from '@/assets/icons/shield-check.svg';
+import downloadIconRaw from '@/assets/icons/download.svg';
 
 interface ActionBarProps {
   onCheckDeps: () => void;

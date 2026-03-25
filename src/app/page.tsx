@@ -1,6 +1,6 @@
-import { API_BASE } from '../lib/api';
-import HomeClient from './HomeClient';
-import type { ModHit } from '../types/modrinth';
+import { API_BASE } from '@/lib/api';
+import HomeClient from '@/app/HomeClient';
+import type { ModHit } from '@/types/modrinth';
 
 async function fetchInitialMods(): Promise<ModHit[] | null> {
   try {

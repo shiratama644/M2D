@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import translations, { type Translation } from '../i18n/translations';
+import translations, { type Translation } from '@/i18n/translations';
 import {
   STORAGE_KEY,
   DEBUG_KEY,
@@ -18,8 +18,9 @@ import {
   CONTEXT_HISTORY_KEY,
   MAX_SEARCH_HISTORY,
   MAX_CONTEXT_HISTORY,
+  LOCALE_MAP,
   type SearchFilters,
-} from '../lib/helpers';
+} from '@/lib/helpers';
 
 // Safe localStorage helpers — no-op on the server during SSR.
 const ls = {
@@ -35,9 +36,6 @@ const ls = {
 
 // Module-level ref for dialog promise resolution (not a React ref).
 let dialogResolver: ((result?: boolean) => void) | null = null;
-
-// Locale mapping for debug log timestamps.
-const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
 
 /** Safely parse a JSON string from localStorage, returning fallback on failure. */
 function parseJSON<T>(key: string, fallback: T): T {

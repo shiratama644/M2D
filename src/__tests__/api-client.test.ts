@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { API_BASE, getApiBase, ApiError, request } from '../lib/api/client';
+import { API_BASE, getApiBase, ApiError, request } from '@/lib/api/client';
 
 // ---------------------------------------------------------------------------
 // API_BASE constant

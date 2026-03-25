@@ -1,11 +1,11 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import CustomSelect from '../ui/CustomSelect';
-import ToggleSwitch from '../ui/ToggleSwitch';
-import Icon from '../ui/Icon';
-import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '../../lib/helpers';
-import type { GameVersion } from '../../types/modrinth';
+import { useApp } from '@/context/AppContext';
+import CustomSelect from '@/components/ui/CustomSelect';
+import ToggleSwitch from '@/components/ui/ToggleSwitch';
+import Icon from '@/components/ui/Icon';
+import { LOADER_OPTIONS, LOADER_ICON_PATHS } from '@/lib/helpers';
+import type { GameVersion } from '@/types/modrinth';
 
 interface SettingsContentProps {
   gameVersions: GameVersion[];

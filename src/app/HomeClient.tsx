@@ -1,31 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
-import Header from '../components/layout/Header';
-import SideMenu from '../components/layout/SideMenu';
-import SearchSection from '../components/search/SearchSection';
-import ActionBar from '../components/search/ActionBar';
-import ModList from '../components/mods/ModList';
-import ModDetail from '../components/mods/ModDetail';
-import LeftPanel from '../components/panels/LeftPanel';
-import RightPanel from '../components/panels/RightPanel';
-import SettingsModal from '../components/modals/SettingsModal';
-import DependencyModal from '../components/modals/DependencyModal';
-import SelectedModal from '../components/modals/SelectedModal';
-import HistoryModal from '../components/modals/HistoryModal';
-import FavoritesModal from '../components/modals/FavoritesModal';
-import LoadingOverlay from '../components/ui/LoadingOverlay';
-import DebugPanel from '../components/debug/DebugPanel';
-import CustomDialog from '../components/ui/CustomDialog';
-import { useIsDesktop } from '../hooks/useIsDesktop';
-import { useColumnResize } from '../hooks/useColumnResize';
-import { useModDownload } from '../hooks/useModDownload';
-import { useDependencyCheck } from '../hooks/useDependencyCheck';
-import { LOADER_OPTIONS } from '../lib/helpers';
-import type { ModHit } from '../types/modrinth';
-import type { DepIssues, SearchParams } from '../hooks/useDependencyCheck';
-import type { SearchContextEntry } from '../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import Header from '@/components/layout/Header';
+import SideMenu from '@/components/layout/SideMenu';
+import SearchSection from '@/components/search/SearchSection';
+import ActionBar from '@/components/search/ActionBar';
+import ModList from '@/components/mods/ModList';
+import ModDetail from '@/components/mods/ModDetail';
+import LeftPanel from '@/components/panels/LeftPanel';
+import RightPanel from '@/components/panels/RightPanel';
+import SettingsModal from '@/components/modals/SettingsModal';
+import DependencyModal from '@/components/modals/DependencyModal';
+import SelectedModal from '@/components/modals/SelectedModal';
+import HistoryModal from '@/components/modals/HistoryModal';
+import FavoritesModal from '@/components/modals/FavoritesModal';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
+import DebugPanel from '@/components/debug/DebugPanel';
+import CustomDialog from '@/components/ui/CustomDialog';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
+import { useColumnResize } from '@/hooks/useColumnResize';
+import { useModDownload } from '@/hooks/useModDownload';
+import { useDependencyCheck } from '@/hooks/useDependencyCheck';
+import { LOADER_OPTIONS } from '@/lib/helpers';
+import type { ModHit } from '@/types/modrinth';
+import type { DepIssues, SearchParams } from '@/hooks/useDependencyCheck';
+import type { SearchContextEntry } from '@/store/useAppStore';
 
 const DEFAULT_SEARCH: SearchParams = {
   query: '',

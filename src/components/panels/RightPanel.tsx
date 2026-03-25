@@ -1,25 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { API } from '../../lib/api';
-import ModDetail from '../mods/ModDetail';
-import SettingsContent from '../settings/SettingsContent';
-import DebugPanel from '../debug/DebugPanel';
-import { useGameVersions } from '../../hooks/useGameVersions';
-import Icon from '../ui/Icon';
-import { FALLBACK_ICON, countActiveFilters } from '../../lib/helpers';
-import type { SearchContextEntry } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import { API } from '@/lib/api';
+import ModDetail from '@/components/mods/ModDetail';
+import SettingsContent from '@/components/settings/SettingsContent';
+import DebugPanel from '@/components/debug/DebugPanel';
+import { useGameVersions } from '@/hooks/useGameVersions';
+import Icon from '@/components/ui/Icon';
+import { FALLBACK_ICON, countActiveFilters, LOCALE_MAP } from '@/lib/helpers';
+import type { SearchContextEntry } from '@/store/useAppStore';
 
-/** Maps store language keys to BCP-47 locale strings for Intl formatting. */
-const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
-
-import fileTextIconRaw from '../../assets/icons/file-text.svg';
-import historyIconRaw from '../../assets/icons/history.svg';
-import settingsIconRaw from '../../assets/icons/settings.svg';
-import checkCircleIconRaw from '../../assets/icons/check-circle.svg';
-import starIconRaw from '../../assets/icons/star.svg';
-import terminalIconRaw from '../../assets/icons/terminal-square.svg';
+import fileTextIconRaw from '@/assets/icons/file-text.svg';
+import historyIconRaw from '@/assets/icons/history.svg';
+import settingsIconRaw from '@/assets/icons/settings.svg';
+import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
+import starIconRaw from '@/assets/icons/star.svg';
+import terminalIconRaw from '@/assets/icons/terminal-square.svg';
 
 type Tab = 'description' | 'history' | 'settings' | 'selected' | 'favorites' | 'console';
 

@@ -1,14 +1,11 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import MobileModal from '../ui/MobileModal';
-import { countActiveFilters } from '../../lib/helpers';
-import type { SearchContextEntry } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import MobileModal from '@/components/ui/MobileModal';
+import { countActiveFilters, LOCALE_MAP } from '@/lib/helpers';
+import type { SearchContextEntry } from '@/store/useAppStore';
 
-import historyIconRaw from '../../assets/icons/history.svg';
-
-/** Maps store language keys to BCP-47 locale strings for Intl formatting. */
-const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
+import historyIconRaw from '@/assets/icons/history.svg';
 
 /** Format a Unix timestamp for display in the history list. */
 function formatHistoryTime(timestamp: number, locale: string): string {

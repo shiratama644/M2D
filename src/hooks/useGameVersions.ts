@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { API } from '../lib/api';
-import { useApp } from '../context/AppContext';
-import type { GameVersion } from '../types/modrinth';
+import { API } from '@/lib/api';
+import { useApp } from '@/context/AppContext';
+import type { GameVersion } from '@/types/modrinth';
 
 /**
  * Fetches the list of released Minecraft game versions from the Modrinth API.

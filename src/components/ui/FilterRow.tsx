@@ -1,9 +1,9 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import Icon from './Icon';
-import checkIconRaw from '../../assets/icons/check.svg';
-import banIconRaw from '../../assets/icons/ban.svg';
+import { useApp } from '@/context/AppContext';
+import Icon from '@/components/ui/Icon';
+import checkIconRaw from '@/assets/icons/check.svg';
+import banIconRaw from '@/assets/icons/ban.svg';
 
 interface FilterRowProps {
   label: string;
