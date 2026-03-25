@@ -322,3 +322,41 @@ describe('countActiveFilters', () => {
     expect(countActiveFilters({ loaders: {} })).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// formatHistoryTime
+// ---------------------------------------------------------------------------
+
+import { formatHistoryTime } from '@/lib/helpers';
+
+describe('formatHistoryTime', () => {
+  it('returns time-only (HH:MM) for timestamps on today', () => {
+    const now = new Date();
+    const result = formatHistoryTime(now.getTime(), 'en-US');
+    expect(result).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('includes a date component for timestamps from a previous day', () => {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const result = formatHistoryTime(twoDaysAgo.getTime(), 'en-US');
+    // e.g. "Mar 23 09:00" — length longer than a plain HH:MM
+    expect(result.length).toBeGreaterThan(5);
+    // Must still end with a time component
+    expect(result).toMatch(/\d{2}:\d{2}$/);
+  });
+
+  it('uses the supplied locale for formatting', () => {
+    const now = new Date();
+    const resultEn = formatHistoryTime(now.getTime(), 'en-US');
+    const resultJa = formatHistoryTime(now.getTime(), 'ja-JP');
+    // Both should be valid HH:MM strings (today → time-only branch)
+    expect(resultEn).toMatch(/^\d{2}:\d{2}$/);
+    expect(resultJa).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('returns a non-empty string for any valid timestamp', () => {
+    expect(formatHistoryTime(0, 'en-US')).toBeTruthy();
+    expect(formatHistoryTime(Date.now(), 'en-US')).toBeTruthy();
+  });
+});

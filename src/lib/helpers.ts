@@ -222,3 +222,25 @@ export function countActiveFilters(filters: SearchFilters): number {
   if (filters.other) count += Object.values(filters.other).filter(Boolean).length;
   return count;
 }
+
+/**
+ * Formats a Unix timestamp for display in a history list.
+ * - Same day → time only (HH:MM, 24-hour)
+ * - Different day → "Mon D HH:MM"
+ */
+export function formatHistoryTime(timestamp: number, locale: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (isToday) {
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  return (
+    date.toLocaleDateString(locale, { month: 'short', day: 'numeric' }) +
+    ' ' +
+    date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })
+  );
+}

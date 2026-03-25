@@ -9,14 +9,10 @@ import { useCategoryGroups } from '@/hooks/useCategories';
 import CustomSelect from '@/components/ui/CustomSelect';
 import FilterRow from '@/components/ui/FilterRow';
 import Icon from '@/components/ui/Icon';
+import CollapsibleSection from '@/components/ui/CollapsibleSection';
+import { getDiscoverOptions } from '@/lib/discoverOptions';
 import type { SearchParams } from '@/hooks/useDependencyCheck';
 import type { DiscoverType } from '@/store/useAppStore';
-
-import cubeIconRaw from '@/assets/icons/cube.svg';
-import packageIconRaw from '@/assets/icons/package.svg';
-import imageIconRaw from '@/assets/icons/image.svg';
-import sparklesIconRaw from '@/assets/icons/sparkles.svg';
-import chevronDownRaw from '@/assets/icons/chevron-down.svg';
 
 interface LeftPanelProps {
   onFilterChange: (filters: SearchParams['filters']) => void;
@@ -34,43 +30,6 @@ function makeInitialFilters(modVersion: string, loaderOptions: { value: string }
   };
 }
 
-/** Collapsible section header used in the filter panel. */
-function CollapsibleSection({
-  title,
-  children,
-  defaultOpen = true,
-}: {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const contentId = `lp-section-${title.replace(/\s+/g, '-').toLowerCase()}`;
-  return (
-    <div className="lp-filter-section">
-      <button
-        className="lp-filter-title lp-filter-title-toggle"
-        onClick={() => setOpen((v) => !v)}
-        type="button"
-        aria-expanded={open}
-        aria-controls={contentId}
-      >
-        <span>{title}</span>
-        <Icon
-          svg={chevronDownRaw}
-          size={12}
-          className={`lp-filter-chevron${open ? ' open' : ''}`}
-        />
-      </button>
-      {open && (
-        <div id={contentId} className="lp-filter-section-body">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
   const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
   const gameVersions = useGameVersions();
@@ -84,12 +43,7 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
   }
 
-  const DISCOVER_OPTIONS: Array<{ type: DiscoverType; label: string; icon: string }> = [
-    { type: 'mod', label: t.discover.mod, icon: cubeIconRaw },
-    { type: 'modpack', label: t.discover.modpack, icon: packageIconRaw },
-    { type: 'resourcepack', label: t.discover.texture, icon: imageIconRaw },
-    { type: 'shader', label: t.discover.shader, icon: sparklesIconRaw },
-  ];
+  const discoverOptions = getDiscoverOptions(t);
 
   const emit = (newFilters: Filters) => {
     setFilters(newFilters);
@@ -145,7 +99,7 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
       <div className="lp-discover-section">
         <h4 className="lp-filter-title">{t.discover.title}</h4>
         <div className="lp-discover-btns">
-          {DISCOVER_OPTIONS.map(({ type, label, icon }) => (
+          {discoverOptions.map(({ type, label, icon }) => (
             <button
               key={type}
               className={`lp-discover-btn${discoverType === type ? ' active' : ''}`}

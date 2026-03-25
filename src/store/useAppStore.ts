@@ -21,18 +21,7 @@ import {
   LOCALE_MAP,
   type SearchFilters,
 } from '@/lib/helpers';
-
-// Safe localStorage helpers — no-op on the server during SSR.
-const ls = {
-  get: (key: string): string | null =>
-    typeof window !== 'undefined' ? localStorage.getItem(key) : null,
-  set: (key: string, value: string): void => {
-    if (typeof window !== 'undefined') localStorage.setItem(key, value);
-  },
-  remove: (key: string): void => {
-    if (typeof window !== 'undefined') localStorage.removeItem(key);
-  },
-};
+import { ls } from '@/lib/localStorage';
 
 // Module-level ref for dialog promise resolution (not a React ref).
 let dialogResolver: ((result?: boolean) => void) | null = null;

@@ -13,6 +13,7 @@ export default defineConfig({
       include: [
         'src/lib/helpers.ts',
         'src/lib/utils.ts',
+        'src/lib/facets.ts',
         'src/lib/api/client.ts',
         'src/lib/api/modrinth.ts',
         'src/store/useAppStore.ts',
