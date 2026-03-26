@@ -7,7 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET, memCache } from '@/app/api/v2/[...path]/route';
+import { GET } from '@/app/api/v2/[...path]/route';
+import { memCache } from '@/app/api/v2/cache';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -141,7 +142,7 @@ describe('proxy route GET handler', () => {
     );
   });
 
-  it('uses 300s revalidate for project/* paths', async () => {
+  it('uses 600s revalidate for project/* paths', async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
 
     const req = makeRequest('http://localhost/api/v2/project/sodium');
@@ -149,11 +150,11 @@ describe('proxy route GET handler', () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ next: expect.objectContaining({ revalidate: 300 }) }),
+      expect.objectContaining({ next: expect.objectContaining({ revalidate: 600 }) }),
     );
   });
 
-  it('uses 60s revalidate for version_file/* paths', async () => {
+  it('uses 300s revalidate for version_file/* paths', async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
 
     const req = makeRequest('http://localhost/api/v2/version_file/abc');
@@ -161,7 +162,7 @@ describe('proxy route GET handler', () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ next: expect.objectContaining({ revalidate: 60 }) }),
+      expect.objectContaining({ next: expect.objectContaining({ revalidate: 300 }) }),
     );
   });
 
