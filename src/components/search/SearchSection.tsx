@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
-import CustomSelect from '../ui/CustomSelect';
-import Icon from '../ui/Icon';
-import FilterModal from '../modals/FilterModal';
-import { LOADER_OPTIONS, OTHER_FILTER_OPTIONS, getLoaderOptions } from '../../lib/helpers';
-import { useIsDesktop } from '../../hooks/useIsDesktop';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
-import type { DiscoverType } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import CustomSelect from '@/components/ui/CustomSelect';
+import Icon from '@/components/ui/Icon';
+import FilterModal from '@/components/modals/FilterModal';
+import { LOADER_OPTIONS, OTHER_FILTER_OPTIONS, getLoaderOptions, countActiveFilters } from '@/lib/helpers';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
+import type { DiscoverType } from '@/store/useAppStore';
 
-import searchIconRaw from '../../assets/icons/search.svg';
-import filterIconRaw from '../../assets/icons/filter.svg';
+import searchIconRaw from '@/assets/icons/search.svg';
+import filterIconRaw from '@/assets/icons/filter.svg';
 
 const INITIAL_LOADER_STATE = Object.fromEntries(LOADER_OPTIONS.map((o) => [o.value, null])) as Record<string, string | null>;
 const INITIAL_ENVIRONMENT_STATE = { client_side: null as string | null, server_side: null as string | null };
@@ -25,16 +25,6 @@ function makeInitialFilters(modVersion: string): SearchParams['filters'] {
     other: INITIAL_OTHER_STATE,
     version: modVersion || '',
   };
-}
-
-function hasActiveFilters(filters: SearchParams['filters']): boolean {
-  if (!filters) return false;
-  return (
-    Object.values(filters.loaders || {}).some(Boolean) ||
-    Object.values(filters.categories || {}).some(Boolean) ||
-    Object.values(filters.environment || {}).some(Boolean) ||
-    Object.values(filters.other || {}).some(Boolean)
-  );
 }
 
 interface SearchSectionProps {
@@ -111,7 +101,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
-  const filtersActive = hasActiveFilters(filters);
+  const filtersActive = countActiveFilters(filters ?? { loaders: {} }) > 0;
 
   return (
     <section className="search-section">

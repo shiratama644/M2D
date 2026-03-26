@@ -1,60 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import ModCard from './ModCard';
-import { API } from '../../lib/api';
-import { useApp } from '../../context/AppContext';
-import type { ModHit } from '../../types/modrinth';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
-
-interface SearchFilters {
-  loaders: Record<string, string | null>;
-  categories?: Record<string, string | null>;
-  environment?: { client_side: string | null; server_side: string | null };
-  other?: Record<string, string | null>;
-  version?: string;
-}
-
-function buildFacets(filters: SearchFilters | null | undefined, projectType: string): string[][] {
-  const facets: string[][] = [[`project_type:${projectType}`]];
-  if (!filters) return facets;
-
-  const included = Object.entries(filters.loaders || {})
-    .filter(([, v]) => v === 'include')
-    .map(([k]) => `categories:${k}`);
-  const excluded = Object.entries(filters.loaders || {})
-    .filter(([, v]) => v === 'exclude');
-
-  if (included.length > 0) facets.push(included);
-  excluded.forEach(([k]) => facets.push([`NOT categories:${k}`]));
-
-  const includedCats = Object.entries(filters.categories || {})
-    .filter(([, v]) => v === 'include')
-    .map(([k]) => `categories:${k}`);
-  const excludedCats = Object.entries(filters.categories || {})
-    .filter(([, v]) => v === 'exclude');
-
-  if (includedCats.length > 0) facets.push(includedCats);
-  excludedCats.forEach(([k]) => facets.push([`NOT categories:${k}`]));
-
-  if (filters.environment) {
-    const cs = filters.environment.client_side;
-    const ss = filters.environment.server_side;
-    if (cs === 'include') facets.push(['client_side:required', 'client_side:optional']);
-    else if (cs === 'exclude') facets.push(['client_side:unsupported']);
-    if (ss === 'include') facets.push(['server_side:required', 'server_side:optional']);
-    else if (ss === 'exclude') facets.push(['server_side:unsupported']);
-  }
-
-  if (filters.other?.open_source === 'include') facets.push(['open_source:true']);
-  else if (filters.other?.open_source === 'exclude') facets.push(['NOT open_source:true']);
-
-  if (filters.version?.trim()) facets.push([`versions:${filters.version.trim()}`]);
-
-  return facets;
-}
+import ModCard from '@/components/mods/ModCard';
+import SkeletonCard from '@/components/mods/SkeletonCard';
+import { API } from '@/lib/api';
+import { useApp } from '@/context/AppContext';
+import { buildFacets } from '@/lib/facets';
+import type { ModHit } from '@/types/modrinth';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
 
 const LIMIT = 12;
+/** Number of skeleton cards to show while the initial page loads. */
+const SKELETON_COUNT = 6;
 
 interface ModListProps {
   searchParams: SearchParams;
@@ -63,10 +20,13 @@ interface ModListProps {
 }
 
 export default function ModList({ searchParams, isDesktop, initialMods }: ModListProps) {
-  const { updateModDataMap, addDebugLog, discoverType } = useApp();
+  const { updateModDataMap, addDebugLog, discoverType, t } = useApp();
   const [mods, setMods] = useState<ModHit[]>(() => initialMods ?? []);
   const [loading, setLoading] = useState(false);
   const [noResults, setNoResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  /** True only during the very first load (mods list is empty). */
+  const [initialLoading, setInitialLoading] = useState(false);
 
   const offsetRef = useRef(initialMods?.length ?? 0);
   const loadingRef = useRef(false);
@@ -90,6 +50,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
     loadingRef.current = true;
     setLoading(true);
+    if (offset === 0) setInitialLoading(true);
 
     const facets = buildFacets(p.filters, discoverType);
     let index: string;
@@ -101,6 +62,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
     try {
       const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index, controller.signal);
+      setError(null);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;
         if (offset === 0) {
@@ -121,13 +83,22 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       if ((err as { name?: string }).name === 'AbortError') return;
       addDebugLog('error', `Search error: ${err}`);
       hasMoreRef.current = false;
+      setError(t.modList.fetchError);
     } finally {
       if (!controller.signal.aborted) {
         loadingRef.current = false;
         setLoading(false);
+        setInitialLoading(false);
       }
     }
   }, [searchParams, discoverType, updateModDataMap, addDebugLog]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setNoResults(false);
+    hasMoreRef.current = true;
+    loadMore();
+  }, [loadMore]);
 
   useEffect(() => {
     if (initialDataRef.current !== null) {
@@ -146,6 +117,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     }
     setMods([]);
     setNoResults(false);
+    setError(null);
     offsetRef.current = 0;
     loadingRef.current = false;
     hasMoreRef.current = true;
@@ -170,13 +142,35 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
   }, [loadMore]);
 
   return (
-    <main className="main-content">
-      <div className="mod-list">
-        {noResults && (
+    <main className="main-content" aria-busy={loading} aria-label="Mod list">
+      <div
+        className="mod-list"
+        role="list"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-relevant="additions"
+      >
+        {/* Skeleton cards shown on initial load before any results arrive */}
+        {initialLoading &&
+          Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <SkeletonCard key={`skeleton-${i}`} />
+          ))}
+
+        {!initialLoading && noResults && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2.5rem' }}>
             No mods found.
           </div>
         )}
+
+        {!initialLoading && error && (
+          <div className="mod-list-error" role="alert">
+            <p>{error}</p>
+            <button className="btn-retry" onClick={handleRetry} type="button">
+              {t.modList.retry}
+            </button>
+          </div>
+        )}
+
         {mods.map((mod) => (
           <ModCard key={mod.project_id} mod={mod} isDesktop={isDesktop} />
         ))}
@@ -184,7 +178,8 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       <div
         ref={sentinelRef}
         className="loader-sentinel"
-        style={{ opacity: loading ? 1 : 0 }}
+        aria-hidden="true"
+        style={{ opacity: loading && !initialLoading ? 1 : 0 }}
       >
         <div className="loader-dots">
           <div /><div /><div /><div />

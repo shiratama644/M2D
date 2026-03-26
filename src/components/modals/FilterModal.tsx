@@ -1,27 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '../../lib/helpers';
-import { CATEGORY_ICON_MAP } from '../../lib/categoryIcons';
-import { useGameVersions } from '../../hooks/useGameVersions';
-import { useCategoryGroups } from '../../hooks/useCategories';
-import CustomSelect from '../ui/CustomSelect';
-import FilterRow from '../ui/FilterRow';
-import MobileModal from '../ui/MobileModal';
-import Icon from '../ui/Icon';
-import { cn } from '../../lib/utils';
-import type { SearchParams } from '../../hooks/useDependencyCheck';
-import type { DiscoverType } from '../../store/useAppStore';
+import { useApp } from '@/context/AppContext';
+import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '@/lib/helpers';
+import { CATEGORY_ICON_MAP } from '@/lib/categoryIcons';
+import { useGameVersions } from '@/hooks/useGameVersions';
+import { useCategoryGroups } from '@/hooks/useCategories';
+import CustomSelect from '@/components/ui/CustomSelect';
+import FilterRow from '@/components/ui/FilterRow';
+import MobileModal from '@/components/ui/MobileModal';
+import CollapsibleSection from '@/components/ui/CollapsibleSection';
+import Icon from '@/components/ui/Icon';
+import { cn } from '@/lib/utils';
+import { getDiscoverOptions } from '@/lib/discoverOptions';
+import type { SearchParams } from '@/hooks/useDependencyCheck';
+import type { DiscoverType } from '@/store/useAppStore';
 
-import filterIconRaw from '../../assets/icons/filter.svg';
-import clientIconRaw from '../../assets/icons/client.svg';
-import serverIconRaw from '../../assets/icons/server.svg';
-import chevronDownRaw from '../../assets/icons/chevron-down.svg';
-import cubeIconRaw from '../../assets/icons/cube.svg';
-import packageIconRaw from '../../assets/icons/package.svg';
-import imageIconRaw from '../../assets/icons/image.svg';
-import sparklesIconRaw from '../../assets/icons/sparkles.svg';
+import filterIconRaw from '@/assets/icons/filter.svg';
+import clientIconRaw from '@/assets/icons/client.svg';
+import serverIconRaw from '@/assets/icons/server.svg';
 
 interface FilterModalProps {
   filters: SearchParams['filters'];
@@ -29,36 +26,6 @@ interface FilterModalProps {
   onClose: () => void;
   projectType?: string;
   onProjectTypeChange?: (type: DiscoverType) => void;
-}
-
-/** Collapsible section for the mobile filter modal. */
-function CollapsibleSection({
-  title,
-  children,
-  defaultOpen = true,
-}: {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="lp-filter-section" style={{ marginBottom: '1rem' }}>
-      <button
-        className="lp-filter-title lp-filter-title-toggle"
-        onClick={() => setOpen((v) => !v)}
-        type="button"
-      >
-        <span>{title}</span>
-        <Icon
-          svg={chevronDownRaw}
-          size={12}
-          className={`lp-filter-chevron${open ? ' open' : ''}`}
-        />
-      </button>
-      {open && <div className="lp-filter-section-body">{children}</div>}
-    </div>
-  );
 }
 
 export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod', onProjectTypeChange }: FilterModalProps) {
@@ -69,12 +36,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
   const loaderOptions = getLoaderOptions(localProjectType);
   const [localFilters, setLocalFilters] = useState(filters);
 
-  const DISCOVER_OPTIONS: Array<{ type: DiscoverType; label: string; icon: string }> = [
-    { type: 'mod', label: t.discover.mod, icon: cubeIconRaw },
-    { type: 'modpack', label: t.discover.modpack, icon: packageIconRaw },
-    { type: 'resourcepack', label: t.discover.texture, icon: imageIconRaw },
-    { type: 'shader', label: t.discover.shader, icon: sparklesIconRaw },
-  ];
+  const discoverOptions = getDiscoverOptions(t);
 
   const handleDiscoverTypeChange = (type: DiscoverType) => {
     setLocalProjectType(type);
@@ -148,7 +110,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
     >
       <div className="fm-discover-section">
         <div className="lp-discover-btns">
-          {DISCOVER_OPTIONS.map(({ type, label, icon }) => (
+          {discoverOptions.map(({ type, label, icon }) => (
             <button
               key={type}
               className={cn('lp-discover-btn', localProjectType === type && 'active')}

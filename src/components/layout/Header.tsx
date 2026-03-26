@@ -1,15 +1,15 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import Icon from '../ui/Icon';
+import { useApp } from '@/context/AppContext';
+import Icon from '@/components/ui/Icon';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import hamburgerIconRaw from '../../assets/icons/hamburger.svg';
-import settingsIconRaw from '../../assets/icons/settings.svg';
-import userIconRaw from '../../assets/icons/user.svg';
-import historyIconRaw from '../../assets/icons/history.svg';
-import starIconRaw from '../../assets/icons/star.svg';
+import hamburgerIconRaw from '@/assets/icons/hamburger.svg';
+import settingsIconRaw from '@/assets/icons/settings.svg';
+import userIconRaw from '@/assets/icons/user.svg';
+import historyIconRaw from '@/assets/icons/history.svg';
+import starIconRaw from '@/assets/icons/star.svg';
 
 export default function Header() {
   const { setMenuOpen, setSettingsOpen, setHistoryModalOpen, setFavoritesModalOpen } = useApp();

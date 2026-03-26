@@ -3,10 +3,10 @@
 import { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
-import { useScrollLock } from '../../hooks/useScrollLock';
-import Icon from './Icon';
-import xIconRaw from '../../assets/icons/x.svg';
+import { cn } from '@/lib/utils';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import Icon from '@/components/ui/Icon';
+import xIconRaw from '@/assets/icons/x.svg';
 
 interface MobileModalProps {
   title: string;

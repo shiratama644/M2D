@@ -1,12 +1,12 @@
 // SVG imports – Next.js webpack is configured to return SVG files as raw strings.
-import fabricIconRaw from '../assets/icons/tags/loaders/fabric.svg';
-import forgeIconRaw from '../assets/icons/tags/loaders/forge.svg';
-import neoforgeIconRaw from '../assets/icons/tags/loaders/neoforge.svg';
-import quiltIconRaw from '../assets/icons/tags/loaders/quilt.svg';
-import irisIconRaw from '../assets/icons/tags/loaders/iris.svg';
-import optifineIconRaw from '../assets/icons/tags/loaders/optifine.svg';
-import vanillaIconRaw from '../assets/icons/tags/loaders/vanilla.svg';
-import canvasIconRaw from '../assets/icons/tags/loaders/canvas.svg';
+import fabricIconRaw from '@/assets/icons/tags/loaders/fabric.svg';
+import forgeIconRaw from '@/assets/icons/tags/loaders/forge.svg';
+import neoforgeIconRaw from '@/assets/icons/tags/loaders/neoforge.svg';
+import quiltIconRaw from '@/assets/icons/tags/loaders/quilt.svg';
+import irisIconRaw from '@/assets/icons/tags/loaders/iris.svg';
+import optifineIconRaw from '@/assets/icons/tags/loaders/optifine.svg';
+import vanillaIconRaw from '@/assets/icons/tags/loaders/vanilla.svg';
+import canvasIconRaw from '@/assets/icons/tags/loaders/canvas.svg';
 
 // ---------------------------------------------------------------------------
 // Async concurrency utility
@@ -65,6 +65,9 @@ export const CONTEXT_HISTORY_KEY = 'mod_manager_context_history';
 // ---------------------------------------------------------------------------
 // App-wide constants
 // ---------------------------------------------------------------------------
+
+/** Maps internal language codes to BCP 47 locale strings. */
+export const LOCALE_MAP: Record<string, string> = { en: 'en-US', ja: 'ja-JP' };
 
 export const MAX_SEARCH_HISTORY = 50;
 export const MAX_CONTEXT_HISTORY = 50;
@@ -218,4 +221,26 @@ export function countActiveFilters(filters: SearchFilters): number {
   if (filters.environment) count += Object.values(filters.environment).filter(Boolean).length;
   if (filters.other) count += Object.values(filters.other).filter(Boolean).length;
   return count;
+}
+
+/**
+ * Formats a Unix timestamp for display in a history list.
+ * - Same day → time only (HH:MM, 24-hour)
+ * - Different day → "Mon D HH:MM"
+ */
+export function formatHistoryTime(timestamp: number, locale: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (isToday) {
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  return (
+    date.toLocaleDateString(locale, { month: 'short', day: 'numeric' }) +
+    ' ' +
+    date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })
+  );
 }

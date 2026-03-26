@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { useScrollLock } from '../../hooks/useScrollLock';
-import { API } from '../../lib/api';
-import { FALLBACK_ICON } from '../../lib/helpers';
-import Icon from '../ui/Icon';
-import checkCircleIconRaw from '../../assets/icons/check-circle.svg';
-import xIconRaw from '../../assets/icons/x.svg';
+import { useApp } from '@/context/AppContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import { API } from '@/lib/api';
+import { FALLBACK_ICON } from '@/lib/helpers';
+import Icon from '@/components/ui/Icon';
+import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
+import xIconRaw from '@/assets/icons/x.svg';
 
 export default function SelectedModal() {
   const {

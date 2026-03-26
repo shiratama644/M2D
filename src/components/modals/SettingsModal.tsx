@@ -1,10 +1,10 @@
 'use client';
 
-import { useApp } from '../../context/AppContext';
-import MobileModal from '../ui/MobileModal';
-import SettingsContent from '../settings/SettingsContent';
-import { useGameVersions } from '../../hooks/useGameVersions';
-import settingsIconRaw from '../../assets/icons/settings.svg';
+import { useApp } from '@/context/AppContext';
+import MobileModal from '@/components/ui/MobileModal';
+import SettingsContent from '@/components/settings/SettingsContent';
+import { useGameVersions } from '@/hooks/useGameVersions';
+import settingsIconRaw from '@/assets/icons/settings.svg';
 
 export default function SettingsModal() {
   const { settingsOpen, setSettingsOpen, t } = useApp();

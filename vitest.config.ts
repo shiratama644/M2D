@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
@@ -11,8 +12,13 @@ export default defineConfig({
       // meaningful (a broad include with untested files would mask regressions).
       include: [
         'src/lib/helpers.ts',
+        'src/lib/utils.ts',
+        'src/lib/facets.ts',
         'src/lib/api/client.ts',
+        'src/lib/api/modrinth.ts',
         'src/store/useAppStore.ts',
+        'src/app/api/v2/[...path]/route.ts',
+        'src/app/api/revalidate/route.ts',
       ],
       thresholds: {
         lines: 95,
@@ -24,6 +30,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // Resolve @/ imports to src/ (mirrors tsconfig paths)
+      '@/': path.resolve(__dirname, 'src') + '/',
       // Resolve SVG imports to an empty string (raw-loader behaviour in tests)
       '~/': '/src/',
     },

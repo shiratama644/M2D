@@ -1,5 +1,5 @@
-import { request, API_BASE, getApiBase, ApiError } from './client';
-import type { ModProject, ModHit, GameVersion, ModVersion } from '../../types/modrinth';
+import { request, API_BASE, getApiBase, ApiError } from '@/lib/api/client';
+import type { ModProject, ModHit, GameVersion, ModVersion } from '@/types/modrinth';
 
 export interface SearchResult {
   hits: ModHit[];

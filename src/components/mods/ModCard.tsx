@@ -2,14 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { cva } from 'class-variance-authority';
-import { formatNum, FALLBACK_ICON } from '../../lib/helpers';
-import { useApp } from '../../context/AppContext';
-import { cn } from '../../lib/utils';
-import Icon from '../ui/Icon';
-import userIconRaw from '../../assets/icons/user.svg';
-import downloadIconRaw from '../../assets/icons/download.svg';
-import starIconRaw from '../../assets/icons/star.svg';
-import type { ModHit } from '../../types/modrinth';
+import { formatNum, FALLBACK_ICON } from '@/lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import Icon from '@/components/ui/Icon';
+import userIconRaw from '@/assets/icons/user.svg';
+import downloadIconRaw from '@/assets/icons/download.svg';
+import starIconRaw from '@/assets/icons/star.svg';
+import type { ModHit } from '@/types/modrinth';
 
 const modCardVariants = cva('mod-card', {
   variants: {
@@ -37,6 +37,7 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
     activeModId, setActiveModId,
     favorites, toggleFavorite,
     showCardDescription,
+    t,
   } = useApp();
 
   const isSelected = selectedMods.has(mod.project_id);
@@ -66,6 +67,8 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       layout
+      role="listitem"
+      aria-label={mod.title}
     >
       <div className="mod-checkbox-wrapper">
         <input
@@ -73,13 +76,14 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
           className="mod-checkbox"
           checked={isSelected}
           onChange={handleCheckboxChange}
+          aria-label={t.modList.selectMod.replace('%s', mod.title)}
         />
       </div>
       <img
         src={mod.icon_url || FALLBACK_ICON}
         loading="lazy"
         className="mod-icon"
-        alt="icon"
+        alt={`${mod.title} icon`}
         onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
       />
       <div className="mod-info">

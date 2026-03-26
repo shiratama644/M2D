@@ -6,6 +6,7 @@ import {
   getCategoryLabel,
   getCategoryHeaderLabel,
   getLoaderOptions,
+  countActiveFilters,
   LOADER_OPTIONS,
   SHADER_LOADER_OPTIONS,
   MAX_SEARCH_HISTORY,
@@ -13,7 +14,7 @@ import {
   FALLBACK_ICON,
   LEVEL_COLORS,
   ENVIRONMENT_OPTIONS,
-} from '../lib/helpers';
+} from '@/lib/helpers';
 
 // ---------------------------------------------------------------------------
 // asyncPool
@@ -261,5 +262,101 @@ describe('constants', () => {
     expect(values).toContain('optifine');
     expect(values).toContain('vanilla-shader');
     expect(values).toContain('canvas');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// countActiveFilters
+// ---------------------------------------------------------------------------
+
+describe('countActiveFilters', () => {
+  it('returns 0 for all-null filters', () => {
+    expect(countActiveFilters({ loaders: { fabric: null, forge: null } })).toBe(0);
+  });
+
+  it('counts non-null loader values', () => {
+    expect(
+      countActiveFilters({ loaders: { fabric: 'include', forge: null, quilt: 'exclude' } }),
+    ).toBe(2);
+  });
+
+  it('counts non-null category values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        categories: { optimization: 'include', technology: null },
+      }),
+    ).toBe(1);
+  });
+
+  it('counts non-null environment values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        environment: { client_side: 'include', server_side: null },
+      }),
+    ).toBe(1);
+  });
+
+  it('counts non-null "other" values', () => {
+    expect(
+      countActiveFilters({
+        loaders: {},
+        other: { open_source: 'include' },
+      }),
+    ).toBe(1);
+  });
+
+  it('sums counts across all filter groups', () => {
+    expect(
+      countActiveFilters({
+        loaders: { fabric: 'include' },
+        categories: { optimization: 'include', technology: 'exclude' },
+        environment: { client_side: 'include', server_side: 'include' },
+        other: { open_source: null },
+      }),
+    ).toBe(5);
+  });
+
+  it('returns 0 when no optional groups are present', () => {
+    expect(countActiveFilters({ loaders: {} })).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatHistoryTime
+// ---------------------------------------------------------------------------
+
+import { formatHistoryTime } from '@/lib/helpers';
+
+describe('formatHistoryTime', () => {
+  it('returns time-only (HH:MM) for timestamps on today', () => {
+    const now = new Date();
+    const result = formatHistoryTime(now.getTime(), 'en-US');
+    expect(result).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('includes a date component for timestamps from a previous day', () => {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const result = formatHistoryTime(twoDaysAgo.getTime(), 'en-US');
+    // e.g. "Mar 23 09:00" — length longer than a plain HH:MM
+    expect(result.length).toBeGreaterThan(5);
+    // Must still end with a time component
+    expect(result).toMatch(/\d{2}:\d{2}$/);
+  });
+
+  it('uses the supplied locale for formatting', () => {
+    const now = new Date();
+    const resultEn = formatHistoryTime(now.getTime(), 'en-US');
+    const resultJa = formatHistoryTime(now.getTime(), 'ja-JP');
+    // Both should be valid HH:MM strings (today → time-only branch)
+    expect(resultEn).toMatch(/^\d{2}:\d{2}$/);
+    expect(resultJa).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('returns a non-empty string for any valid timestamp', () => {
+    expect(formatHistoryTime(0, 'en-US')).toBeTruthy();
+    expect(formatHistoryTime(Date.now(), 'en-US')).toBeTruthy();
   });
 });

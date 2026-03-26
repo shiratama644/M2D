@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { useScrollLock } from '../../hooks/useScrollLock';
-import Icon from '../ui/Icon';
-import { FALLBACK_ICON } from '../../lib/helpers';
-import gitGraphIconRaw from '../../assets/icons/git-graph.svg';
-import xIconRaw from '../../assets/icons/x.svg';
-import checkCircleIconRaw from '../../assets/icons/check-circle.svg';
-import infoIconRaw from '../../assets/icons/info.svg';
-import type { DepIssues } from '../../hooks/useDependencyCheck';
+import { useApp } from '@/context/AppContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import Icon from '@/components/ui/Icon';
+import { FALLBACK_ICON } from '@/lib/helpers';
+import gitGraphIconRaw from '@/assets/icons/git-graph.svg';
+import xIconRaw from '@/assets/icons/x.svg';
+import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
+import infoIconRaw from '@/assets/icons/info.svg';
+import type { DepIssues } from '@/hooks/useDependencyCheck';
 
 interface DepModalProps {
   issues: DepIssues;

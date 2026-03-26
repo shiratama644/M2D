@@ -26,7 +26,7 @@ vi.stubGlobal('localStorage', localStorageMock);
 // We use `await import(...)` inside beforeEach via a factory helper because
 // Vitest module registry is shared; we reset the store state manually instead.
 
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
 
 // Helper: reset store to a clean state between tests
 function resetStore() {

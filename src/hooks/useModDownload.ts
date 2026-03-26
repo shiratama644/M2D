@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { API } from '../lib/api';
-import { asyncPool, CONCURRENCY_LIMIT } from '../lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { API } from '@/lib/api';
+import { asyncPool, CONCURRENCY_LIMIT } from '@/lib/helpers';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import type { SearchParams, ResolveSettingsResult } from './useDependencyCheck';
+import type { SearchParams, ResolveSettingsResult } from '@/hooks/useDependencyCheck';
 
 export function useModDownload(searchParams: SearchParams | null) {
   const {

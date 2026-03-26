@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApp } from '../../context/AppContext';
-import { useScrollLock } from '../../hooks/useScrollLock';
-import { Button } from './button';
-import Icon from './Icon';
-import circleAlertIconRaw from '../../assets/icons/circle-alert.svg';
-import infoIconRaw from '../../assets/icons/info.svg';
-import xIconRaw from '../../assets/icons/x.svg';
+import { useApp } from '@/context/AppContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/Icon';
+import circleAlertIconRaw from '@/assets/icons/circle-alert.svg';
+import infoIconRaw from '@/assets/icons/info.svg';
+import xIconRaw from '@/assets/icons/x.svg';
 
 export default function CustomDialog() {
   const { dialog, closeDialog } = useApp();

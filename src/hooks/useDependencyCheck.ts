@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { API } from '../lib/api';
-import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '../lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { API } from '@/lib/api';
+import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 
 export type { SearchFilters };
 

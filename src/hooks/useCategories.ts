@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { API } from '../lib/api';
-import { useApp } from '../context/AppContext';
-import type { ModCategory } from '../types/modrinth';
+import { API } from '@/lib/api';
+import { useApp } from '@/context/AppContext';
+import type { ModCategory } from '@/types/modrinth';
 
 // Module-level cache to avoid re-fetching on every component mount.
 let cachedCategories: ModCategory[] | null = null;

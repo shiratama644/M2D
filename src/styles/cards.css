@@ -27,3 +27,90 @@
 }
 .mod-favorite-btn:hover { color: #facc15; background: var(--glass-bg-hover); }
 .mod-favorite-btn.favorited { color: #facc15; }
+
+/* --- Skeleton Loading --- */
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+  animation: none;
+}
+.skeleton-card:hover { transform: none !important; }
+
+.skeleton-checkbox {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  margin: 0 0.375rem;
+}
+
+.skeleton-icon {
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+}
+
+.skeleton-line {
+  border-radius: 0.375rem;
+  height: 0.8rem;
+}
+
+.skeleton-title {
+  width: 55%;
+  margin-bottom: 0.25rem;
+}
+
+.skeleton-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.375rem;
+}
+
+.skeleton-meta-item {
+  width: 4.5rem;
+  height: 0.65rem;
+}
+
+/* Shared shimmer gradient applied to all skeleton children */
+.skeleton-checkbox,
+.skeleton-icon,
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--glass-border) 25%,
+    var(--glass-bg-hover) 50%,
+    var(--glass-border) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* --- Error / empty states --- */
+.mod-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.mod-list-error p { font-size: 0.9rem; }
+.mod-list-error .btn-retry {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  background: var(--glass-bg-hover);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.mod-list-error .btn-retry:hover { background: var(--glass-bg-solid); }
