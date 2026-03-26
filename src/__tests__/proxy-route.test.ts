@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/v2/[...path]/route';
+import { GET, memCache } from '@/app/api/v2/[...path]/route';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,6 +30,7 @@ function makeParams(path: string[]): { params: Promise<{ path: string[] }> } {
 describe('proxy route GET handler', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch);
+    memCache.flushAll();
   });
 
   afterEach(() => {
