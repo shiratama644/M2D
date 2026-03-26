@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import NodeCache from 'node-cache';
 
 const MODRINTH_BASE = 'https://api.modrinth.com/v2';
 
@@ -7,7 +8,10 @@ const UPSTREAM_TIMEOUT_MS = parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '', 10) 
 /** Modrinth asks third-party clients to identify themselves. */
 const USER_AGENT = 'M2D/1.0 (https://github.com/shiratama644/M2D)';
 
-function getRevalidate(pathStr: string): number {
+/** In-memory cache shared across requests within the same Node.js process. */
+export const memCache = new NodeCache({ useClones: false });
+
+function getCacheTtl(pathStr: string): number {
   if (pathStr.startsWith('tag/')) return 3600;
   if (pathStr.startsWith('version_file/')) return 60;
   if (pathStr.includes('/version')) return 300;
@@ -32,14 +36,20 @@ export async function GET(
   const pathStr = pathSegments.join('/');
   const search = normalizeQueryString(request.nextUrl.search);
   const upstreamUrl = `${MODRINTH_BASE}/${pathStr}${search}`;
+  const cacheKey = upstreamUrl;
 
-  const revalidate = getRevalidate(pathStr);
+  const cached = memCache.get<unknown>(cacheKey);
+  if (cached !== undefined) {
+    return NextResponse.json(cached);
+  }
+
+  const ttl = getCacheTtl(pathStr);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
 
   try {
     const res = await fetch(upstreamUrl, {
-      next: { revalidate },
+      next: { revalidate: ttl },
       signal: controller.signal,
       headers: { 'User-Agent': USER_AGENT },
     });
@@ -50,6 +60,7 @@ export async function GET(
     }
 
     const data = await res.json();
+    memCache.set(cacheKey, data, ttl);
     return NextResponse.json(data);
   } catch (err) {
     if ((err as { name?: string }).name === 'AbortError') {
