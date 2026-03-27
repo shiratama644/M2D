@@ -10,7 +10,7 @@
 const TRANSLATE_MAX = 500;
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
-export async function translateChunk(text: string): Promise<string> {
+export async function translateChunk(text: string, signal?: AbortSignal): Promise<string> {
   const preserved: string[] = [];
   // Generate a per-call random 8-hex-digit nonce so that the placeholder
   // is unique to this invocation and cannot collide with real content
@@ -44,7 +44,7 @@ export async function translateChunk(text: string): Promise<string> {
   processed = processed.replace(/https?:\/\/[^\s<>)\]]+/g, protect);
 
   try {
-    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(processed)}&langpair=en|ja`);
+    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(processed)}&langpair=en|ja`, { signal });
     if (!res.ok) return text;
     const data = await res.json();
     if (data.responseStatus === 200) {
@@ -61,7 +61,7 @@ export async function translateChunk(text: string): Promise<string> {
   return text;
 }
 
-export async function translateBody(body: string): Promise<string> {
+export async function translateBody(body: string, signal?: AbortSignal): Promise<string> {
   if (!body) return body;
 
   const codeBlocks: string[] = [];
@@ -80,7 +80,7 @@ export async function translateBody(body: string): Promise<string> {
       if (!trimmed || trimmed.length < 3) return part;
       if (trimmed.includes(CODE_PH)) return part;
       if (trimmed.startsWith('```') || trimmed.startsWith('~~~') || trimmed.startsWith('    ')) return part;
-      if (trimmed.length <= TRANSLATE_MAX) return translateChunk(trimmed);
+      if (trimmed.length <= TRANSLATE_MAX) return translateChunk(trimmed, signal);
 
       const chunks: string[] = [];
       let current = '';
@@ -95,7 +95,7 @@ export async function translateBody(body: string): Promise<string> {
         }
       }
       if (current) chunks.push(current);
-      const results = await Promise.all(chunks.map(translateChunk));
+      const results = await Promise.all(chunks.map((c) => translateChunk(c, signal)));
       return results.join(' ');
     }),
   );

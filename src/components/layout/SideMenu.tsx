@@ -106,9 +106,23 @@ export default function SideMenu() {
       try {
         const parts = atob((ev.target?.result as string).trim()).split(':');
         if (parts.length < 3 || parts[0] !== 'MMPROF1') throw new Error('Invalid Signature');
+        let profileName: string;
+        try {
+          profileName = decodeURIComponent(parts[1]);
+        } catch {
+          throw new Error('Invalid profile name encoding');
+        }
+        if (profileName.length > 100) throw new Error('Profile name is too long');
+        const rawMods = parts[2] ? parts[2].split(',').filter(Boolean) : [];
+        if (rawMods.length > 500) throw new Error('Too many mods in profile (max 500)');
+        const validIdPattern = /^[a-zA-Z0-9_-]{1,64}$/;
+        const mods = rawMods.filter((id) => validIdPattern.test(id));
+        if (mods.length < rawMods.length) {
+          addDebugLog('warn', `Profile import: ${rawMods.length - mods.length} invalid mod ID(s) were skipped.`);
+        }
         const profile = {
-          name: decodeURIComponent(parts[1]) + ' (Imported)',
-          mods: parts[2] ? parts[2].split(',') : [],
+          name: profileName + ' (Imported)',
+          mods,
           date: new Date().toLocaleDateString(),
         };
         saveProfiles([...profiles, profile]);
@@ -126,6 +140,13 @@ export default function SideMenu() {
   const importZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const MAX_ZIP_SIZE = 500 * 1024 * 1024; // 500 MB
+    if (file.size > MAX_ZIP_SIZE) {
+      await showAlert('File size is too large (max 500 MB).');
+      e.target.value = '';
+      return;
+    }
 
     if (!window.crypto?.subtle) {
       await showAlert('Cryptography API is not supported in this environment.');

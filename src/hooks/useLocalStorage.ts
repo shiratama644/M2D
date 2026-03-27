@@ -34,20 +34,23 @@ export function useLocalStorage<T>(
 
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
-      try {
-        const next = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(next);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(
-            key,
-            typeof next === 'object' ? JSON.stringify(next) : String(next),
-          );
+      setStoredValue((prev) => {
+        try {
+          const next = value instanceof Function ? value(prev) : value;
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(
+              key,
+              typeof next === 'object' ? JSON.stringify(next) : String(next),
+            );
+          }
+          return next;
+        } catch (err) {
+          console.error(`useLocalStorage: could not save "${key}"`, err);
+          return prev;
         }
-      } catch (err) {
-        console.error(`useLocalStorage: could not save "${key}"`, err);
-      }
+      });
     },
-    [key, storedValue],
+    [key],
   );
 
   const removeValue = useCallback(() => {

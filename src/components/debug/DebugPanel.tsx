@@ -19,6 +19,11 @@ export default function DebugPanel() {
   const [copied, setCopied] = useState(false);
   const fabRef = useRef<HTMLDivElement | null>(null);
   const logsRef = useRef<HTMLDivElement | null>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+  }, []);
 
   useEffect(() => {
     if (!debugMode) return;
@@ -121,7 +126,10 @@ export default function DebugPanel() {
       .join('\n');
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    }).catch((err) => {
+      console.error('Failed to copy logs to clipboard:', err);
     });
   };
 

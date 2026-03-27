@@ -12,12 +12,12 @@ export function buildFacets(filters: SearchFilters | null | undefined, projectTy
 
   const included = Object.entries(filters.loaders || {})
     .filter(([, v]) => v === 'include')
-    .map(([k]) => `categories:${k}`);
+    .map(([k]) => `loaders:${k}`);
   const excluded = Object.entries(filters.loaders || {})
     .filter(([, v]) => v === 'exclude');
 
   if (included.length > 0) facets.push(included);
-  excluded.forEach(([k]) => facets.push([`NOT categories:${k}`]));
+  excluded.forEach(([k]) => facets.push([`NOT loaders:${k}`]));
 
   const includedCats = Object.entries(filters.categories || {})
     .filter(([, v]) => v === 'include')
