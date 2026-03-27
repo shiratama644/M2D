@@ -719,15 +719,294 @@ return text;
 
 ---
 
+### 2-9. `HomeClient` と `useScrollLock` の `modal-open` クラス競合
+
+**ファイル:** `src/app/HomeClient.tsx` (行 81–85)、`src/hooks/useScrollLock.ts`
+
+```typescript
+// HomeClient — menuOpen/mobileDetailOpen の変化ごとに classList を直接操作
+useEffect(() => {
+  const isOpen = menuOpen || mobileDetailOpen;
+  document.body.classList.toggle('modal-open', isOpen); // ❌ useScrollLock と独立して動作
+}, [menuOpen, mobileDetailOpen]);
+```
+
+**問題点:**
+
+- `HomeClient` は `menuOpen` / `mobileDetailOpen` を監視して `document.body.classList` を直接操作する。
+- 一方、`CustomDialog`・`DependencyModal`・`MobileModal` などは `useScrollLock` フックを使い、モジュールレベルの `lockCount` で同じクラスを管理する。
+- 例えば、`CustomDialog`（useScrollLock）が開いている状態でサイドメニューが閉じると、HomeClient のエフェクトが `classList.toggle('modal-open', false)` を実行してクラスを削除してしまう。その結果、ダイアログが表示中にもかかわらずスクロールが再有効化される。
+
+**推奨対処:**
+
+`HomeClient` 側の `classList` 直接操作を削除し、`useScrollLock` に一本化する。
+
+```typescript
+// HomeClient の useEffect を削除し、代わりに：
+useScrollLock(menuOpen || mobileDetailOpen);
+```
+
+---
+
+## 3. 中 (Medium) — 追加分
+
+### 3-11. アプリ全体のセキュリティヘッダーが未設定
+
+**ファイル:** `next.config.mjs`
+
+**問題点:**
+
+- `next.config.mjs` の `headers()` 関数が定義されておらず、全レスポンスに以下のヘッダーが付与されない。
+  - `X-Content-Type-Options: nosniff` — MIME スニッフィング防止
+  - `X-Frame-Options: SAMEORIGIN` — クリックジャッキング防止
+  - `Strict-Transport-Security` — HTTPS 強制（本番環境）
+  - `Permissions-Policy` — 不要なブラウザ機能の無効化
+- 既存の 3-3（プロキシルートの CORS/CSP 欠如）とは別に、アプリ全体としてヘッダーが設定されていない。
+
+**推奨対処:**
+
+```javascript
+// next.config.mjs
+async headers() {
+  return [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=()' },
+        {
+          key: 'Strict-Transport-Security',
+          value: 'max-age=63072000; includeSubDomains; preload',
+        },
+      ],
+    },
+  ];
+},
+```
+
+---
+
+### 3-12. `rateLimitStore` の IP エントリが永続する（メモリリーク）
+
+**ファイル:** `src/app/api/revalidate/route.ts` (行 10–18)
+
+```typescript
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const timestamps = (rateLimitStore.get(ip) ?? []).filter((t) => t > windowStart);
+  if (timestamps.length >= RATE_LIMIT_MAX) return true;
+  timestamps.push(now);
+  rateLimitStore.set(ip, timestamps); // ❌ 空になっても IP キーは削除されない
+  return false;
+}
+```
+
+**問題点:**
+
+- 古いタイムスタンプは 1 分のウィンドウ外として都度フィルタリングされるが、IP アドレスのキー自体は Map から削除されない。
+- サーバーが長時間稼働すると、アクセスした全ユニーク IP が Map に積み上がり続ける。
+- サーバーレス環境（Cloudflare Workers / Vercel）では各インスタンスが短命なため影響は小さいが、常駐プロセスでは問題になる。
+
+**推奨対処:**
+
+```typescript
+if (timestamps.length === 0) {
+  rateLimitStore.delete(ip);
+} else {
+  rateLimitStore.set(ip, timestamps);
+}
+```
+
+---
+
+### 3-13. `ModDetail` の `API.getProject()` に AbortSignal を渡していない
+
+**ファイル:** `src/components/mods/ModDetail.tsx` (行 38–42)
+
+```typescript
+useEffect(() => {
+  if (!activeModId) return;
+  let cancelled = false;
+  API.getProject(activeModId)  // ❌ AbortSignal を渡していない
+    .then((data) => { if (!cancelled) setState(...); })
+    .catch(() => { if (!cancelled) setState(...); });
+  return () => { cancelled = true; };
+}, [activeModId]);
+```
+
+**問題点:**
+
+- `cancelled` フラグはコンポーネント側の状態更新を防ぐが、フライト中の fetch リクエスト自体はキャンセルされない。
+- `activeModId` が短時間に複数回変化した場合（例: 素早い連続クリック）、完了しない fetch が並行して走り続ける。
+- 3-4 で指摘した `useGameVersions` / `useCategories` / `useDependencyCheck` と同一のパターン。
+
+**推奨対処:**
+
+```typescript
+useEffect(() => {
+  if (!activeModId) return;
+  const controller = new AbortController();
+  API.getProject(activeModId, controller.signal)
+    .then((data) => setState({ id: activeModId, detail: data }))
+    .catch((err) => {
+      if ((err as { name?: string }).name !== 'AbortError')
+        setState({ id: activeModId, detail: null });
+    });
+  return () => controller.abort();
+}, [activeModId]);
+```
+
+---
+
+## 4. 低 (Low) — 追加分
+
+### 4-9. `SideMenu` の `profileMsg` タイマーリーク
+
+**ファイル:** `src/components/layout/SideMenu.tsx` (行 55–56)
+
+```typescript
+setProfileMsg('Saved!');
+setTimeout(() => setProfileMsg(''), 2000); // ❌ タイマー ID を保持せず、クリーンアップなし
+```
+
+**問題点:**
+
+- 2-8（`DebugPanel` のタイマーリーク）と同一パターン。
+- コンポーネントがアンマウントされた後にタイマーが発火して `setProfileMsg` が呼ばれる。
+- `useRef` でタイマー ID を保持し、`useEffect` のクリーンアップで `clearTimeout` すべき。
+
+---
+
+### 4-10. `commitRename` に重複チェックがない
+
+**ファイル:** `src/components/layout/SideMenu.tsx` (行 81–89)
+
+```typescript
+const commitRename = (index: number) => {
+  const newName = renameValue.trim();
+  if (!newName) { setRenamingIndex(null); return; }
+  const newProfiles = profiles.map((p, i) => (i === index ? { ...p, name: newName } : p));
+  saveProfiles(newProfiles); // ❌ 重複チェックなし
+  ...
+};
+```
+
+**問題点:**
+
+- 4-1（プロファイル保存時の重複チェックなし）と同一パターン。
+- リネーム先の名前が既存プロファイルと重複していても保存できてしまう。
+- `saveProfile` 関数も重複チェックがないため、新規保存・リネームの両方で同名プロファイルが生まれる。
+
+---
+
+### 4-11. `CustomSelect` のキーボードアクセシビリティ欠如
+
+**ファイル:** `src/components/ui/CustomSelect.tsx`
+
+**問題点:**
+
+- `CustomSelect` コンポーネントにキーボードナビゲーション（`Enter`・`ArrowUp`・`ArrowDown`・`Escape`）が実装されていない。
+- `role="combobox"` / `aria-expanded` / `aria-activedescendant` などの WAI-ARIA 属性が付与されていない。
+- キーボードのみで操作するユーザーやスクリーンリーダーユーザーはソート・フィルターを変更できない。
+- アプリ全体で `CustomSelect` が多用されているため影響範囲が広い。
+
+---
+
+### 4-12. `useScrollLock` のモジュールレベル変数 `lockCount`
+
+**ファイル:** `src/hooks/useScrollLock.ts` (行 3)
+
+```typescript
+let lockCount = 0; // ❌ モジュールスコープ — テスト間・HMR で状態が残留する
+```
+
+**問題点:**
+
+- `lockCount` はモジュールレベルで宣言されているため、テスト間でリセットされず状態が漏れる。
+- 開発時のホットリロード（HMR）でも `lockCount` がリセットされないため、`modal-open` クラスが残り続けるケースがある。
+- 本番環境への影響は限定的だが、テストの信頼性に影響する。
+
+---
+
+### 4-13. `modDataMap` のサイズ上限がない
+
+**ファイル:** `src/store/useAppStore.ts` (行 420–422)
+
+```typescript
+updateModDataMap: (updates) => {
+  set((state) => ({ modDataMap: { ...state.modDataMap, ...updates } })); // ❌ 無制限に蓄積
+},
+```
+
+**問題点:**
+
+- 2-3（翻訳キャッシュのメモリリーク）と同一パターン。
+- 閲覧した mod の数だけエントリが増え続け、長時間のセッションでメモリを圧迫する。
+- `modDataMap` は `localStorage` に保存されないため、ページリロードでクリアされるが、SPA として長時間使用する場合は問題になりうる。
+
+**推奨対処:**
+
+LRU ポリシーを実装するか、エントリ数の上限（例: 500）を設け、超えたら古いものから削除する。
+
+---
+
+### 4-14. `HistoryTab` / `HistoryModal` の毎レンダーでの配列コピー
+
+**ファイル:** `src/components/panels/HistoryTab.tsx` (行 40)、`src/components/modals/HistoryModal.tsx` (行 71)
+
+```typescript
+{[...contextHistory].reverse().map((entry) => { // ❌ 毎レンダーでスプレッド+reverse
+```
+
+**問題点:**
+
+- レンダーごとに `[...contextHistory]` で新配列を生成し、さらに `.reverse()` でインプレース変更する。
+- `contextHistory` が長い（最大 50 件）場合でも毎回配列コピーが発生する。
+- `useMemo` でメモ化するか、ストア側でエントリを降順で管理することで回避できる。
+
+**推奨対処:**
+
+```typescript
+const reversedHistory = useMemo(
+  () => [...contextHistory].reverse(),
+  [contextHistory],
+);
+```
+
+---
+
+### 4-15. `ModList` の `t` 変数シャドーイング
+
+**ファイル:** `src/components/mods/ModList.tsx` (行 23 および 124)
+
+```typescript
+// 行 23: 翻訳オブジェクト
+const { updateModDataMap, addDebugLog, discoverType, t } = useApp();
+
+// 行 124: useEffect 内で同名の変数を再宣言
+const t = setTimeout(() => loadMore(), 0); // ❌ 翻訳 t をシャドーイング
+```
+
+**問題点:**
+
+- `useEffect` ブロック内で `const t = setTimeout(...)` が宣言されており、外側の翻訳オブジェクト `t` をシャドーイングする。
+- 現在は `t.modList.fetchError` が `loadMore` の `useCallback` 内で参照されるため、実際のバグにはなっていない。
+- ただし、将来的に同 `useEffect` 内で翻訳 `t` を使うコードが追加された場合、サイレントバグが発生する。
+- 変数名を `timerId` 等に変更すれば即座に解消できる。
+
+---
+
 ## 5. まとめ
 
 | 重大度 | 件数 | 主な問題 |
 |--------|------|----------|
 | 🔴 クリティカル | 4 | 環境変数未検証、ローダーフィルターバグ、翻訳・取得のレースコンディション |
-| 🟠 高 | 8 | XSS リスク、エラーハンドリング欠如、メモリリーク、入力バリデーション不足、ErrorBoundary 欠如、タイマーリーク |
-| 🟡 中 | 10 | CORS 未設定、パフォーマンス問題、キャッシュ設定の問題、レンダー中状態更新、AbortSignal 未使用 |
-| 🟢 低 | 8 | アクセシビリティ、デッドコード、テスト不足、クリップボードエラーハンドリング、翻訳フィードバック不足 |
-| **合計** | **30** | |
+| 🟠 高 | 9 | XSS リスク、エラーハンドリング欠如、メモリリーク、入力バリデーション不足、ErrorBoundary 欠如、タイマーリーク、modal-open 競合 |
+| 🟡 中 | 13 | CORS 未設定、セキュリティヘッダー欠如、パフォーマンス問題、キャッシュ設定、レンダー中状態更新、AbortSignal 未使用、メモリリーク |
+| 🟢 低 | 15 | アクセシビリティ、デッドコード、テスト不足、クリップボードエラーハンドリング、翻訳フィードバック不足、タイマーリーク、重複チェック欠如、変数シャドーイング |
+| **合計** | **41** | |
 
 ### 対応優先度
 
@@ -743,12 +1022,16 @@ return text;
 5. `src/components/layout/SideMenu.tsx` — ZIP サイズ上限とプロファイルインポートバリデーション
 6. `src/app/HomeClient.tsx` 等 — `ErrorBoundary` の追加（2-7）
 7. `src/components/debug/DebugPanel.tsx` — タイマーリークとクリップボードエラー修正（2-8, 4-7）
+8. `src/app/HomeClient.tsx` — `useScrollLock` に一本化して modal-open 競合を解消（2-9）
+9. `next.config.mjs` — セキュリティヘッダーの追加（3-11）
 
 **コード品質改善:**
 
-8. `useLocalStorage` の `useCallback` 修正
-9. `SearchSection` / `LeftPanel` のレンダー中状態更新を `useEffect` に移行（3-7）
-10. `useColumnResize` のレイアウトスラッシング修正（3-8）
-11. `useGameVersions` / `useCategories` / `useDependencyCheck` に `AbortController` 追加（3-9, 3-10）
-12. テストカバレッジの拡充（特にフックとコンポーネント）
-13. CORS / CSP ヘッダーの追加
+10. `useLocalStorage` の `useCallback` 修正
+11. `SearchSection` / `LeftPanel` のレンダー中状態更新を `useEffect` に移行（3-7）
+12. `useColumnResize` のレイアウトスラッシング修正（3-8）
+13. `useGameVersions` / `useCategories` / `useDependencyCheck` / `ModDetail` に `AbortController` 追加（3-9, 3-10, 3-13）
+14. テストカバレッジの拡充（特にフックとコンポーネント）
+15. CORS / CSP ヘッダーの追加（3-3）
+16. `rateLimitStore` の IP エントリ削除（3-12）
+17. `CustomSelect` のキーボードアクセシビリティ追加（4-11）
