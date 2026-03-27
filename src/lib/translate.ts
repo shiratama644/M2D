@@ -55,8 +55,10 @@ export async function translateChunk(text: string, signal?: AbortSignal): Promis
       }
       return result;
     }
-  } catch {
-    // fall through
+  } catch (err) {
+    // Re-throw AbortError so callers can detect cancellation.
+    if ((err as { name?: string }).name === 'AbortError') throw err;
+    // fall through for other errors (network, parse, etc.)
   }
   return text;
 }

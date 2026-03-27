@@ -27,7 +27,7 @@ interface TranslatedContent {
 const EMPTY_TRANSLATION: TranslatedContent = { id: null, lang: null, description: null, body: null };
 
 export default function ModDetail() {
-  const { activeModId, modDataMap, t } = useApp();
+  const { activeModId, modDataMap, showAlert, t } = useApp();
   const [state, setState] = useState<{ id: string | null; detail: ModProject | null }>({ id: null, detail: null });
   const [translatedContent, setTranslatedContent] = useState<TranslatedContent>(EMPTY_TRANSLATION);
   const [translating, setTranslating] = useState(false);
@@ -37,6 +37,12 @@ export default function ModDetail() {
   const translationAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // Abort any in-progress translation and reset state when the active mod changes.
+    translationAbortRef.current?.abort();
+    translationAbortRef.current = null;
+    setTranslating(false);
+    setTranslatedContent(EMPTY_TRANSLATION);
+
     if (!activeModId) return;
     const controller = new AbortController();
     API.getProject(activeModId, controller.signal)
@@ -84,6 +90,7 @@ export default function ModDetail() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         console.error('Translation failed:', err);
+        showAlert(t.rightPanel.translateFailed);
         setTranslating(false);
       });
   };

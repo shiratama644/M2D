@@ -3,7 +3,8 @@
 import { Component, type ReactNode } from 'react';
 
 interface Props {
-  fallback: ReactNode;
+  /** Either a static node or a render-prop that receives a reset callback. */
+  fallback: ReactNode | ((reset: () => void) => ReactNode);
   children: ReactNode;
 }
 
@@ -22,8 +23,15 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, info);
   }
 
+  reset = () => {
+    this.setState({ hasError: false });
+  };
+
   render() {
-    if (this.state.hasError) return this.props.fallback;
+    if (this.state.hasError) {
+      const { fallback } = this.props;
+      return typeof fallback === 'function' ? fallback(this.reset) : fallback;
+    }
     return this.props.children;
   }
 }

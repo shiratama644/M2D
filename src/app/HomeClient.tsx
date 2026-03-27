@@ -120,7 +120,12 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
           />
           <main className="pc-center-panel" style={{ width: `${centerWidth}%` }}>
             <SearchSection onSearch={handleSearch} />
-            <ErrorBoundary fallback={<div className="mod-detail-empty"><p>Failed to load mod list.</p></div>}>
+            <ErrorBoundary fallback={(reset) => (
+              <div className="mod-detail-empty">
+                <p>Failed to load mod list.</p>
+                <button className="btn-small" onClick={reset}>Retry</button>
+              </div>
+            )}>
               <ModList searchParams={searchParams} isDesktop initialMods={initialMods} />
             </ErrorBoundary>
             <div className="pc-action-bar">
@@ -132,7 +137,12 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
             onMouseDown={(e) => onColResizeStart('right', e)}
           />
           <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
-            <ErrorBoundary fallback={<div className="mod-detail-empty"><p>Failed to load details.</p></div>}>
+            <ErrorBoundary fallback={(reset) => (
+              <div className="mod-detail-empty">
+                <p>Failed to load details.</p>
+                <button className="btn-small" onClick={reset}>Retry</button>
+              </div>
+            )}>
               <RightPanel onContextRestore={handleContextRestore} />
             </ErrorBoundary>
           </aside>
