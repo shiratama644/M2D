@@ -52,6 +52,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
     addDebugLog,
     addSearchHistory,
     activeModId,
+    setActiveModId,
     discoverType,
     setDiscoverType,
     addContextHistory,
@@ -61,14 +62,8 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const isDesktop = useIsDesktop();
   const [searchParams, setSearchParams] = useState<SearchParams>(DEFAULT_SEARCH);
 
-  const [mobileDetailClosed, setMobileDetailClosed] = useState(false);
-  const [prevActiveModId, setPrevActiveModId] = useState<string | null>(null);
-  if (prevActiveModId !== activeModId) {
-    setPrevActiveModId(activeModId);
-    if (mobileDetailClosed) setMobileDetailClosed(false);
-  }
-  const mobileDetailOpen = !isDesktop && !!activeModId && !mobileDetailClosed;
-  const closeMobileDetail = () => setMobileDetailClosed(true);
+  const mobileDetailOpen = !isDesktop && !!activeModId;
+  const closeMobileDetail = () => setActiveModId(null);
 
   const { leftWidth, rightWidth, centerWidth, layoutRef, onColResizeStart } = useColumnResize({
     minLeft: 10, maxLeft: 40,
