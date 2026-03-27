@@ -13,6 +13,8 @@
 4. [低 (Low)](#4-低-low)
 5. [まとめ](#5-まとめ)
 
+> **更新:** 2026-03-27 — 項目を追加（2-7〜2-8, 3-7〜3-10, 4-7〜4-8）
+
 ---
 
 ## 1. クリティカル
@@ -287,6 +289,68 @@ if (file.size > MAX_SIZE) {
 
 ---
 
+### 2-7. ErrorBoundary が存在しない
+
+**ファイル:** `src/app/HomeClient.tsx`、`src/components/mods/ModList.tsx`、`src/components/mods/ModDetail.tsx`
+
+**問題点:**
+
+- `ModList`・`ModDetail`・`SideMenu` などのコンポーネントで例外が発生した場合、アプリ全体がクラッシュしてホワイトスクリーンになる。
+- `src/app/error.tsx` はページレベルのエラーのみ処理しており、コンポーネントレベルのレンダーエラーを補足しない。
+- ユーザーに有益なフォールバック UI が表示されない。
+
+**推奨対処:**
+
+`react-error-boundary` などを用いて主要コンポーネントを `ErrorBoundary` でラップする。
+
+```tsx
+<ErrorBoundary fallback={<ModListError />}>
+  <ModList {...props} />
+</ErrorBoundary>
+<ErrorBoundary fallback={<ModDetailError />}>
+  <ModDetail />
+</ErrorBoundary>
+```
+
+---
+
+### 2-8. `DebugPanel` のアンマウント後の状態更新
+
+**ファイル:** `src/components/debug/DebugPanel.tsx` (行 122–125)
+
+```typescript
+navigator.clipboard.writeText(text).then(() => {
+  setCopied(true);
+  setTimeout(() => setCopied(false), 1500); // ❌ コンポーネント破棄後に setCopied が呼ばれる
+});
+```
+
+**問題点:**
+
+- `setTimeout` の ID を保持していないため、コンポーネントがアンマウントされた後にタイマーが発火して `setCopied(false)` を呼び出す。
+- React は「アンマウント済みコンポーネントへの状態更新」として警告を出す。
+
+**推奨対処:**
+
+```typescript
+const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+useEffect(() => () => {
+  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+}, []);
+
+const copyLogs = () => {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      setCopied(true);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    })
+    .catch(() => { /* 権限エラーなど */ });
+};
+```
+
+---
+
 ## 3. 中 (Medium)
 
 ### 3-1. JSON.stringify によるフィルター重複判定の誤り
@@ -380,6 +444,134 @@ parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '', 10) || 8_000
 
 - `parseInt('', 10)` は `NaN` を返し、`NaN || 8_000` は偶然正しく動作するが意図が不明確。
 - `parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '0', 10) || 8_000` と書くべき。
+
+---
+
+### 3-7. `SearchSection` / `LeftPanel` のレンダー中状態更新（アンチパターン）
+
+**ファイル:** `src/components/search/SearchSection.tsx` (行 43–55)、`src/components/panels/LeftPanel.tsx` (行 40–44)
+
+```typescript
+const [prevModVersion, setPrevModVersion] = useState(modVersion);
+if (prevModVersion !== modVersion) { // ❌ レンダー関数の本体で setState を呼んでいる
+  setPrevModVersion(modVersion);
+  setFilters((prev) => ({ ...prev, version: modVersion || '' }));
+}
+```
+
+**問題点:**
+
+- React のレンダー関数本体で `setState` を呼び出すアンチパターン。
+- 1 レンダーサイクル内に複数の状態更新が発生し、不要な再レンダーを引き起こす。
+- エッジケースでは無限ループになる可能性がある。
+- 同じパターンが `SearchSection` と `LeftPanel` の 2 か所に重複している。
+
+**推奨対処:**
+
+```typescript
+useEffect(() => {
+  setFilters((prev) => ({ ...prev, version: modVersion || '' }));
+}, [modVersion]);
+
+useEffect(() => {
+  const newLoaders = Object.fromEntries(getLoaderOptions(discoverType).map((o) => [o.value, null]));
+  setFilters((prev) => ({ ...prev, categories: {}, loaders: newLoaders }));
+}, [discoverType]);
+```
+
+---
+
+### 3-8. `useColumnResize` のレイアウトスラッシング
+
+**ファイル:** `src/hooks/useColumnResize.ts` (行 46–65)
+
+```typescript
+const onMouseMove = (e: MouseEvent) => {
+  if (!draggingCol.current || !layoutRef.current) return;
+  const rect = layoutRef.current.getBoundingClientRect(); // ❌ mousemove のたびに呼ばれる（毎秒 100 回以上）
+  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+  // ... 状態更新 → 再レンダー → 再計算 のサイクル
+};
+```
+
+**問題点:**
+
+- `getBoundingClientRect()` はドラッグ中の `mousemove` イベントのたびに（毎秒最大 100 回以上）呼ばれる。
+- レイアウト情報の再計算（強制リフロー）と再レンダーが連鎖し、スクロールがカクつく。
+
+**推奨対処:**
+
+`mousedown` 時に一度だけ rect を取得してキャッシュし、`mousemove` ではキャッシュ済みの値を使う。
+
+```typescript
+const layoutRectRef = useRef<DOMRect | null>(null);
+
+const onMouseDown = () => {
+  layoutRectRef.current = layoutRef.current?.getBoundingClientRect() ?? null;
+};
+
+const onMouseMove = (e: MouseEvent) => {
+  if (!draggingCol.current || !layoutRectRef.current) return;
+  const rect = layoutRectRef.current; // キャッシュ済みの値を使用
+  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+};
+```
+
+---
+
+### 3-9. `useGameVersions` / `useCategories` の AbortSignal 未使用
+
+**ファイル:** `src/hooks/useGameVersions.ts` (行 17–24)、`src/hooks/useCategories.ts` (行 62–70)
+
+```typescript
+useEffect(() => {
+  API.getGameVersions()
+    .then((versions) => {
+      setGameVersions(versions.filter(...)); // ❌ アンマウント後に setState が呼ばれる可能性
+    })
+    .catch((e: unknown) => addDebugLog('warn', `...`));
+}, [addDebugLog]); // ❌ addDebugLog が再生成されると不要なリフェッチが発生
+```
+
+**問題点:**
+
+- `AbortController` が使われていないため、コンポーネントがアンマウントされてもリクエストが完了し、`setState` が呼ばれる。
+- `addDebugLog` が依存配列に含まれているため、コールバックが再生成されるたびにリフェッチが走る。
+
+**推奨対処:**
+
+```typescript
+useEffect(() => {
+  const controller = new AbortController();
+  API.getGameVersions(controller.signal)
+    .then((versions) => {
+      if (!controller.signal.aborted) setGameVersions(versions.filter(...));
+    })
+    .catch((e) => {
+      if ((e as { name?: string }).name !== 'AbortError') addDebugLog('warn', `...`);
+    });
+  return () => controller.abort();
+}, []); // addDebugLog を依存から除去（初回のみ実行）
+```
+
+---
+
+### 3-10. `useDependencyCheck` の AbortSignal 未使用
+
+**ファイル:** `src/hooks/useDependencyCheck.ts` (行 71–87)
+
+```typescript
+const versions = await API.getVersions(pid, useLoader, useVersion); // ❌ signal 未使用
+```
+
+**問題点:**
+
+- 依存関係チェックの実行中にユーザーがモーダルを閉じても、全てのリクエストが完走し続ける。
+- `API.getVersions()` は `AbortSignal` 引数に対応しているにもかかわらず利用されていない。
+
+**推奨対処:**
+
+依存関係チェック開始時に `AbortController` を生成し、モーダルクローズ時に `controller.abort()` を呼ぶ。
 
 ---
 
@@ -477,15 +669,65 @@ useEffect(() => {
 
 ---
 
+### 4-7. `DebugPanel` のクリップボード API エラーハンドリング不備
+
+**ファイル:** `src/components/debug/DebugPanel.tsx` (行 122–125)
+
+```typescript
+navigator.clipboard.writeText(text).then(() => {
+  setCopied(true);
+  // ...
+}); // ❌ .catch() がない
+```
+
+**問題点:**
+
+- `navigator.clipboard.writeText` はブラウザの権限が拒否された場合など、例外を投げる。
+- `.catch()` がないため、Unhandled Promise Rejection となる。
+- ユーザーはコピー失敗を知らされない。
+
+**推奨対処:**
+
+```typescript
+navigator.clipboard.writeText(text)
+  .then(() => { setCopied(true); timeoutRef.current = setTimeout(() => setCopied(false), 1500); })
+  .catch(() => { /* 失敗した場合のフォールバック（例: execCommand） */ });
+```
+
+---
+
+### 4-8. `translate.ts` の翻訳失敗フィードバック不足
+
+**ファイル:** `src/lib/translate.ts` (行 46–61)
+
+```typescript
+if (data.responseStatus === 200) {
+  // ... 翻訳結果を返す
+}
+// 200 以外の場合は元のテキストを返す（サイレント）
+return text;
+```
+
+**問題点:**
+
+- MyMemory API が 200 以外のステータスを返した場合（レート制限 429 など）、サイレントに元テキストが返され、翻訳ボタンを押しても何も変化しないように見える。
+- ユーザーは翻訳が失敗したのか、元から日本語対応していないのか判断できない。
+
+**推奨対処:**
+
+失敗ステータスをデバッグログに残し、呼び出し元でユーザーへの通知（`showAlert` など）を表示する。
+
+---
+
 ## 5. まとめ
 
 | 重大度 | 件数 | 主な問題 |
 |--------|------|----------|
 | 🔴 クリティカル | 4 | 環境変数未検証、ローダーフィルターバグ、翻訳・取得のレースコンディション |
-| 🟠 高 | 6 | XSS リスク、エラーハンドリング欠如、メモリリーク、入力バリデーション不足 |
-| 🟡 中 | 6 | CORS 未設定、パフォーマンス問題、キャッシュ設定の問題 |
-| 🟢 低 | 6 | アクセシビリティ、デッドコード、テスト不足 |
-| **合計** | **22** | |
+| 🟠 高 | 8 | XSS リスク、エラーハンドリング欠如、メモリリーク、入力バリデーション不足、ErrorBoundary 欠如、タイマーリーク |
+| 🟡 中 | 10 | CORS 未設定、パフォーマンス問題、キャッシュ設定の問題、レンダー中状態更新、AbortSignal 未使用 |
+| 🟢 低 | 8 | アクセシビリティ、デッドコード、テスト不足、クリップボードエラーハンドリング、翻訳フィードバック不足 |
+| **合計** | **30** | |
 
 ### 対応優先度
 
@@ -499,9 +741,14 @@ useEffect(() => {
 3. `src/components/mods/ModDetail.tsx` — `AbortController` を使ったレースコンディション修正
 4. `src/hooks/useModDownload.ts` — エラーハンドリングとタイムアウト追加
 5. `src/components/layout/SideMenu.tsx` — ZIP サイズ上限とプロファイルインポートバリデーション
+6. `src/app/HomeClient.tsx` 等 — `ErrorBoundary` の追加（2-7）
+7. `src/components/debug/DebugPanel.tsx` — タイマーリークとクリップボードエラー修正（2-8, 4-7）
 
 **コード品質改善:**
 
-6. `useLocalStorage` の `useCallback` 修正
-7. テストカバレッジの拡充（特にフックとコンポーネント）
-8. CORS / CSP ヘッダーの追加
+8. `useLocalStorage` の `useCallback` 修正
+9. `SearchSection` / `LeftPanel` のレンダー中状態更新を `useEffect` に移行（3-7）
+10. `useColumnResize` のレイアウトスラッシング修正（3-8）
+11. `useGameVersions` / `useCategories` / `useDependencyCheck` に `AbortController` 追加（3-9, 3-10）
+12. テストカバレッジの拡充（特にフックとコンポーネント）
+13. CORS / CSP ヘッダーの追加
