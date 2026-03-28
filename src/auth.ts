@@ -11,11 +11,23 @@ declare module 'next-auth' {
   }
 }
 
+// Validate required env vars at server runtime (skip during the build phase).
+if (process.env.NEXT_PHASE !== 'phase-production-build') {
+  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+    throw new Error(
+      'Missing required environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET must be set',
+    );
+  }
+}
+
+const clientId = process.env.DISCORD_CLIENT_ID;
+const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Discord({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      clientId: clientId!,
+      clientSecret: clientSecret!,
       authorization: { params: { scope: 'identify email' } },
     }),
   ],

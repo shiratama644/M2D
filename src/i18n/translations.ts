@@ -156,6 +156,7 @@ const translations = {
       translate: 'Translate to JP',
       translated: 'Translated',
       revertTranslation: 'Show Original',
+      translateFailed: 'Translation failed. Please try again.',
     },
     discover: {
       title: 'Discover',
@@ -341,6 +342,7 @@ const translations = {
       translate: '日本語に翻訳',
       translated: '翻訳済み',
       revertTranslation: '原文に戻す',
+      translateFailed: '翻訳に失敗しました。もう一度お試しください。',
     },
     discover: {
       title: 'Discover',

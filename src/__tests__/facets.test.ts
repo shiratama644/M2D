@@ -28,23 +28,23 @@ describe('buildFacets', () => {
 
   it('includes a single loader in its own facet group', () => {
     const result = buildFacets({ loaders: { fabric: 'include', forge: null } }, 'mod');
-    expect(result).toContainEqual(['categories:fabric']);
+    expect(result).toContainEqual(['loaders:fabric']);
   });
 
   it('groups multiple "include" loaders into the same facet group', () => {
     const result = buildFacets({ loaders: { fabric: 'include', quilt: 'include' } }, 'mod');
-    expect(result).toContainEqual(['categories:fabric', 'categories:quilt']);
+    expect(result).toContainEqual(['loaders:fabric', 'loaders:quilt']);
   });
 
   it('adds a NOT facet for an excluded loader', () => {
     const result = buildFacets({ loaders: { forge: 'exclude' } }, 'mod');
-    expect(result).toContainEqual(['NOT categories:forge']);
+    expect(result).toContainEqual(['NOT loaders:forge']);
   });
 
   it('handles include + exclude loaders simultaneously', () => {
     const result = buildFacets({ loaders: { fabric: 'include', forge: 'exclude' } }, 'mod');
-    expect(result).toContainEqual(['categories:fabric']);
-    expect(result).toContainEqual(['NOT categories:forge']);
+    expect(result).toContainEqual(['loaders:fabric']);
+    expect(result).toContainEqual(['NOT loaders:forge']);
   });
 
   // ── Category facets ────────────────────────────────────────────────────────
@@ -148,7 +148,7 @@ describe('buildFacets', () => {
       'mod',
     );
     expect(result).toContainEqual(['project_type:mod']);
-    expect(result).toContainEqual(['categories:fabric']);
+    expect(result).toContainEqual(['loaders:fabric']);
     expect(result).toContainEqual(['categories:optimization']);
     expect(result).toContainEqual(['client_side:required', 'client_side:optional']);
     expect(result).toContainEqual(['open_source:true']);

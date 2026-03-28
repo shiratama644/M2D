@@ -22,6 +22,8 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { useColumnResize } from '@/hooks/useColumnResize';
 import { useModDownload } from '@/hooks/useModDownload';
 import { useDependencyCheck } from '@/hooks/useDependencyCheck';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { LOADER_OPTIONS } from '@/lib/helpers';
 import type { ModHit } from '@/types/modrinth';
 import type { DepIssues, SearchParams } from '@/hooks/useDependencyCheck';
@@ -79,10 +81,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const isOpen = menuOpen || mobileDetailOpen;
-    document.body.classList.toggle('modal-open', isOpen);
-  }, [menuOpen, mobileDetailOpen]);
+  useScrollLock(menuOpen || mobileDetailOpen);
 
   const handleSearch = ({ query, sort, filters }: SearchParams) => {
     setSearchParams({ query, sort, filters });
@@ -121,7 +120,14 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
           />
           <main className="pc-center-panel" style={{ width: `${centerWidth}%` }}>
             <SearchSection onSearch={handleSearch} />
-            <ModList searchParams={searchParams} isDesktop initialMods={initialMods} />
+            <ErrorBoundary fallback={(reset) => (
+              <div className="mod-detail-empty">
+                <p>Failed to load mod list.</p>
+                <button className="btn-small" onClick={reset}>Retry</button>
+              </div>
+            )}>
+              <ModList searchParams={searchParams} isDesktop initialMods={initialMods} />
+            </ErrorBoundary>
             <div className="pc-action-bar">
               <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
             </div>
@@ -131,7 +137,14 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
             onMouseDown={(e) => onColResizeStart('right', e)}
           />
           <aside className="pc-right-panel" style={{ width: `${rightWidth}%` }}>
-            <RightPanel onContextRestore={handleContextRestore} />
+            <ErrorBoundary fallback={(reset) => (
+              <div className="mod-detail-empty">
+                <p>Failed to load details.</p>
+                <button className="btn-small" onClick={reset}>Retry</button>
+              </div>
+            )}>
+              <RightPanel onContextRestore={handleContextRestore} />
+            </ErrorBoundary>
           </aside>
         </div>
       ) : (

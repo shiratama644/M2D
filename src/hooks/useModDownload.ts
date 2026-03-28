@@ -87,7 +87,7 @@ export function useModDownload(searchParams: SearchParams | null) {
         const versions = await API.getVersions(pid, useLoader, useVersion);
         if (versions?.length && versions[0].files?.length) {
           const file = versions[0].files.find((f) => f.primary) || versions[0].files[0];
-          const res = await fetch(file.url);
+          const res = await fetch(file.url, { signal: AbortSignal.timeout(30_000) });
           if (res.ok) {
             zip.file(file.filename, await res.blob());
             success++;
