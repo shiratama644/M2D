@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,12 @@ export default function SideMenu() {
   const [renameValue, setRenameValue] = useState('');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const importZipInputRef = useRef<HTMLInputElement | null>(null);
+  const profileMsgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the profile message timer on unmount to avoid setState after unmount.
+  useEffect(() => () => {
+    if (profileMsgTimerRef.current) clearTimeout(profileMsgTimerRef.current);
+  }, []);
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -43,6 +49,10 @@ export default function SideMenu() {
     const name = profileName.trim();
     if (!name || selectedMods.size === 0) {
       await showAlert('Invalid name or no mods selected.');
+      return;
+    }
+    if (profiles.some((p) => p.name === name)) {
+      await showAlert('A profile with that name already exists.');
       return;
     }
     const newProfiles = [
@@ -53,7 +63,8 @@ export default function SideMenu() {
     addDebugLog('info', `Profile saved: "${name}" (${selectedMods.size} mods)`);
     setProfileName('');
     setProfileMsg('Saved!');
-    setTimeout(() => setProfileMsg(''), 2000);
+    if (profileMsgTimerRef.current) clearTimeout(profileMsgTimerRef.current);
+    profileMsgTimerRef.current = setTimeout(() => setProfileMsg(''), 2000);
   };
 
   const loadProfile = async (index: number) => {
@@ -78,9 +89,13 @@ export default function SideMenu() {
     setRenameValue(profiles[index].name);
   };
 
-  const commitRename = (index: number) => {
+  const commitRename = async (index: number) => {
     const newName = renameValue.trim();
     if (!newName) { setRenamingIndex(null); return; }
+    if (profiles.some((p, i) => i !== index && p.name === newName)) {
+      await showAlert('A profile with that name already exists.');
+      return;
+    }
     const oldName = profiles[index].name;
     const newProfiles = profiles.map((p, i) => (i === index ? { ...p, name: newName } : p));
     saveProfiles(newProfiles);

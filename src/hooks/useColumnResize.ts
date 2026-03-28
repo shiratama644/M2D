@@ -34,18 +34,22 @@ export function useColumnResize({
   const [rightWidth, setRightWidth] = useState(initialRight);
   const layoutRef = useRef<HTMLDivElement | null>(null);
   const draggingCol = useRef<'left' | 'right' | null>(null);
+  const layoutRectRef = useRef<DOMRect | null>(null);
 
   const onColResizeStart = useCallback((which: 'left' | 'right', e: React.MouseEvent) => {
     e.preventDefault();
     draggingCol.current = which;
+    // Cache the layout rect once on drag start to avoid repeated getBoundingClientRect
+    // calls (which force layout reflow) on every mousemove event.
+    layoutRectRef.current = layoutRef.current?.getBoundingClientRect() ?? null;
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'col-resize';
   }, []);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
-      if (!draggingCol.current || !layoutRef.current) return;
-      const rect = layoutRef.current.getBoundingClientRect();
+      if (!draggingCol.current || !layoutRectRef.current) return;
+      const rect = layoutRectRef.current;
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
 
       if (draggingCol.current === 'left') {
@@ -58,6 +62,7 @@ export function useColumnResize({
     const onMouseUp = () => {
       if (!draggingCol.current) return;
       draggingCol.current = null;
+      layoutRectRef.current = null;
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };

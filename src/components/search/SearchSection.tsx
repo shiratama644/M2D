@@ -39,31 +39,34 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
   const [filters, setFilters] = useState<SearchParams['filters']>(() => makeInitialFilters(modVersion));
   const [filterOpen, setFilterOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const queryRef = useRef(query);
+  queryRef.current = query;
+  const sortRef = useRef(sort);
+  sortRef.current = sort;
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
 
-  const [prevModVersion, setPrevModVersion] = useState(modVersion);
-  if (prevModVersion !== modVersion) {
-    setPrevModVersion(modVersion);
+  // Sync version filter when the global modVersion changes.
+  useEffect(() => {
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
-  }
+  }, [modVersion]);
 
-  // Reset category AND loader filters when project type changes
-  const [prevDiscoverType, setPrevDiscoverType] = useState(discoverType);
-  if (prevDiscoverType !== discoverType) {
-    setPrevDiscoverType(discoverType);
+  // Reset category/loader filters and re-search when project type changes (including
+  // changes triggered from LeftPanel or other sources outside this component).
+  useEffect(() => {
     const newLoaders = Object.fromEntries(getLoaderOptions(discoverType).map((o) => [o.value, null])) as Record<string, string | null>;
-    setFilters((prev) => ({ ...prev, categories: {}, loaders: newLoaders }));
-  }
-
-  const makeResetFilters = (type: DiscoverType, base: SearchParams['filters']): SearchParams['filters'] => {
-    const newLoaders = Object.fromEntries(getLoaderOptions(type).map((o) => [o.value, null])) as Record<string, string | null>;
-    return { ...base, categories: {}, loaders: newLoaders };
-  };
+    const reset = { ...filtersRef.current, categories: {}, loaders: newLoaders };
+    setFilters(reset);
+    onSearchRef.current({ query: queryRef.current, sort: sortRef.current, filters: reset });
+  // Intentionally only re-run when discoverType changes; other values accessed via refs.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discoverType]);
 
   const handleDiscoverTypeChange = (type: DiscoverType) => {
     setDiscoverType(type);
-    const newFilters = makeResetFilters(type, filters);
-    setFilters(newFilters);
-    doSearch(query, sort, newFilters);
+    // The discoverType useEffect will reset filters and trigger a new search.
   };
 
   const sortOptions = [

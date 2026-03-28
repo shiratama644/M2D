@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { API } from '@/lib/api';
 import { useApp } from '@/context/AppContext';
 import type { GameVersion } from '@/types/modrinth';
@@ -12,16 +12,27 @@ import type { GameVersion } from '@/types/modrinth';
  */
 export function useGameVersions(): GameVersion[] {
   const { addDebugLog } = useApp();
+  const addDebugLogRef = useRef(addDebugLog);
+  addDebugLogRef.current = addDebugLog;
   const [gameVersions, setGameVersions] = useState<GameVersion[]>([]);
 
   useEffect(() => {
-    API.getGameVersions()
+    const controller = new AbortController();
+    API.getGameVersions(controller.signal)
       .then((versions) => {
-        const releases = versions.filter((v) => v.version_type === 'release');
-        setGameVersions(releases);
+        if (!controller.signal.aborted) {
+          setGameVersions(versions.filter((v) => v.version_type === 'release'));
+        }
       })
-      .catch((e: unknown) => addDebugLog('warn', `Failed to load game versions: ${e}`));
-  }, [addDebugLog]);
+      .catch((e: unknown) => {
+        if ((e as { name?: string }).name !== 'AbortError') {
+          addDebugLogRef.current('warn', `Failed to load game versions: ${e}`);
+        }
+      });
+    return () => controller.abort();
+  // Run once on mount; addDebugLog is accessed via ref to avoid spurious refetches.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return gameVersions;
 }

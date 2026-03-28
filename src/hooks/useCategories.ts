@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { API } from '@/lib/api';
 import { useApp } from '@/context/AppContext';
 import type { ModCategory } from '@/types/modrinth';
@@ -57,17 +57,29 @@ function categoryItemComparator(a: ModCategory, b: ModCategory): number {
  */
 export function useCategories(projectType: string): ModCategory[] {
   const { addDebugLog } = useApp();
+  const addDebugLogRef = useRef(addDebugLog);
+  addDebugLogRef.current = addDebugLog;
   const [allCategories, setAllCategories] = useState<ModCategory[]>(() => cachedCategories ?? []);
 
   useEffect(() => {
     if (cachedCategories !== null) return;
-    API.getCategories()
+    const controller = new AbortController();
+    API.getCategories(controller.signal)
       .then((cats) => {
-        cachedCategories = cats;
-        setAllCategories(cats);
+        if (!controller.signal.aborted) {
+          cachedCategories = cats;
+          setAllCategories(cats);
+        }
       })
-      .catch((e: unknown) => addDebugLog('warn', `Failed to load categories: ${e}`));
-  }, [addDebugLog]);
+      .catch((e: unknown) => {
+        if ((e as { name?: string }).name !== 'AbortError') {
+          addDebugLogRef.current('warn', `Failed to load categories: ${e}`);
+        }
+      });
+    return () => controller.abort();
+  // Run once on mount; addDebugLog is accessed via ref to avoid spurious refetches.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return useMemo(
     () =>

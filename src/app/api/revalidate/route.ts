@@ -7,9 +7,22 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 
 const rateLimitStore = new Map<string, number[]>();
 
+// Evict IPs whose timestamps have all expired (opportunistic cleanup every 100 requests).
+let cleanupCounter = 0;
+function pruneRateLimitStore(windowStart: number): void {
+  if (++cleanupCounter < 100) return;
+  cleanupCounter = 0;
+  for (const [storedIp, storedTs] of rateLimitStore) {
+    if (!storedTs.some((t) => t > windowStart)) {
+      rateLimitStore.delete(storedIp);
+    }
+  }
+}
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  pruneRateLimitStore(windowStart);
   const timestamps = (rateLimitStore.get(ip) ?? []).filter((t) => t > windowStart);
   if (timestamps.length >= RATE_LIMIT_MAX) return true;
   timestamps.push(now);

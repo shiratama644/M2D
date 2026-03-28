@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { countActiveFilters, LOCALE_MAP, formatHistoryTime } from '@/lib/helpers';
 import type { SearchContextEntry } from '@/store/useAppStore';
@@ -26,6 +27,8 @@ export default function HistoryTab({ onContextRestore }: HistoryTabProps) {
     shader: t.discover.shader,
   };
 
+  const reversedHistory = useMemo(() => [...contextHistory].reverse(), [contextHistory]);
+
   return (
     <div className="rp-history">
       <div className="rp-history-header">
@@ -36,7 +39,7 @@ export default function HistoryTab({ onContextRestore }: HistoryTabProps) {
         <div className="rp-empty">{t.history.noHistory}</div>
       ) : (
         <div className="rp-history-list">
-          {[...contextHistory].reverse().map((entry) => {
+          {reversedHistory.map((entry) => {
             const filterCount = countActiveFilters(entry.filters);
             return (
               <div key={entry.id} className="rp-history-item">
