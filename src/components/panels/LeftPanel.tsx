@@ -37,11 +37,10 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
   const loaderOptions = getLoaderOptions(discoverType);
   const [filters, setFilters] = useState<Filters>(() => makeInitialFilters(modVersion, getLoaderOptions(discoverType)));
 
-  const [prevModVersion, setPrevModVersion] = useState(modVersion);
-  if (prevModVersion !== modVersion) {
-    setPrevModVersion(modVersion);
+  // Sync version filter when the global modVersion changes.
+  useEffect(() => {
     setFilters((prev) => ({ ...prev, version: modVersion || '' }));
-  }
+  }, [modVersion]);
 
   const discoverOptions = getDiscoverOptions(t);
 

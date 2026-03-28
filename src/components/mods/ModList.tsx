@@ -121,8 +121,8 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     offsetRef.current = 0;
     loadingRef.current = false;
     hasMoreRef.current = true;
-    const t = setTimeout(() => loadMore(), 0);
-    return () => clearTimeout(t);
+    const timerId = setTimeout(() => loadMore(), 0);
+    return () => clearTimeout(timerId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, loadMore]);
 
