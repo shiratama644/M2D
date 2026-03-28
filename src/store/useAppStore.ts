@@ -192,6 +192,8 @@ export interface AppState {
   hydrate: () => void;
 }
 
+let dialogResolver: ((result?: boolean) => void) | null = null;
+
 export const useAppStore = create<AppState>((set, get) => ({
   // ── Settings ──────────────────────────────────────────────────────────────
   // Initial values are SSR-safe defaults. Persisted values are loaded from
