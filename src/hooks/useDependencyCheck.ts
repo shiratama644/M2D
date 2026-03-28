@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { API } from '@/lib/api';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
@@ -49,11 +49,22 @@ export function useDependencyCheck(
     setDepModalOpen,
   } = useApp();
 
+  const depAbortRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight dependency check when the hook unmounts.
+  useEffect(() => () => { depAbortRef.current?.abort(); }, []);
+
   const handleCheckDeps = useCallback(async () => {
     if (selectedMods.size === 0) return;
 
+    // Cancel any previous in-flight check.
+    depAbortRef.current?.abort();
+    const controller = new AbortController();
+    depAbortRef.current = controller;
+    const { signal } = controller;
+
     const settings = await resolveSettings();
-    if (!settings.proceed) return;
+    if (!settings.proceed || signal.aborted) return;
     const { loader: useLoader, version: useVersion } = settings;
 
     addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
@@ -72,7 +83,7 @@ export function useDependencyCheck(
         const mod = modDataMap[pid] as { title?: string } | undefined;
         const modName = mod?.title || pid;
         try {
-          const versions = await API.getVersions(pid, useLoader, useVersion);
+          const versions = await API.getVersions(pid, useLoader, useVersion, signal);
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
           return versions?.length
             ? { modName, dependencies: versions[0].dependencies }
@@ -93,7 +104,6 @@ export function useDependencyCheck(
       const versionIdsToResolve = new Set<string>();
 
       results.filter(Boolean).forEach((res) => {
-        if (!res) return;
         res.dependencies?.forEach((dep) => {
           if (dep.project_id) {
             allDeps.push({ source: res.modName, dep });

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import MobileModal from '@/components/ui/MobileModal';
 import { countActiveFilters, LOCALE_MAP } from '@/lib/helpers';
@@ -43,6 +44,8 @@ export default function HistoryModal({ onContextRestore, onClose }: HistoryModal
     resourcepack: t.discover.texture,
     shader: t.discover.shader,
   };
+
+  const reversedHistory = useMemo(() => [...contextHistory].reverse(), [contextHistory]);
 
   const handleRestore = (entry: SearchContextEntry) => {
     onContextRestore(entry);

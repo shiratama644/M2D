@@ -4,7 +4,7 @@ import { memCache } from '@/app/api/v2/cache';
 
 const MODRINTH_BASE = 'https://api.modrinth.com/v2';
 
-const UPSTREAM_TIMEOUT_MS = parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '', 10) || 8_000;
+const UPSTREAM_TIMEOUT_MS = parseInt(process.env.UPSTREAM_TIMEOUT_MS ?? '0', 10) || 8_000;
 
 /** Modrinth asks third-party clients to identify themselves. */
 const USER_AGENT = 'M2D/1.0 (https://github.com/shiratama644/M2D)';
@@ -37,11 +37,24 @@ function buildEtag(data: unknown): string {
 }
 
 function cacheHeaders(ttl: number): Record<string, string> {
-  const swr = Math.floor(ttl * 0.5);
+  // Cap stale-while-revalidate to 120 s so cached data is never more than
+  // 2 minutes stale even for long-lived endpoints like tag/ (TTL 3600 s).
+  const swr = Math.min(Math.floor(ttl * 0.5), 120);
   return {
     'Cache-Control': `public, max-age=${ttl}, stale-while-revalidate=${swr}`,
     Vary: 'Accept-Encoding',
   };
+}
+
+/** Restrict the proxy to same-origin requests by echoing back the Origin only if
+ *  it matches the deployment host, otherwise omit the header (browser will block). */
+function corsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
+  if (origin && host && new URL(origin).host === host) {
+    return { 'Access-Control-Allow-Origin': origin };
+  }
+  return {};
 }
 
 export async function GET(
@@ -60,12 +73,12 @@ export async function GET(
     if (ifNoneMatch && ifNoneMatch === cached.etag) {
       return new NextResponse(null, {
         status: 304,
-        headers: { ETag: cached.etag, 'X-Cache': 'HIT' },
+        headers: { ETag: cached.etag, 'X-Cache': 'HIT', ...corsHeaders(request) },
       });
     }
     const ttl = getCacheTtl(pathStr);
     return NextResponse.json(cached.data, {
-      headers: { ETag: cached.etag, 'X-Cache': 'HIT', ...cacheHeaders(ttl) },
+      headers: { ETag: cached.etag, 'X-Cache': 'HIT', ...cacheHeaders(ttl), ...corsHeaders(request) },
     });
   }
 
@@ -89,7 +102,7 @@ export async function GET(
     const etag = buildEtag(data);
     memCache.set<CacheEntry>(cacheKey, { data, etag }, ttl);
     return NextResponse.json(data, {
-      headers: { ETag: etag, 'X-Cache': 'MISS', ...cacheHeaders(ttl) },
+      headers: { ETag: etag, 'X-Cache': 'MISS', ...cacheHeaders(ttl), ...corsHeaders(request) },
     });
   } catch (err) {
     if ((err as { name?: string }).name === 'AbortError') {

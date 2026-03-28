@@ -143,7 +143,7 @@ export default function ModDetail() {
         <Image
           src={iconSrc}
           className="mod-detail-icon"
-          alt="icon"
+          alt={`${projectDetail.title || mod?.title || activeModId} icon`}
           width={64}
           height={64}
           onError={() => setIconError({ id: activeModId, errored: true })}
@@ -240,7 +240,7 @@ export default function ModDetail() {
           <div className="mod-gallery-grid">
             {gallery.map((item, i) => (
               <a
-                key={i}
+                key={item.url}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"

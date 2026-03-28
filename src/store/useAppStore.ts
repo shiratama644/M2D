@@ -23,8 +23,19 @@ import {
 } from '@/lib/helpers';
 import { ls } from '@/lib/localStorage';
 
-// Module-level ref for dialog promise resolution (not a React ref).
-let dialogResolver: ((result?: boolean) => void) | null = null;
+/** Serialize an object to JSON with keys sorted so key-order differences don't break equality. */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  const sorted = Object.keys(value as Record<string, unknown>)
+    .sort()
+    .reduce<Record<string, unknown>>((acc, k) => {
+      acc[k] = stableStringify((value as Record<string, unknown>)[k]);
+      return acc;
+    }, {});
+  return JSON.stringify(sorted);
+}
 
 /** Safely parse a JSON string from localStorage, returning fallback on failure. */
 function parseJSON<T>(key: string, fallback: T): T {
@@ -418,7 +429,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   modDataMap: {},
 
   updateModDataMap: (updates) => {
-    set((state) => ({ modDataMap: { ...state.modDataMap, ...updates } }));
+    set((state) => {
+      const merged = { ...state.modDataMap, ...updates };
+      // Cap at 500 entries to avoid unbounded memory growth (LRU: drop oldest keys first).
+      const keys = Object.keys(merged);
+      if (keys.length <= 500) return { modDataMap: merged };
+      const trimmed: Record<string, unknown> = {};
+      for (const k of keys.slice(keys.length - 500)) trimmed[k] = merged[k];
+      return { modDataMap: trimmed };
+    });
   },
 
   // ── Favorites ─────────────────────────────────────────────────────────────
@@ -447,8 +466,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   addSearchHistory: (query) => {
     if (!query?.trim()) return;
     set((state) => {
-      const filtered = state.searchHistory.filter((q) => q !== query.trim());
-      const next = [query.trim(), ...filtered].slice(0, MAX_SEARCH_HISTORY);
+      const trimmed = query.trim();
+      const set_ = new Set(state.searchHistory);
+      set_.delete(trimmed);
+      const next = [trimmed, ...set_].slice(0, MAX_SEARCH_HISTORY);
       ls.set(SEARCH_HISTORY_KEY, JSON.stringify(next));
       return { searchHistory: next };
     });
@@ -480,7 +501,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       last.query === entry.query &&
       last.sort === entry.sort &&
       last.projectType === entry.projectType &&
-      JSON.stringify(last.filters) === JSON.stringify(entry.filters)
+      stableStringify(last.filters) === stableStringify(entry.filters)
     ) return;
 
     const newEntry: SearchContextEntry = {
