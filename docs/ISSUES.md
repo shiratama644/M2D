@@ -152,6 +152,8 @@ useEffect(() => {
 
 ### 2-1. `dangerouslySetInnerHTML` による XSS リスク
 
+> ✅ **解決済み** — `src/components/ui/Icon.tsx` で `sanitizeSvg()` 関数を追加し、`<script>` タグを除去するサニタイズ処理を適用済み（`useMemo` でメモ化）。DOMPurify は追加せず、バンドル済み SVG では常に no-op。
+
 **ファイル:** `src/components/ui/Icon.tsx` (行 14–22)
 
 ```typescript
@@ -452,6 +454,8 @@ const swr = Math.floor(ttl * 0.5);
 ---
 
 ### 3-5. `ModList` における不要な再計算
+
+> ✅ **解決済み** — `src/components/mods/ModList.tsx` で `searchParams`・`discoverType`・`updateModDataMap`・`addDebugLog`・`t` をすべて `useRef` 経由でアクセスするよう変更し、`loadMore` の `useCallback` 依存配列を `[]` に。親コンポーネントが同値で再レンダーしても `loadMore` が再生成されなくなった。
 
 **ファイル:** `src/components/mods/ModList.tsx`
 
@@ -965,6 +969,8 @@ const commitRename = (index: number) => {
 
 ### 4-11. `CustomSelect` のキーボードアクセシビリティ欠如
 
+> ✅ **解決済み** — `src/components/ui/CustomSelect.tsx` に `role="combobox"`・`aria-haspopup="listbox"`・`aria-expanded`・`aria-activedescendant`・`aria-controls` を追加。`tabIndex={0}` で Tab フォーカス可能に。`onKeyDown` で `Enter`/`Space`（開く・選択）、`ArrowDown`/`ArrowUp`（ハイライト移動）、`Escape`（閉じる）を実装。オプション側には `role="listbox"` / `role="option"` / `aria-selected` を付与。`aria-label` prop も追加済み。
+
 **ファイル:** `src/components/ui/CustomSelect.tsx`
 
 **問題点:**
@@ -977,6 +983,8 @@ const commitRename = (index: number) => {
 ---
 
 ### 4-12. `useScrollLock` のモジュールレベル変数 `lockCount`
+
+> ✅ **解決済み** — `src/hooks/useScrollLock.ts` に `__resetScrollLock()` 関数を追加エクスポート。テストの teardown で呼ぶことで `lockCount` を 0 にリセットし、`modal-open` クラスも除去できる。本番コードへの影響なし。
 
 **ファイル:** `src/hooks/useScrollLock.ts` (行 3)
 
@@ -1071,10 +1079,10 @@ const t = setTimeout(() => loadMore(), 0); // ❌ 翻訳 t をシャドーイン
 | 重大度 | 件数 | 解決済み | 未対応 | 主な問題 |
 |--------|------|----------|--------|----------|
 | 🔴 クリティカル | 4 | **4** | 0 | 環境変数未検証、ローダーフィルターバグ、翻訳・取得のレースコンディション |
-| 🟠 高 | 9 | **8** | 1 | XSS リスク（未対応）、エラーハンドリング欠如、メモリリーク、入力バリデーション不足、ErrorBoundary 欠如、タイマーリーク、modal-open 競合 |
-| 🟡 中 | 13 | **12** | 1 | CORS 対応済み、セキュリティヘッダー対応済み、パフォーマンス対応済み、レンダー中状態更新対応済み、AbortSignal 対応済み、メモリリーク対応済み、**未対応: ModList loadMore 再計算（3-5）** |
-| 🟢 低 | 15 | **13** | 2 | デッドコード・タイマーリーク・重複チェック・変数シャドーイング対応済み、**未対応: テスト不足（4-6）・CustomSelect アクセシビリティ（4-11）** |
-| **合計** | **41** | **37** | **4** | |
+| 🟠 高 | 9 | **9** | 0 | 全対応済み |
+| 🟡 中 | 13 | **13** | 0 | 全対応済み |
+| 🟢 低 | 15 | **14** | 1 | **未対応: テスト不足（4-6）** |
+| **合計** | **41** | **40** | **1** | |
 
 ### 対応優先度
 
@@ -1107,11 +1115,11 @@ const t = setTimeout(() => loadMore(), 0); // ❌ 翻訳 t をシャドーイン
 21. ~~`src/store/useAppStore.ts` — `modDataMap` 上限追加（4-13）~~ ✅
 22. ~~`HistoryTab.tsx` / `HistoryModal.tsx` — `useMemo` で配列コピー最適化（4-14）~~ ✅
 23. ~~`src/components/mods/ModList.tsx` — `t` 変数シャドーイング修正（4-15）~~ ✅
+24. ~~`src/components/ui/Icon.tsx` — SVG 文字列サニタイズ追加（2-1）~~ ✅
+25. ~~`src/components/mods/ModList.tsx` — `loadMore` を refs で安定化（3-5）~~ ✅
+26. ~~`src/components/ui/CustomSelect.tsx` — キーボードナビゲーション・ARIA 属性追加（4-11）~~ ✅
+27. ~~`src/hooks/useScrollLock.ts` — `__resetScrollLock()` エクスポート追加（4-12）~~ ✅
 
-**未対応:**
+**未対応（大規模作業のため別セッション）:**
 
-- `src/components/ui/Icon.tsx` — `dangerouslySetInnerHTML` XSS リスク（2-1）
-- `src/components/mods/ModList.tsx` — `loadMore` の `searchParams` 参照による不要な再計算（3-5）
-- テストカバレッジの拡充（4-6）
-- `CustomSelect` のキーボードアクセシビリティ追加（4-11）
-- `useScrollLock` の `lockCount` モジュールレベル変数（4-12）
+- テストカバレッジの拡充（4-6）: React コンポーネント・カスタムフック・認証フローのテスト追加
