@@ -71,7 +71,7 @@ export default function HistoryModal({ onContextRestore, onClose }: HistoryModal
           <div className="rp-empty">{t.history.noHistory}</div>
         ) : (
           <div className="rp-history-list">
-            {[...contextHistory].reverse().map((entry) => {
+            {reversedHistory.map((entry) => {
               const filterCount = countActiveFilters(entry.filters);
               return (
                 <div key={entry.id} className="rp-history-item">

@@ -103,7 +103,7 @@ export function useDependencyCheck(
       }> = [];
       const versionIdsToResolve = new Set<string>();
 
-      results.filter(Boolean).forEach((res) => {
+      results.filter((res): res is NonNullable<typeof res> => res !== null).forEach((res) => {
         res.dependencies?.forEach((dep) => {
           if (dep.project_id) {
             allDeps.push({ source: res.modName, dep });

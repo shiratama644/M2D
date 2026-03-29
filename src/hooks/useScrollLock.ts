@@ -17,3 +17,14 @@ export function useScrollLock(active = true) {
     };
   }, [active]);
 }
+
+/**
+ * Reset the module-level lock counter to zero and remove the `modal-open` class.
+ * Intended for use in test teardown to prevent state leaking between test cases.
+ */
+export function __resetScrollLock() {
+  lockCount = 0;
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('modal-open');
+  }
+}

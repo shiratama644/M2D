@@ -36,10 +36,24 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
   const initialDataRef = useRef<ModHit[] | null>(initialMods != null ? initialMods : null);
 
+  // Keep refs up-to-date so loadMore can read the latest values without being
+  // listed as a dependency (which would cause spurious effect re-runs when the
+  // parent re-renders with structurally-equal but referentially-different props).
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+  const discoverTypeRef = useRef(discoverType);
+  discoverTypeRef.current = discoverType;
+  const updateModDataMapRef = useRef(updateModDataMap);
+  updateModDataMapRef.current = updateModDataMap;
+  const addDebugLogRef = useRef(addDebugLog);
+  addDebugLogRef.current = addDebugLog;
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return;
 
-    const p = searchParams;
+    const p = searchParamsRef.current;
     const offset = offsetRef.current;
 
     if (abortControllerRef.current) {
@@ -52,7 +66,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     setLoading(true);
     if (offset === 0) setInitialLoading(true);
 
-    const facets = buildFacets(p.filters, discoverType);
+    const facets = buildFacets(p.filters, discoverTypeRef.current);
     let index: string;
     if (!p.sort || p.sort === 'relevance') {
       index = (p.query || '').trim() === '' ? 'downloads' : 'relevance';
@@ -67,23 +81,23 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
         hasMoreRef.current = false;
         if (offset === 0) {
           setNoResults(true);
-          addDebugLog('info', `Search returned no results for "${p.query}"`);
+          addDebugLogRef.current('info', `Search returned no results for "${p.query}"`);
         }
       } else {
         const modMap: Record<string, unknown> = {};
         data.hits.forEach((mod) => { modMap[mod.project_id] = mod; });
-        updateModDataMap(modMap);
+        updateModDataMapRef.current(modMap);
         setNoResults(false);
         setMods((prev) => [...prev, ...data.hits]);
         offsetRef.current = offset + data.hits.length;
-        addDebugLog('log', `Loaded ${data.hits.length} mods (offset=${offset}, total≈${data.total_hits ?? '?'})`);
+        addDebugLogRef.current('log', `Loaded ${data.hits.length} mods (offset=${offset}, total≈${data.total_hits ?? '?'})`);
         if (data.hits.length < LIMIT) hasMoreRef.current = false;
       }
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return;
-      addDebugLog('error', `Search error: ${err}`);
+      addDebugLogRef.current('error', `Search error: ${err}`);
       hasMoreRef.current = false;
-      setError(t.modList.fetchError);
+      setError(tRef.current.modList.fetchError);
     } finally {
       if (!controller.signal.aborted) {
         loadingRef.current = false;
@@ -91,7 +105,9 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
         setInitialLoading(false);
       }
     }
-  }, [searchParams, discoverType, updateModDataMap, addDebugLog]);
+  // All external values are accessed via stable refs; no reactive deps needed.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRetry = useCallback(() => {
     setError(null);
@@ -106,7 +122,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       initialDataRef.current = null;
       const modMap: Record<string, unknown> = {};
       serverMods.forEach((mod) => { modMap[mod.project_id] = mod; });
-      updateModDataMap(modMap);
+      updateModDataMapRef.current(modMap);
       offsetRef.current = serverMods.length;
       hasMoreRef.current = serverMods.length >= LIMIT;
       if (serverMods.length === 0) setNoResults(true);
@@ -121,10 +137,11 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     offsetRef.current = 0;
     loadingRef.current = false;
     hasMoreRef.current = true;
-    const t = setTimeout(() => loadMore(), 0);
-    return () => clearTimeout(t);
+    const timerId = setTimeout(() => loadMore(), 0);
+    return () => clearTimeout(timerId);
+  // loadMore is stable (empty useCallback deps); searchParams is the real trigger.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, loadMore]);
+  }, [searchParams]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
