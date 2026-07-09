@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { API } from '@/lib/api';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
+import { pickPreferredModVersion } from '@/lib/versionSelection';
 
 export type { SearchFilters };
 
@@ -14,9 +15,9 @@ export interface SearchParams {
 }
 
 export interface DepIssues {
-  required: Array<{ source: string; targetId: string }>;
-  optional: Array<{ source: string; targetId: string }>;
-  conflict: Array<{ source: string; targetId: string }>;
+  required: Array<{ source: string; targetId: string; reason?: string }>;
+  optional: Array<{ source: string; targetId: string; reason?: string }>;
+  conflict: Array<{ source: string; targetId: string; reason?: string }>;
 }
 
 export interface ResolveSettingsResult {
@@ -72,6 +73,7 @@ export function useDependencyCheck(
 
     const issues: DepIssues = { required: [], optional: [], conflict: [] };
     const missingModIds = new Set<string>();
+    const modsWithoutCompatibleVersion = new Set<string>();
 
     try {
       const ids = Array.from(selectedMods);
@@ -85,9 +87,25 @@ export function useDependencyCheck(
         try {
           const versions = await API.getVersions(pid, useLoader, useVersion, signal);
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
-          return versions?.length
-            ? { modName, dependencies: versions[0].dependencies }
-            : null;
+          const selectedVersion = pickPreferredModVersion(versions);
+          if (!selectedVersion) {
+            modsWithoutCompatibleVersion.add(pid);
+            addDebugLog('warn', `No compatible version found for ${modName} (${useLoader} ${useVersion})`);
+            return null;
+          }
+          if (selectedVersion.version_type && selectedVersion.version_type !== 'release') {
+            addDebugLog(
+              'warn',
+              `Dependency check for ${modName} uses ${selectedVersion.version_type} version (no release found)`,
+            );
+          }
+          return {
+            projectId: pid,
+            modName,
+            selectedVersionId: selectedVersion.id,
+            selectedVersionNumber: selectedVersion.version_number,
+            dependencies: selectedVersion.dependencies,
+          };
         } catch (e) {
           addDebugLog('error', `Failed to fetch versions for ${modName}: ${e}`);
           return null;
@@ -102,8 +120,12 @@ export function useDependencyCheck(
         dep: { project_id: string | null; version_id: string | null; dependency_type: string };
       }> = [];
       const versionIdsToResolve = new Set<string>();
+      const selectedVersionIdByProject: Record<string, string> = {};
+      const selectedVersionNumberByProject: Record<string, string> = {};
 
       results.filter((res): res is NonNullable<typeof res> => res !== null).forEach((res) => {
+        selectedVersionIdByProject[res.projectId] = res.selectedVersionId;
+        selectedVersionNumberByProject[res.projectId] = res.selectedVersionNumber;
         res.dependencies?.forEach((dep) => {
           if (dep.project_id) {
             allDeps.push({ source: res.modName, dep });
@@ -115,12 +137,16 @@ export function useDependencyCheck(
       });
 
       const versionToProjectId: Record<string, string> = {};
+      const versionToNumber: Record<string, string> = {};
       if (versionIdsToResolve.size > 0) {
         updateLoading('Resolving version IDs...');
         try {
           const vData = await API.getVersionsBulk(Array.from(versionIdsToResolve));
           if (Array.isArray(vData)) {
-            vData.forEach((v) => { versionToProjectId[v.id] = v.project_id; });
+            vData.forEach((v) => {
+              versionToProjectId[v.id] = v.project_id;
+              versionToNumber[v.id] = v.version_number;
+            });
             addDebugLog('log', `Resolved ${vData.length} version IDs to project IDs`);
           }
         } catch (e) {
@@ -140,6 +166,29 @@ export function useDependencyCheck(
         if (dep.dependency_type === 'required' && !isSelected) {
           issues.required.push({ source, targetId: projectId });
           missingModIds.add(projectId);
+        } else if (dep.dependency_type === 'required' && isSelected) {
+          if (modsWithoutCompatibleVersion.has(projectId)) {
+            issues.conflict.push({
+              source,
+              targetId: projectId,
+              reason: `Selected mod has no compatible version for ${useLoader} ${useVersion}.`,
+            });
+            missingModIds.add(projectId);
+            return;
+          }
+          if (dep.version_id) {
+            const selectedVersionId = selectedVersionIdByProject[projectId];
+            if (selectedVersionId && selectedVersionId !== dep.version_id) {
+              const requiredVersion = versionToNumber[dep.version_id] ?? dep.version_id;
+              const selectedVersion = selectedVersionNumberByProject[projectId] ?? selectedVersionId;
+              issues.conflict.push({
+                source,
+                targetId: projectId,
+                reason: `Version mismatch (required: ${requiredVersion}, selected: ${selectedVersion}).`,
+              });
+              missingModIds.add(projectId);
+            }
+          }
         } else if (dep.dependency_type === 'optional' && !isSelected) {
           issues.optional.push({ source, targetId: projectId });
           missingModIds.add(projectId);
