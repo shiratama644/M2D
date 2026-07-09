@@ -99,6 +99,7 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
                         <span>{item.source}</span>
                       </p>
                       <p className="dep-target">{targetTitle}</p>
+                      {item.detail && <p className="dep-detail">{item.detail}</p>}
                     </div>
                     <div>{actionBtn}</div>
                   </div>

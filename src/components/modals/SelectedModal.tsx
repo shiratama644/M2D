@@ -15,7 +15,14 @@ export default function SelectedModal() {
     selectedMods, removeMod, modDataMap, updateModDataMap,
   } = useApp();
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   useScrollLock(selectedModalOpen);
+
+  useEffect(() => {
+    if (!selectedModalOpen) {
+      setSearchQuery('');
+    }
+  }, [selectedModalOpen]);
 
   useEffect(() => {
     if (!selectedModalOpen) return;
@@ -42,6 +49,14 @@ export default function SelectedModal() {
   if (!selectedModalOpen) return null;
 
   const ids = Array.from(selectedMods);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredIds = normalizedQuery
+    ? ids.filter((id) => {
+      const mod = modDataMap[id] as { title?: string } | undefined;
+      const title = mod?.title || '';
+      return title.toLowerCase().includes(normalizedQuery) || id.toLowerCase().includes(normalizedQuery);
+    })
+    : ids;
 
   return (
     <div
@@ -63,23 +78,40 @@ export default function SelectedModal() {
           ) : loadingDetails ? (
             <div className="empty-state" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
           ) : (
-            <div className="selected-list">
-              {ids.map((id) => {
-                const mod = modDataMap[id] as { icon_url?: string; title?: string } | undefined;
-                return (
-                  <div key={id} className="selected-item">
-                    <img
-                      src={mod?.icon_url || FALLBACK_ICON}
-                      className="selected-item-icon"
-                      alt="icon"
-                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
-                    />
-                    <span className="selected-item-title">{mod?.title || id}</span>
-                    <button onClick={() => removeMod(id)} className="btn-small red-outline">Remove</button>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              <div className="selected-search-wrap">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search selected mods..."
+                  className="input-base"
+                />
+              </div>
+              {filteredIds.length === 0 ? (
+                <div className="empty-state" style={{ color: 'var(--text-muted)' }}>
+                  No matching mods.
+                </div>
+              ) : (
+                <div className="selected-list">
+                  {filteredIds.map((id) => {
+                    const mod = modDataMap[id] as { icon_url?: string; title?: string } | undefined;
+                    return (
+                      <div key={id} className="selected-item">
+                        <img
+                          src={mod?.icon_url || FALLBACK_ICON}
+                          className="selected-item-icon"
+                          alt="icon"
+                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
+                        />
+                        <span className="selected-item-title">{mod?.title || id}</span>
+                        <button onClick={() => removeMod(id)} className="btn-small red-outline">Remove</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className="modal-footer">
