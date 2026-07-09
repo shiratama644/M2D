@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { API } from '@/lib/api';
 import { asyncPool, CONCURRENCY_LIMIT } from '@/lib/helpers';
+import { pickPreferredModVersion } from '@/lib/versionSelection';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import type { SearchParams, ResolveSettingsResult } from '@/hooks/useDependencyCheck';
@@ -85,8 +86,15 @@ export function useModDownload(searchParams: SearchParams | null) {
       const modName = mod?.title || pid;
       try {
         const versions = await API.getVersions(pid, useLoader, useVersion);
-        if (versions?.length && versions[0].files?.length) {
-          const file = versions[0].files.find((f) => f.primary) || versions[0].files[0];
+        const selectedVersion = pickPreferredModVersion(versions);
+        if (selectedVersion?.files?.length) {
+          if (selectedVersion.version_type && selectedVersion.version_type !== 'release') {
+            addDebugLog(
+              'warn',
+              `Using ${selectedVersion.version_type} version for ${modName} (no release version found)`,
+            );
+          }
+          const file = selectedVersion.files.find((f) => f.primary) || selectedVersion.files[0];
           const res = await fetch(file.url, { signal: AbortSignal.timeout(30_000) });
           if (res.ok) {
             zip.file(file.filename, await res.blob());

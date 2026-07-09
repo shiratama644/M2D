@@ -99,6 +99,9 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
                         <span>{item.source}</span>
                       </p>
                       <p className="dep-target">{targetTitle}</p>
+                      {item.reason && (
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.reason}</p>
+                      )}
                     </div>
                     <div>{actionBtn}</div>
                   </div>

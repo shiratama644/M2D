@@ -83,9 +83,13 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
 
   useScrollLock(menuOpen || mobileDetailOpen);
 
-  const handleSearch = ({ query, sort, filters }: SearchParams) => {
+  const handleSearch = (
+    { query, sort, filters }: SearchParams,
+    options?: { recordHistory?: boolean },
+  ) => {
     setSearchParams({ query, sort, filters });
     addDebugLog('info', `Search: query="${query}" sort=${sort}`);
+    if (options?.recordHistory === false) return;
     if (query?.trim()) addSearchHistory(query.trim());
     // Write a committed search context snapshot (dedup handled in store).
     addContextHistory({ query, sort, filters, projectType: discoverType });

@@ -28,7 +28,7 @@ function makeInitialFilters(modVersion: string): SearchParams['filters'] {
 }
 
 interface SearchSectionProps {
-  onSearch: (params: SearchParams) => void;
+  onSearch: (params: SearchParams, options?: { recordHistory?: boolean }) => void;
 }
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
@@ -77,7 +77,12 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
     { value: 'updated',   label: t.sort.updatedDate },
   ];
 
-  const doSearch = (q = query, s = sort, f = filters) => onSearch({ query: q, sort: s, filters: f });
+  const doSearch = (
+    q = query,
+    s = sort,
+    f = filters,
+    options?: { recordHistory?: boolean },
+  ) => onSearch({ query: q, sort: s, filters: f }, options);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') doSearch();
@@ -88,7 +93,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
     setQuery(q);
     if (fastSearch) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => doSearch(q, sort, filters), 500);
+      debounceRef.current = setTimeout(() => doSearch(q, sort, filters, { recordHistory: false }), 500);
     }
   };
 

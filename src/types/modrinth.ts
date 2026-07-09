@@ -56,6 +56,7 @@ export interface ModVersion {
   project_id: string;
   name: string;
   version_number: string;
+  version_type?: string;
   files: Array<{
     url: string;
     filename: string;
