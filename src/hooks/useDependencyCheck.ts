@@ -15,9 +15,9 @@ export interface SearchParams {
 }
 
 export interface DepIssues {
-  required: Array<{ source: string; targetId: string; reason?: string }>;
-  optional: Array<{ source: string; targetId: string; reason?: string }>;
-  conflict: Array<{ source: string; targetId: string; reason?: string }>;
+  required: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
+  optional: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
+  conflict: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
 }
 
 export interface ResolveSettingsResult {
@@ -193,7 +193,7 @@ export function useDependencyCheck(
             issues.conflict.push({
               source: sourceLabel,
               targetId: projectId,
-              reason: `Selected mod has no compatible version for ${useLoader} ${useVersion}.`,
+              detail: `Selected mod has no compatible version for ${useLoader} ${useVersion}.`,
             });
             missingModIds.add(projectId);
             return;
@@ -206,7 +206,7 @@ export function useDependencyCheck(
               issues.conflict.push({
                 source: sourceLabel,
                 targetId: projectId,
-                reason: `Version mismatch (required: ${requiredVersion}, selected: ${selectedVersion}).`,
+                detail: `Version mismatch (required: ${requiredVersion}, selected: ${selectedVersion}).`,
               });
               missingModIds.add(projectId);
             }
