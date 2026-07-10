@@ -10,9 +10,16 @@ import settingsIconRaw from '@/assets/icons/settings.svg';
 import userIconRaw from '@/assets/icons/user.svg';
 import historyIconRaw from '@/assets/icons/history.svg';
 import starIconRaw from '@/assets/icons/star.svg';
+import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 
 export default function Header() {
-  const { setMenuOpen, setSettingsOpen, setHistoryModalOpen, setFavoritesModalOpen } = useApp();
+  const {
+    setMenuOpen,
+    setSettingsOpen,
+    setHistoryModalOpen,
+    setFavoritesModalOpen,
+    setSelectedModalOpen,
+  } = useApp();
   const { data: session } = useSession();
 
   return (
@@ -35,6 +42,13 @@ export default function Header() {
           aria-label="Favorites"
         >
           <Icon svg={starIconRaw} size={24} />
+        </button>
+        <button
+          onClick={() => setSelectedModalOpen(true)}
+          className="btn icon-only-btn mobile-only-btn"
+          aria-label="Selected Mods"
+        >
+          <Icon svg={checkCircleIconRaw} size={24} />
         </button>
         <Link href="/account" className="btn icon-only-btn" aria-label="Account">
           {session?.user?.image ? (
