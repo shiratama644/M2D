@@ -168,49 +168,25 @@ export function useDependencyCheck(
         }
       }
 
-      allDeps.forEach(({ source, sourceId, dep }) => {
+      for (const { source, sourceId, dep } of allDeps) {
         const sourceLabel = sourceNameById[sourceId] || source;
         const projectId = dep.project_id || versionToProjectId[dep.version_id ?? ''];
-        if (!projectId) {
-          if (dep.version_id) {
-            addDebugLog('warn', `Could not resolve project ID for version ${dep.version_id} (source: ${sourceLabel})`);
-          }
-          return;
+        if (!projectId && dep.version_id) {
+          addDebugLog('warn', `Could not resolve project ID for version ${dep.version_id} (source: ${sourceLabel})`);
         }
-        const isSelected = selectedMods.has(projectId);
-        if (dep.dependency_type === 'required' && !isSelected) {
-          issues.required.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        } else if (dep.dependency_type === 'required' && isSelected) {
-          if (modsWithoutCompatibleVersion.has(projectId)) {
-            issues.conflict.push({
-              source: sourceLabel,
-              targetId: projectId,
-              detail: `Selected mod has no compatible version for ${useLoader} ${useVersion}.`,
-            });
-            missingModIds.add(projectId);
-            return;
-          }
-          if (dep.version_id) {
-            const selectedVersionId = selectedVersionIdByProject[projectId];
-            if (selectedVersionId && selectedVersionId !== dep.version_id) {
-              const requiredVersion = versionToNumber[dep.version_id] ?? dep.version_id;
-              const selectedVersion = selectedVersionNumberByProject[projectId] ?? selectedVersionId;
-              issues.conflict.push({
-                source: sourceLabel,
-                targetId: projectId,
-                detail: `Version mismatch (required: ${requiredVersion}, selected: ${selectedVersion}).`,
-              });
-              missingModIds.add(projectId);
-            }
-          }
-        } else if (dep.dependency_type === 'optional' && !isSelected) {
-          issues.optional.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        } else if (dep.dependency_type === 'incompatible' && isSelected) {
-          issues.conflict.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        }
+      }
+
+      const { issues, missingModIds } = classifyDependencies({
+        allDeps,
+        selectedMods,
+        sourceNameById,
+        versionToProjectId,
+        versionToNumber,
+        selectedVersionIdByProject,
+        selectedVersionNumberByProject,
+        modsWithoutCompatibleVersion,
+        useLoader,
+        useVersion,
       });
 
       addDebugLog(

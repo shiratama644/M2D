@@ -4,47 +4,18 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { API } from '@/lib/api';
 import { useApp } from '@/context/AppContext';
 import type { ModCategory } from '@/types/modrinth';
+import { groupCategories, sortCategories } from '@/lib/categorySort';
 
 // Module-level cache to avoid re-fetching on every component mount.
 let cachedCategories: ModCategory[] | null = null;
 
+export function __resetCategoryCache() {
+  cachedCategories = null;
+}
+
 export interface CategoryGroup {
   header: string;
   items: ModCategory[];
-}
-
-// Preferred display order for category header groups (matches Modrinth's display order).
-// Headers not in this list are sorted after the listed ones by alphabetical order.
-const HEADER_ORDER = ['categories', 'features', 'resolutions', 'performance_impact'];
-
-function headerSortIndex(header: string): number {
-  const index = HEADER_ORDER.indexOf(header);
-  return index === -1 ? HEADER_ORDER.length : index;
-}
-
-// Logical sort order for performance_impact categories (lowest to highest impact).
-// screenshot-utility is listed last as it is a special-purpose category rather than a quality level.
-const PERFORMANCE_IMPACT_ORDER = ['potato', 'low', 'medium', 'high', 'fancy', 'screenshot-utility'];
-
-function performanceImpactSortIndex(name: string): number {
-  const index = PERFORMANCE_IMPACT_ORDER.indexOf(name);
-  return index === -1 ? PERFORMANCE_IMPACT_ORDER.length : index;
-}
-
-// Sort resolution strings (e.g. "16x", "128x") numerically by their leading number.
-function resolutionSortKey(name: string): number {
-  const match = name.match(/^(\d+)/);
-  return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
-}
-
-function categoryItemComparator(a: ModCategory, b: ModCategory): number {
-  if (a.header === 'performance_impact') {
-    return performanceImpactSortIndex(a.name) - performanceImpactSortIndex(b.name);
-  }
-  if (a.header === 'resolutions') {
-    return resolutionSortKey(a.name) - resolutionSortKey(b.name);
-  }
-  return a.name.localeCompare(b.name);
 }
 
 /**
@@ -82,14 +53,7 @@ export function useCategories(projectType: string): ModCategory[] {
   }, []);
 
   return useMemo(
-    () =>
-      allCategories
-        .filter((c) => c.project_type === projectType)
-        .sort(
-          (a, b) =>
-            headerSortIndex(a.header) - headerSortIndex(b.header) ||
-            categoryItemComparator(a, b),
-        ),
+    () => sortCategories(allCategories, projectType),
     [allCategories, projectType],
   );
 }

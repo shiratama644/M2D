@@ -701,7 +701,7 @@ useEffect(() => {
 
 ### 4-6. テストカバレッジの不足
 
-現在のテストは以下をカバーしている（2026-08 拡充済み: 依存分類の純関数化、`ls` / `useLocalStorage` / `useScrollLock` / `ErrorBoundary` / `getDiscoverOptions`）:
+現在のテストは以下をカバーしている（2026-08 拡充済み: 依存分類・カテゴリソート、翻訳、主要フック、`ls` / `ErrorBoundary`）:
 
 | テストファイル | 対象モジュール |
 |---|---|

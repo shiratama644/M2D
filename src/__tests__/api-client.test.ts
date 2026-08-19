@@ -129,6 +129,14 @@ describe('request', () => {
     expect(calledUrl).toContain('limit=5');
   });
 
+  it('throws AbortError immediately when the signal is already aborted', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const controller = new AbortController();
+    controller.abort();
+    await expect(request('/search', {}, controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it('forwards AbortSignal to fetch', async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
 

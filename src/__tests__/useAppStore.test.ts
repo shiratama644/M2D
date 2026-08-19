@@ -421,6 +421,37 @@ describe('profiles', () => {
 // modDataMap
 // ---------------------------------------------------------------------------
 
+describe('hydrate', () => {
+  it('restores persisted settings from localStorage', () => {
+    localStorageMock.setItem('mod_manager_theme', 'light');
+    localStorageMock.setItem('mod_manager_language', 'ja');
+    localStorageMock.setItem('mod_manager_loader', 'forge');
+    localStorageMock.setItem('mod_manager_version', '1.20.1');
+    localStorageMock.setItem('mod_manager_debug', 'true');
+    localStorageMock.setItem('mod_manager_favorites', JSON.stringify(['sodium']));
+    localStorageMock.setItem('mod_manager_search_history', JSON.stringify(['iris']));
+    localStorageMock.setItem('mod_manager_discover_type', 'shader');
+
+    useAppStore.getState().hydrate();
+
+    const s = useAppStore.getState();
+    expect(s.theme).toBe('light');
+    expect(s.language).toBe('ja');
+    expect(s.modLoader).toBe('forge');
+    expect(s.modVersion).toBe('1.20.1');
+    expect(s.debugMode).toBe(true);
+    expect(s.favorites.has('sodium')).toBe(true);
+    expect(s.searchHistory).toEqual(['iris']);
+    expect(s.discoverType).toBe('shader');
+  });
+
+  it('falls back when persisted JSON is invalid', () => {
+    localStorageMock.setItem('mod_profiles', '{not-json');
+    useAppStore.getState().hydrate();
+    expect(useAppStore.getState().profiles).toEqual([]);
+  });
+});
+
 describe('modDataMap', () => {
   it('updateModDataMap merges new entries', () => {
     useAppStore.getState().updateModDataMap({ sodium: { title: 'Sodium' } });

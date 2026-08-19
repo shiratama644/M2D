@@ -3,8 +3,10 @@ import { pickPreferredModVersion } from '@/lib/versionSelection';
 import type { ModVersion } from '@/types/modrinth';
 
 describe('pickPreferredModVersion', () => {
-  it('returns null when versions are empty', () => {
+  it('returns null when versions are empty, null, or undefined', () => {
     expect(pickPreferredModVersion([])).toBeNull();
+    expect(pickPreferredModVersion(null)).toBeNull();
+    expect(pickPreferredModVersion(undefined)).toBeNull();
   });
 
   it('prefers release versions over alpha/beta', () => {
