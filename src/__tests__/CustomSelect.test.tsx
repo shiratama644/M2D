@@ -1,5 +1,4 @@
-import { createElement } from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CustomSelect from '@/components/ui/CustomSelect';
 
@@ -15,13 +14,13 @@ beforeEach(() => {
 
 describe('CustomSelect', () => {
   it('shows the selected label', () => {
-    render(createElement(CustomSelect, { options, value: 'b', onChange: () => {}, 'aria-label': 'Sort' }));
+    render(<CustomSelect options={options} value="b" onChange={() => {}} aria-label="Sort" />);
     expect(screen.getByRole('combobox').textContent).toContain('Beta');
   });
 
   it('opens on click and selects an option', () => {
     const onChange = vi.fn();
-    render(createElement(CustomSelect, { options, value: 'a', onChange, 'aria-label': 'Sort' }));
+    render(<CustomSelect options={options} value="a" onChange={onChange} aria-label="Sort" />);
     fireEvent.click(screen.getByRole('combobox'));
     expect(screen.getByRole('listbox')).toBeTruthy();
     fireEvent.click(screen.getByRole('option', { name: 'Gamma' }));
@@ -31,7 +30,7 @@ describe('CustomSelect', () => {
 
   it('opens with Enter and moves highlight with arrows', () => {
     const onChange = vi.fn();
-    render(createElement(CustomSelect, { options, value: 'a', onChange, 'aria-label': 'Sort' }));
+    render(<CustomSelect options={options} value="a" onChange={onChange} aria-label="Sort" />);
     const box = screen.getByRole('combobox');
     fireEvent.keyDown(box, { key: 'Enter' });
     expect(box.getAttribute('aria-expanded')).toBe('true');
@@ -41,7 +40,7 @@ describe('CustomSelect', () => {
   });
 
   it('closes on Escape and outside click', () => {
-    render(createElement(CustomSelect, { options, value: 'a', onChange: () => {}, 'aria-label': 'Sort' }));
+    render(<CustomSelect options={options} value="a" onChange={() => {}} aria-label="Sort" />);
     const box = screen.getByRole('combobox');
     fireEvent.click(box);
     fireEvent.keyDown(box, { key: 'Escape' });

@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -10,7 +9,9 @@ function Boom(): never {
 describe('ErrorBoundary', () => {
   it('renders children when they do not throw', () => {
     render(
-      createElement(ErrorBoundary, { fallback: createElement('p', null, 'fallback') }, createElement('p', null, 'ok')),
+      <ErrorBoundary fallback={<p>fallback</p>}>
+        <p>ok</p>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('ok')).toBeTruthy();
   });
@@ -18,7 +19,9 @@ describe('ErrorBoundary', () => {
   it('renders a static fallback after a child error', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(
-      createElement(ErrorBoundary, { fallback: createElement('p', null, 'fallback') }, createElement(Boom)),
+      <ErrorBoundary fallback={<p>fallback</p>}>
+        <Boom />
+      </ErrorBoundary>,
     );
     expect(screen.getByText('fallback')).toBeTruthy();
     spy.mockRestore();
@@ -29,17 +32,13 @@ describe('ErrorBoundary', () => {
     let shouldThrow = true;
     function MaybeBoom() {
       if (shouldThrow) throw new Error('boom');
-      return createElement('p', null, 'recovered');
+      return <p>recovered</p>;
     }
 
     render(
-      createElement(
-        ErrorBoundary,
-        {
-          fallback: (reset: () => void) => createElement('button', { onClick: reset }, 'retry'),
-        },
-        createElement(MaybeBoom),
-      ),
+      <ErrorBoundary fallback={(reset) => <button onClick={reset}>retry</button>}>
+        <MaybeBoom />
+      </ErrorBoundary>,
     );
     expect(screen.getByText('retry')).toBeTruthy();
     shouldThrow = false;

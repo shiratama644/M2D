@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FilterRow from '@/components/ui/FilterRow';
@@ -12,7 +11,7 @@ vi.mock('@/context/AppContext', async () => {
 describe('FilterRow', () => {
   it('marks the include button active and toggles both states', () => {
     const onToggle = vi.fn();
-    render(createElement(FilterRow, { label: 'Fabric', state: 'include', onToggle }));
+    render(<FilterRow label="Fabric" state="include" onToggle={onToggle} />);
     const include = screen.getByTitle(useAppStore.getState().t.filters.include);
     const exclude = screen.getByTitle(useAppStore.getState().t.filters.exclude);
     expect(include.className).toContain('active-include');

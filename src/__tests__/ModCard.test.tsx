@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ModCard from '@/components/mods/ModCard';
@@ -28,27 +27,27 @@ describe('ModCard', () => {
   });
 
   it('selects the mod when the checkbox is toggled', () => {
-    render(createElement(ModCard, { mod, isDesktop: true }));
+    render(<ModCard mod={mod} isDesktop />);
     fireEvent.click(screen.getByRole('checkbox'));
     expect(useAppStore.getState().selectedMods.has('sodium')).toBe(true);
   });
 
   it('activates the card on click without selecting', () => {
-    render(createElement(ModCard, { mod, isDesktop: true }));
+    render(<ModCard mod={mod} isDesktop />);
     fireEvent.click(screen.getByRole('listitem', { name: 'Sodium' }));
     expect(useAppStore.getState().activeModId).toBe('sodium');
     expect(useAppStore.getState().selectedMods.has('sodium')).toBe(false);
   });
 
   it('toggles favorite from the star button', () => {
-    render(createElement(ModCard, { mod, isDesktop: true }));
+    render(<ModCard mod={mod} isDesktop />);
     fireEvent.click(screen.getByTitle('Add to favorites'));
     expect(useAppStore.getState().favorites.has('sodium')).toBe(true);
   });
 
   it('shows the description when that setting is on', () => {
     useAppStore.getState().toggleShowCardDescription(true);
-    render(createElement(ModCard, { mod, isDesktop: true }));
+    render(<ModCard mod={mod} isDesktop />);
     expect(screen.getByText('Fast rendering')).toBeTruthy();
   });
 });
