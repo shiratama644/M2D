@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import Icon from '@/components/ui/Icon';
 import shieldCheckIconRaw from '@/assets/icons/shield-check.svg';
 import downloadIconRaw from '@/assets/icons/download.svg';
@@ -11,14 +12,14 @@ interface ActionBarProps {
 }
 
 export default function ActionBar({ onCheckDeps, onDownload }: ActionBarProps) {
-  const { selectedMods, clearMods } = useApp();
+  const { selectedMods } = useApp();
   const count = selectedMods.size;
 
   return (
     <div className={`action-bar ${count > 0 ? 'visible' : ''}`}>
       <div className="action-bar-top">
         <span className="selected-badge">{count} Selected</span>
-        <button onClick={clearMods} className="btn-clear">Clear All</button>
+        <button onClick={() => { void engine.emit('selection.clear', undefined); }} className="btn-clear">Clear All</button>
       </div>
       <div className="action-buttons">
         <button onClick={onCheckDeps} className="btn-action btn-check">

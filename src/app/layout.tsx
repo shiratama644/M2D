@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { AppProvider } from '@/context/AppContext';
+import { EngineProvider } from '@/engine/react/EngineProvider';
 import SessionProvider from '@/components/auth/SessionProvider';
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration';
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -47,7 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <SessionProvider>
           <AppProvider>
-            {children}
+            <EngineProvider>
+              {children}
+            </EngineProvider>
           </AppProvider>
         </SessionProvider>
         <ServiceWorkerRegistration />

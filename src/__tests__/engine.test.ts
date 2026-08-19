@@ -1,0 +1,111 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { EventBus } from '@/engine/EventBus';
+import { Engine, __resetEngine } from '@/engine/Engine';
+import { createEngine } from '@/engine/createEngine';
+import { searchFeature } from '@/engine/features/search';
+import { useAppStore } from '@/store/useAppStore';
+import type { Feature } from '@/engine/types';
+
+beforeEach(() => {
+  __resetEngine();
+  useAppStore.getState().clearSearchHistory();
+  useAppStore.getState().clearContextHistory();
+  useAppStore.getState().clearMods();
+  useAppStore.getState().saveProfiles([]);
+});
+
+describe('EventBus', () => {
+  it('delivers events to subscribers in order', async () => {
+    const bus = new EventBus();
+    const seen: string[] = [];
+    bus.on('selection.clear', () => { seen.push('a'); });
+    bus.on('selection.clear', () => { seen.push('b'); });
+    await bus.emit('selection.clear', undefined);
+    expect(seen).toEqual(['a', 'b']);
+  });
+
+  it('off removes a handler', async () => {
+    const bus = new EventBus();
+    let n = 0;
+    const off = bus.on('selection.clear', () => { n += 1; });
+    off();
+    await bus.emit('selection.clear', undefined);
+    expect(n).toBe(0);
+  });
+});
+
+describe('Engine', () => {
+  it('registers unique features and starts them once', () => {
+    const mounted: string[] = [];
+    const feature: Feature = {
+      id: 'demo',
+      label: 'Demo',
+      mount() {
+        mounted.push('mount');
+      },
+    };
+    const engine = new Engine();
+    engine.register(feature).start().start();
+    expect(engine.has('demo')).toBe(true);
+    expect(mounted).toEqual(['mount']);
+    expect(() => engine.register(feature)).toThrow(/already registered/);
+  });
+
+  it('createEngine installs the built-in catalog', () => {
+    const engine = createEngine().start();
+    expect(engine.listFeatures().map((f) => f.id)).toEqual([
+      'search',
+      'selection',
+      'download',
+      'dependency',
+      'profiles',
+    ]);
+  });
+});
+
+describe('search feature', () => {
+  it('writes search and context history on search.commit', async () => {
+    const engine = new Engine().register(searchFeature).start();
+    await engine.emit('search.commit', {
+      query: 'sodium',
+      sort: 'downloads',
+      filters: { loaders: {}, version: '1.21.1' },
+      projectType: 'mod',
+    });
+    expect(useAppStore.getState().searchHistory[0]).toBe('sodium');
+    expect(useAppStore.getState().contextHistory.at(-1)?.query).toBe('sodium');
+  });
+
+  it('skips history when recordHistory is false', async () => {
+    const engine = new Engine().register(searchFeature).start();
+    await engine.emit('search.commit', {
+      query: 'skip-me',
+      sort: 'relevance',
+      filters: { loaders: {} },
+      projectType: 'mod',
+      recordHistory: false,
+    });
+    expect(useAppStore.getState().searchHistory).toEqual([]);
+    expect(useAppStore.getState().contextHistory).toEqual([]);
+  });
+});
+
+describe('selection and profiles features', () => {
+  it('clears the current selection', async () => {
+    const engine = createEngine().start();
+    useAppStore.getState().addMod('sodium');
+    await engine.emit('selection.clear', undefined);
+    expect(useAppStore.getState().selectedMods.size).toBe(0);
+  });
+
+  it('saves and loads a profile through events', async () => {
+    const engine = createEngine().start();
+    useAppStore.getState().addMod('sodium');
+    await engine.emit('profiles.save', { name: 'RPG' });
+    expect(useAppStore.getState().profiles[0]?.mods).toEqual(['sodium']);
+
+    useAppStore.getState().clearMods();
+    await engine.emit('profiles.load', { index: 0 });
+    expect(useAppStore.getState().selectedMods.has('sodium')).toBe(true);
+  });
+});
