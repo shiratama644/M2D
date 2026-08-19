@@ -5,19 +5,14 @@ import { useApp } from '@/context/AppContext';
 import { API } from '@/lib/api';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
+import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
 
-export type { SearchFilters };
+export type { SearchFilters, DepIssues };
 
 export interface SearchParams {
   query: string;
   sort: string;
   filters: SearchFilters;
-}
-
-export interface DepIssues {
-  required: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
-  optional: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
-  conflict: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
 }
 
 export interface ResolveSettingsResult {
@@ -71,8 +66,6 @@ export function useDependencyCheck(
     addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
     showLoading('Analyzing Dependencies...');
 
-    const issues: DepIssues = { required: [], optional: [], conflict: [] };
-    const missingModIds = new Set<string>();
     const modsWithoutCompatibleVersion = new Set<string>();
 
     try {
