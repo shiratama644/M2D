@@ -6,6 +6,7 @@ import { API } from '@/lib/api';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
+import { indexProjects } from '@/lib/modDisplay';
 
 export type { SearchFilters, DepIssues };
 
@@ -80,12 +81,11 @@ export function useDependencyCheck(
         updateLoading('Resolving source names...');
         try {
           const sourceProjects = await API.getProjects(sourceIdsToFetch, signal);
-          const map: Record<string, unknown> = {};
           sourceProjects.forEach((project) => {
             sourceNameById[project.id] = project.title;
-            map[project.id] = project;
+            if (project.slug) sourceNameById[project.slug] = project.title;
           });
-          if (Object.keys(map).length > 0) updateModDataMap(map);
+          updateModDataMap(indexProjects(sourceProjects));
         } catch (e) {
           addDebugLog('warn', `Failed to resolve source names: ${e}`);
         }
@@ -200,9 +200,7 @@ export function useDependencyCheck(
         if (idsToFetch.length > 0) {
           addDebugLog('log', `Resolving ${idsToFetch.length} unknown mod names...`);
           const pData = await API.getProjects(idsToFetch);
-          const map: Record<string, unknown> = {};
-          pData.forEach((p) => { map[p.id] = p; });
-          updateModDataMap(map);
+          updateModDataMap(indexProjects(pData));
         }
       }
 

@@ -179,6 +179,9 @@ const translations = {
       addToSelected: 'Add to Selected',
       removeFromSelected: 'Remove',
     },
+    mods: {
+      unknown: 'Unknown mod',
+    },
     modList: {
       fetchError: 'Failed to fetch mods.',
       retry: 'Retry',
@@ -364,6 +367,9 @@ const translations = {
       noFavorites: 'お気に入りがありません。',
       addToSelected: '選択に追加',
       removeFromSelected: '削除',
+    },
+    mods: {
+      unknown: '不明なMod',
     },
     modList: {
       fetchError: 'Modの取得に失敗しました。',

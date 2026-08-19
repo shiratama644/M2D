@@ -10,6 +10,8 @@ import xIconRaw from '@/assets/icons/x.svg';
 import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 import infoIconRaw from '@/assets/icons/info.svg';
 import type { DepIssues } from '@/hooks/useDependencyCheck';
+import { displayModTitle, lookupMod } from '@/lib/modDisplay';
+import { useResolveProjects } from '@/hooks/useResolveProjects';
 
 interface DepModalProps {
   issues: DepIssues;
@@ -17,8 +19,14 @@ interface DepModalProps {
 }
 
 export default function DependencyModal({ issues, onClose }: DepModalProps) {
-  const { selectedMods, addMod, removeMod, modDataMap } = useApp();
+  const { selectedMods, addMod, removeMod, modDataMap, t } = useApp();
   const [activeTab, setActiveTab] = useState<'required' | 'optional' | 'conflict'>('required');
+  const targetIds = [
+    ...issues.required,
+    ...issues.optional,
+    ...issues.conflict,
+  ].map((item) => item.targetId);
+  useResolveProjects(targetIds);
   useScrollLock();
 
   if (!issues) return null;
@@ -70,8 +78,8 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
             <div className="dep-list">
               {list.map((item, i) => {
                 const isSelected = selectedMods.has(item.targetId);
-                const targetMod = modDataMap[item.targetId] as { title?: string; icon_url?: string } | undefined;
-                const targetTitle = targetMod?.title || item.targetId;
+                const targetMod = lookupMod(modDataMap, item.targetId);
+                const targetTitle = displayModTitle(modDataMap, item.targetId, t.mods.unknown);
                 const iconUrl = targetMod?.icon_url || FALLBACK_ICON;
 
                 let actionBtn: React.ReactNode;

@@ -85,7 +85,10 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
         }
       } else {
         const modMap: Record<string, unknown> = {};
-        data.hits.forEach((mod) => { modMap[mod.project_id] = mod; });
+        data.hits.forEach((mod) => {
+          modMap[mod.project_id] = mod;
+          if (mod.slug) modMap[mod.slug] = mod;
+        });
         updateModDataMapRef.current(modMap);
         setNoResults(false);
         setMods((prev) => [...prev, ...data.hits]);
@@ -121,7 +124,10 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       const serverMods = initialDataRef.current;
       initialDataRef.current = null;
       const modMap: Record<string, unknown> = {};
-      serverMods.forEach((mod) => { modMap[mod.project_id] = mod; });
+      serverMods.forEach((mod) => {
+        modMap[mod.project_id] = mod;
+        if (mod.slug) modMap[mod.slug] = mod;
+      });
       updateModDataMapRef.current(modMap);
       offsetRef.current = serverMods.length;
       hasMoreRef.current = serverMods.length >= LIMIT;

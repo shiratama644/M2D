@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { API } from '@/lib/api';
 import { FALLBACK_ICON } from '@/lib/helpers';
+import { displayModTitle, lookupMod } from '@/lib/modDisplay';
+import { useResolveProjects } from '@/hooks/useResolveProjects';
 import Icon from '@/components/ui/Icon';
 import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 import xIconRaw from '@/assets/icons/x.svg';
@@ -12,9 +13,9 @@ import xIconRaw from '@/assets/icons/x.svg';
 export default function SelectedModal() {
   const {
     selectedModalOpen, setSelectedModalOpen,
-    selectedMods, removeMod, modDataMap, updateModDataMap,
+    selectedMods, removeMod, modDataMap,
   } = useApp();
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const { loading: loadingDetails } = useResolveProjects(selectedMods);
   const [searchQuery, setSearchQuery] = useState('');
   useScrollLock(selectedModalOpen);
 
@@ -24,36 +25,13 @@ export default function SelectedModal() {
     }
   }, [selectedModalOpen]);
 
-  useEffect(() => {
-    if (!selectedModalOpen) return;
-    const ids = Array.from(selectedMods);
-    const missing = ids.filter((id) => !modDataMap[id]);
-    if (missing.length === 0) return;
-
-    let cancelled = false;
-    setLoadingDetails(true);
-    API.getProjects(missing)
-      .then((data) => {
-        if (cancelled) return;
-        const map: Record<string, unknown> = {};
-        data.forEach((p) => { map[p.id] = p; });
-        updateModDataMap(map);
-      })
-      .catch(console.error)
-      .finally(() => { if (!cancelled) setLoadingDetails(false); });
-
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModalOpen]);
-
   if (!selectedModalOpen) return null;
 
   const ids = Array.from(selectedMods);
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredIds = normalizedQuery
     ? ids.filter((id) => {
-      const mod = modDataMap[id] as { title?: string } | undefined;
-      const title = mod?.title || '';
+      const title = displayModTitle(modDataMap, id);
       return title.toLowerCase().includes(normalizedQuery) || id.toLowerCase().includes(normalizedQuery);
     })
     : ids;
@@ -95,7 +73,7 @@ export default function SelectedModal() {
               ) : (
                 <div className="selected-list">
                   {filteredIds.map((id) => {
-                    const mod = modDataMap[id] as { icon_url?: string; title?: string } | undefined;
+                    const mod = lookupMod(modDataMap, id);
                     return (
                       <div key={id} className="selected-item">
                         <img
@@ -104,7 +82,7 @@ export default function SelectedModal() {
                           alt="icon"
                           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                         />
-                        <span className="selected-item-title">{mod?.title || id}</span>
+                        <span className="selected-item-title">{displayModTitle(modDataMap, id)}</span>
                         <button onClick={() => removeMod(id)} className="btn-small red-outline">Remove</button>
                       </div>
                     );

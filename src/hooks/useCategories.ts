@@ -64,16 +64,5 @@ export function useCategories(projectType: string): ModCategory[] {
  */
 export function useCategoryGroups(projectType: string): CategoryGroup[] {
   const categories = useCategories(projectType);
-  return useMemo(() => {
-    const map = new Map<string, ModCategory[]>();
-    for (const cat of categories) {
-      const group = map.get(cat.header);
-      if (group) {
-        group.push(cat);
-      } else {
-        map.set(cat.header, [cat]);
-      }
-    }
-    return Array.from(map.entries()).map(([header, items]) => ({ header, items }));
-  }, [categories]);
+  return useMemo(() => groupCategories(categories), [categories]);
 }
