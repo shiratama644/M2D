@@ -13,6 +13,7 @@ interface ActionBarProps {
 
 export default function ActionBar({ onCheckDeps, onDownload }: ActionBarProps) {
   const { selectedMods } = useApp();
+  const engine = useEngine();
   const count = selectedMods.size;
 
   return (

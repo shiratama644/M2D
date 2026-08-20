@@ -17,7 +17,6 @@ export const settingsFeature: Feature = {
         else if (key === 'showCardDescription') s.toggleShowCardDescription(value);
         else s.toggleAdvancedConsole(value);
       }),
-      engine.on('search.history.clear', () => useAppStore.getState().clearSearchHistory()),
       engine.on('discover.set', ({ type }) => useAppStore.getState().setDiscoverType(type)),
       engine.on('mods.activate', ({ id }) => useAppStore.getState().setActiveModId(id)),
     ];

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import ModCard from '@/components/mods/ModCard';
 import SkeletonCard from '@/components/mods/SkeletonCard';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
 import { useApp } from '@/context/AppContext';
 import { buildFacets } from '@/lib/facets';
 import type { ModHit } from '@/types/modrinth';
@@ -92,12 +92,6 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
           addDebugLogRef.current('info', `Search returned no results for "${p.query}"`);
         }
       } else {
-        const modMap: Record<string, unknown> = {};
-        data.hits.forEach((mod) => {
-          modMap[mod.project_id] = mod;
-          if (mod.slug) modMap[mod.slug] = mod;
-        });
-        updateModDataMapRef.current(modMap);
         setNoResults(false);
         setMods((prev) => [...prev, ...data.hits]);
         offsetRef.current = offset + data.hits.length;

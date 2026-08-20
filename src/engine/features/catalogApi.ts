@@ -8,10 +8,25 @@ export const catalogFeature: Feature = {
   label: 'Modrinth catalog',
   mount(engine) {
     const offs = [
-      engine.bind('catalog.search', (p) =>
-        API.searchMods(p.query, p.facets, p.offset, p.limit, p.index, p.signal),
-      ),
-      engine.bind('catalog.project', (p) => API.getProject(p.id, p.signal)),
+      engine.bind('catalog.search', async (p) => {
+        const data = await API.searchMods(p.query, p.facets, p.offset, p.limit, p.index, p.signal);
+        if (data?.hits?.length) {
+          const modMap: Record<string, unknown> = {};
+          data.hits.forEach((mod) => {
+            modMap[mod.project_id] = mod;
+            if (mod.slug) modMap[mod.slug] = mod;
+          });
+          useAppStore.getState().updateModDataMap(modMap);
+        }
+        return data;
+      }),
+      engine.bind('catalog.project', async (p) => {
+        const project = await API.getProject(p.id, p.signal);
+        const map: Record<string, unknown> = { [project.id]: project };
+        if (project.slug) map[project.slug] = project;
+        useAppStore.getState().updateModDataMap(map);
+        return project;
+      }),
       engine.bind('catalog.projects', async (p) => {
         const projects = await API.getProjects(p.ids, p.signal);
         useAppStore.getState().updateModDataMap(indexProjects(projects));

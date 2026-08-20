@@ -29,7 +29,7 @@ interface TranslatedContent {
 const EMPTY_TRANSLATION: TranslatedContent = { id: null, lang: null, description: null, body: null };
 
 export default function ModDetail() {
-  const { activeModId, modDataMap, showAlert, t } = useApp();
+  const { activeModId, modDataMap, t } = useApp();
   const [state, setState] = useState<{ id: string | null; detail: ModProject | null }>({ id: null, detail: null });
   const [translatedContent, setTranslatedContent] = useState<TranslatedContent>(EMPTY_TRANSLATION);
   const [translating, setTranslating] = useState(false);

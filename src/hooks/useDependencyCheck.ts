@@ -6,7 +6,6 @@ import { getEngine } from '@/engine/Engine';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
-import { indexProjects } from '@/lib/modDisplay';
 
 export type { SearchFilters, DepIssues };
 
@@ -35,7 +34,6 @@ export function useDependencyCheck(
   const {
     selectedMods,
     modDataMap,
-    updateModDataMap,
     showLoading,
     updateLoading,
     showProgress,
@@ -87,7 +85,6 @@ export function useDependencyCheck(
             sourceNameById[project.id] = project.title;
             if (project.slug) sourceNameById[project.slug] = project.title;
           });
-          updateModDataMap(indexProjects(sourceProjects));
         } catch (e) {
           addDebugLog('warn', `Failed to resolve source names: ${e}`);
         }
@@ -221,7 +218,7 @@ export function useDependencyCheck(
       await showAlert('Error checking dependencies.');
     }
   }, [
-    selectedMods, modDataMap, updateModDataMap, resolveSettings, onResult,
+    selectedMods, modDataMap, resolveSettings, onResult,
     addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     showAlert,
   ]);
