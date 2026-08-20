@@ -47,7 +47,7 @@ print_tree() {
 
     echo "${prefix}${branch}${basename}"
 
-    # ディレクトリなら中身を再帰的に見る
+    # Recurse into subdirectories that are not ignored.
     if [[ -d "$path" ]]; then
       if ! is_ignored "$basename"; then
         print_tree "$path" "$next_prefix"
