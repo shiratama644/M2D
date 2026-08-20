@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "tree": "mkdir -p scripts/tree && bash scripts/generate_tree.sh > scripts/tree/tree.txt",
