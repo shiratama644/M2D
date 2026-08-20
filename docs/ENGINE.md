@@ -40,3 +40,12 @@ export const myFeature: Feature = {
 ## 診断
 
 `engine.status()` で Feature の有効/マウント状態、`engine.recentJournal()` で直近の事件ログを取れます。
+
+## 繰り返し処理（runtime）
+
+同じパターンが 2 回出たら Feature や画面にコピーせず `src/engine/runtime/` に上げる。
+
+- `runAbortable` / `isAbortError` — キャンセル可能な取得
+- `withLoading` — ローディングオーバーレイ
+- `engineAlert` / `engineConfirm` — ダイアログ
+
