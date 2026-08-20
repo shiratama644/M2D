@@ -20,8 +20,6 @@ const buttonVariants = cva(
           'hover:bg-[var(--glass-bg-hover)] text-[var(--text-main)]',
         link:
           'text-[var(--accent-color)] underline-offset-4 hover:underline',
-        discord:
-          'bg-[#5865f2] text-white hover:bg-[#4752c4] w-full justify-center',
       },
       size: {
         default: 'h-10 px-4 py-2',

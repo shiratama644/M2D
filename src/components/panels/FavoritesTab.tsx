@@ -1,44 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { FALLBACK_ICON } from '@/lib/helpers';
+import { displayModTitle, lookupMod } from '@/lib/modDisplay';
+import { useResolveProjects } from '@/hooks/useResolveProjects';
 
 export default function FavoritesTab() {
   const {
     favorites,
     selectedMods,
-    toggleFavorite,
-    addMod,
-    removeMod,
     modDataMap,
-    updateModDataMap,
     t,
   } = useApp();
-  const [loadingFavorites, setLoadingFavorites] = useState(false);
-
-  // Fetch metadata for any favorites not yet in the data map.
-  useEffect(() => {
-    const ids = Array.from(favorites);
-    const missing = ids.filter((id) => !modDataMap[id]);
-    if (missing.length === 0) return;
-
-    let cancelled = false;
-    setLoadingFavorites(true);
-    API.getProjects(missing)
-      .then((data) => {
-        if (cancelled) return;
-        const map: Record<string, unknown> = {};
-        data.forEach((p) => { map[p.id] = p; });
-        updateModDataMap(map);
-      })
-      .catch(console.error)
-      .finally(() => { if (!cancelled) setLoadingFavorites(false); });
-
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [favorites]);
+  const engine = useEngine();
+  const { loading } = useResolveProjects(favorites);
 
   return (
     <div className="rp-section">
@@ -47,12 +23,12 @@ export default function FavoritesTab() {
       </div>
       {favorites.size === 0 ? (
         <div className="rp-empty">{t.favorites.noFavorites}</div>
-      ) : loadingFavorites ? (
-        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
+      ) : loading ? (
+        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>{t.empty.loading}</div>
       ) : (
         <div className="selected-list">
           {Array.from(favorites).map((id) => {
-            const mod = modDataMap[id] as { title?: string; icon_url?: string } | undefined;
+            const mod = lookupMod(modDataMap, id);
             const isSelected = selectedMods.has(id);
             return (
               <div key={id} className="selected-item">
@@ -62,16 +38,16 @@ export default function FavoritesTab() {
                   alt="icon"
                   onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                 />
-                <span className="selected-item-title">{mod?.title || id}</span>
+                <span className="selected-item-title">{displayModTitle(modDataMap, id, t.mods.unknown)}</span>
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
                   <button
-                    onClick={() => isSelected ? removeMod(id) : addMod(id)}
+                    onClick={() => { void engine.emit(isSelected ? 'selection.remove' : 'selection.add', { id }); }}
                     className={`btn-small ${isSelected ? 'red-outline' : 'green'}`}
                   >
                     {isSelected ? t.favorites.removeFromSelected : t.favorites.addToSelected}
                   </button>
                   <button
-                    onClick={() => toggleFavorite(id)}
+                    onClick={() => { void engine.emit('favorites.toggle', { id }); }}
                     className="btn-small red-outline"
                   >
                     ✕

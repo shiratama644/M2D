@@ -11,8 +11,9 @@ import infoIconRaw from '@/assets/icons/info.svg';
 import xIconRaw from '@/assets/icons/x.svg';
 
 export default function CustomDialog() {
-  const { dialog, closeDialog } = useApp();
+  const { dialog, closeDialog, t } = useApp();
   const okRef = useRef<HTMLButtonElement | null>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
   useScrollLock(!!dialog);
 
   useEffect(() => {
@@ -22,6 +23,22 @@ export default function CustomDialog() {
   useEffect(() => {
     if (!dialog) return;
     const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' && boxRef.current) {
+        const focusable = [...boxRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        )].filter((el) => !el.hasAttribute('disabled'));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
         closeDialog(dialog.type === 'confirm' ? true : undefined);
@@ -49,6 +66,7 @@ export default function CustomDialog() {
           transition={{ duration: 0.15 }}
         >
           <motion.div
+            ref={boxRef}
             className="modal-container dialog-container"
             role="dialog"
             aria-modal="true"
@@ -60,9 +78,9 @@ export default function CustomDialog() {
             <div className="modal-header">
               <h3 className="modal-title">
                 {isConfirm ? (
-                  <><Icon svg={infoIconRaw} size={20} style={{ color: 'var(--accent-color)' }} /> Confirm</>
+                  <><Icon svg={infoIconRaw} size={20} style={{ color: 'var(--accent-color)' }} /> {t.dialog.confirm}</>
                 ) : (
-                  <><Icon svg={circleAlertIconRaw} size={20} style={{ color: 'var(--primary-color)' }} /> Notice</>
+                  <><Icon svg={circleAlertIconRaw} size={20} style={{ color: 'var(--primary-color)' }} /> {t.dialog.notice}</>
                 )}
               </h3>
               <button
@@ -78,7 +96,7 @@ export default function CustomDialog() {
             <div className="modal-footer">
               {isConfirm && (
                 <Button variant="secondary" onClick={() => closeDialog(false)}>
-                  Cancel
+                  {t.dialog.cancel}
                 </Button>
               )}
               <Button
@@ -86,7 +104,7 @@ export default function CustomDialog() {
                 onClick={() => closeDialog(isConfirm ? true : undefined)}
                 className="dialog-ok-btn"
               >
-                OK
+                {t.dialog.ok}
               </Button>
             </div>
           </motion.div>

@@ -2,22 +2,18 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
+import { engineAlert } from '@/engine/runtime/dialog';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
+import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
 
-export type { SearchFilters };
+export type { SearchFilters, DepIssues };
 
 export interface SearchParams {
   query: string;
   sort: string;
   filters: SearchFilters;
-}
-
-export interface DepIssues {
-  required: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
-  optional: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
-  conflict: Array<{ source: string; targetId: string; detail?: string; reason?: string }>;
 }
 
 export interface ResolveSettingsResult {
@@ -39,15 +35,14 @@ export function useDependencyCheck(
   const {
     selectedMods,
     modDataMap,
-    updateModDataMap,
     showLoading,
     updateLoading,
     showProgress,
     updateProgress,
     hideLoading,
     addDebugLog,
-    showAlert,
-    setDepModalOpen,
+    t,
+    pinnedVersions,
   } = useApp();
 
   const depAbortRef = useRef<AbortController | null>(null);
@@ -71,8 +66,6 @@ export function useDependencyCheck(
     addDebugLog('info', `Checking dependencies for ${selectedMods.size} mods...`);
     showLoading('Analyzing Dependencies...');
 
-    const issues: DepIssues = { required: [], optional: [], conflict: [] };
-    const missingModIds = new Set<string>();
     const modsWithoutCompatibleVersion = new Set<string>();
 
     try {
@@ -86,13 +79,14 @@ export function useDependencyCheck(
       if (sourceIdsToFetch.length > 0) {
         updateLoading('Resolving source names...');
         try {
-          const sourceProjects = await API.getProjects(sourceIdsToFetch, signal);
-          const map: Record<string, unknown> = {};
+          const sourceProjects = await getEngine().dispatch('catalog.projects', {
+            ids: sourceIdsToFetch,
+            signal,
+          }) ?? [];
           sourceProjects.forEach((project) => {
             sourceNameById[project.id] = project.title;
-            map[project.id] = project;
+            if (project.slug) sourceNameById[project.slug] = project.title;
           });
-          if (Object.keys(map).length > 0) updateModDataMap(map);
         } catch (e) {
           addDebugLog('warn', `Failed to resolve source names: ${e}`);
         }
@@ -105,9 +99,14 @@ export function useDependencyCheck(
         const mod = modDataMap[pid] as { title?: string } | undefined;
         const modName = mod?.title || pid;
         try {
-          const versions = await API.getVersions(pid, useLoader, useVersion, signal);
+          const versions = await getEngine().dispatch('catalog.versions', {
+            id: pid,
+            loader: useLoader,
+            version: useVersion,
+            signal,
+          }) ?? [];
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
-          const selectedVersion = pickPreferredModVersion(versions);
+          const selectedVersion = pickPreferredModVersion(versions, pinnedVersions[pid]);
           if (!selectedVersion) {
             modsWithoutCompatibleVersion.add(pid);
             addDebugLog('warn', `No compatible version found for ${modName} (${useLoader} ${useVersion})`);
@@ -162,7 +161,9 @@ export function useDependencyCheck(
       if (versionIdsToResolve.size > 0) {
         updateLoading('Resolving version IDs...');
         try {
-          const vData = await API.getVersionsBulk(Array.from(versionIdsToResolve));
+          const vData = await getEngine().dispatch('catalog.versionsBulk', {
+            ids: Array.from(versionIdsToResolve),
+          });
           if (Array.isArray(vData)) {
             vData.forEach((v) => {
               versionToProjectId[v.id] = v.project_id;
@@ -175,49 +176,29 @@ export function useDependencyCheck(
         }
       }
 
-      allDeps.forEach(({ source, sourceId, dep }) => {
+      for (const { source, sourceId, dep } of allDeps) {
         const sourceLabel = sourceNameById[sourceId] || source;
         const projectId = dep.project_id || versionToProjectId[dep.version_id ?? ''];
-        if (!projectId) {
-          if (dep.version_id) {
-            addDebugLog('warn', `Could not resolve project ID for version ${dep.version_id} (source: ${sourceLabel})`);
-          }
-          return;
+        if (!projectId && dep.version_id) {
+          addDebugLog('warn', `Could not resolve project ID for version ${dep.version_id} (source: ${sourceLabel})`);
         }
-        const isSelected = selectedMods.has(projectId);
-        if (dep.dependency_type === 'required' && !isSelected) {
-          issues.required.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        } else if (dep.dependency_type === 'required' && isSelected) {
-          if (modsWithoutCompatibleVersion.has(projectId)) {
-            issues.conflict.push({
-              source: sourceLabel,
-              targetId: projectId,
-              detail: `Selected mod has no compatible version for ${useLoader} ${useVersion}.`,
-            });
-            missingModIds.add(projectId);
-            return;
-          }
-          if (dep.version_id) {
-            const selectedVersionId = selectedVersionIdByProject[projectId];
-            if (selectedVersionId && selectedVersionId !== dep.version_id) {
-              const requiredVersion = versionToNumber[dep.version_id] ?? dep.version_id;
-              const selectedVersion = selectedVersionNumberByProject[projectId] ?? selectedVersionId;
-              issues.conflict.push({
-                source: sourceLabel,
-                targetId: projectId,
-                detail: `Version mismatch (required: ${requiredVersion}, selected: ${selectedVersion}).`,
-              });
-              missingModIds.add(projectId);
-            }
-          }
-        } else if (dep.dependency_type === 'optional' && !isSelected) {
-          issues.optional.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        } else if (dep.dependency_type === 'incompatible' && isSelected) {
-          issues.conflict.push({ source: sourceLabel, targetId: projectId });
-          missingModIds.add(projectId);
-        }
+      }
+
+      const { issues, missingModIds } = classifyDependencies({
+        allDeps,
+        selectedMods,
+        sourceNameById,
+        versionToProjectId,
+        versionToNumber,
+        selectedVersionIdByProject,
+        selectedVersionNumberByProject,
+        modsWithoutCompatibleVersion,
+        useLoader,
+        useVersion,
+        formatNoCompatible: (loader, version) =>
+          t.deps.noCompatible.replace('%loader', loader).replace('%version', version),
+        formatVersionMismatch: (required, selected) =>
+          t.deps.versionMismatch.replace('%required', required).replace('%selected', selected),
       });
 
       addDebugLog(
@@ -230,25 +211,21 @@ export function useDependencyCheck(
         const idsToFetch = Array.from(missingModIds).filter((id) => !modDataMap[id]);
         if (idsToFetch.length > 0) {
           addDebugLog('log', `Resolving ${idsToFetch.length} unknown mod names...`);
-          const pData = await API.getProjects(idsToFetch);
-          const map: Record<string, unknown> = {};
-          pData.forEach((p) => { map[p.id] = p; });
-          updateModDataMap(map);
+          await getEngine().dispatch('catalog.projects', { ids: idsToFetch });
         }
       }
 
       hideLoading();
       onResult(issues);
-      setDepModalOpen(true);
+      getEngine().emit('ui.open', { panel: 'deps' });
     } catch (e) {
       hideLoading();
       addDebugLog('error', `Dependency check failed: ${e}`);
-      await showAlert('Error checking dependencies.');
+      await engineAlert(t.deps.checkFailed);
     }
   }, [
-    selectedMods, modDataMap, updateModDataMap, resolveSettings, onResult,
-    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
-    showAlert, setDepModalOpen,
+    selectedMods, modDataMap, resolveSettings, onResult,
+    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading, t, pinnedVersions,
   ]);
 
   return { handleCheckDeps };

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '@/lib/helpers';
 import { CATEGORY_ICON_MAP } from '@/lib/categoryIcons';
 import { useGameVersions } from '@/hooks/useGameVersions';
@@ -31,7 +32,8 @@ function makeInitialFilters(modVersion: string, loaderOptions: { value: string }
 }
 
 export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
-  const { t, modVersion, updateModVersion, discoverType, setDiscoverType } = useApp();
+  const { t, modVersion, discoverType } = useApp();
+  const engine = useEngine();
   const gameVersions = useGameVersions();
   const categoryGroups = useCategoryGroups(discoverType);
   const loaderOptions = getLoaderOptions(discoverType);
@@ -67,7 +69,7 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
 
   const setVersion = (v: string) => {
     const newFilters = { ...filters, version: v };
-    if (v && v !== modVersion) updateModVersion(v);
+    if (v && v !== modVersion) void engine.emit('settings.version', { value: v });
     emit(newFilters);
   };
 
@@ -102,13 +104,20 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
             <button
               key={type}
               className={`lp-discover-btn${discoverType === type ? ' active' : ''}`}
-              onClick={() => setDiscoverType(type)}
+              onClick={() => { void engine.emit('discover.set', { type }); }}
             >
               <Icon svg={icon} size={14} />
               <span>{label}</span>
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="lp-profiles-btn"
+          onClick={() => { void engine.emit('ui.open', { panel: 'menu' }); }}
+        >
+          {t.nav.profiles}
+        </button>
       </div>
       <div className="left-panel-filters">
         <CollapsibleSection title={t.filters.version}>

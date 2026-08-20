@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import MobileModal from '@/components/ui/MobileModal';
 import { countActiveFilters, LOCALE_MAP } from '@/lib/helpers';
 import type { SearchContextEntry } from '@/store/useAppStore';
@@ -33,10 +34,11 @@ interface HistoryModalProps {
 
 export default function HistoryModal({ onContextRestore, onClose }: HistoryModalProps) {
   const {
-    contextHistory, removeContextEntry, clearContextHistory,
+    contextHistory,
     language,
     t,
   } = useApp();
+  const engine = useEngine();
 
   const projectTypeLabel: Record<string, string> = {
     mod: t.discover.mod,
@@ -65,7 +67,7 @@ export default function HistoryModal({ onContextRestore, onClose }: HistoryModal
       <div className="rp-history">
         <div className="rp-history-header">
           <span />
-          <button onClick={clearContextHistory} className="btn-text-sm">{t.history.clear}</button>
+          <button onClick={() => { void engine.emit('search.history.clear', undefined); }} className="btn-text-sm">{t.history.clear}</button>
         </div>
         {contextHistory.length === 0 ? (
           <div className="rp-empty">{t.history.noHistory}</div>
@@ -96,7 +98,7 @@ export default function HistoryModal({ onContextRestore, onClose }: HistoryModal
                   </button>
                   <button
                     className="rp-history-del"
-                    onClick={() => removeContextEntry(entry.id)}
+                    onClick={() => { void engine.emit('search.history.remove', { id: entry.id }); }}
                     title={t.history.deleteEntry}
                   >
                     ✕

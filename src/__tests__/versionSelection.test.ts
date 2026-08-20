@@ -3,8 +3,10 @@ import { pickPreferredModVersion } from '@/lib/versionSelection';
 import type { ModVersion } from '@/types/modrinth';
 
 describe('pickPreferredModVersion', () => {
-  it('returns null when versions are empty', () => {
+  it('returns null when versions are empty, null, or undefined', () => {
     expect(pickPreferredModVersion([])).toBeNull();
+    expect(pickPreferredModVersion(null)).toBeNull();
+    expect(pickPreferredModVersion(undefined)).toBeNull();
   });
 
   it('prefers release versions over alpha/beta', () => {
@@ -24,5 +26,13 @@ describe('pickPreferredModVersion', () => {
     ] as ModVersion[];
     const selected = pickPreferredModVersion(versions);
     expect(selected?.id).toBe('beta1');
+  });
+
+  it('uses a pinned version id when it exists', () => {
+    const versions = [
+      { id: 'release1', version_type: 'release' },
+      { id: 'beta1', version_type: 'beta' },
+    ] as ModVersion[];
+    expect(pickPreferredModVersion(versions, 'beta1')?.id).toBe('beta1');
   });
 });

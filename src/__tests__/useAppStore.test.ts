@@ -1,36 +1,16 @@
 /**
  * Tests for useAppStore (Zustand store).
  *
- * The store touches localStorage via the `ls` helper. We stub global
- * localStorage with a plain in-memory map so tests are isolated and
- * fast-running without real browser storage.
+ * The store persists via IndexedDB (`persist`). Tests use the in-memory cache.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ── localStorage stub ──────────────────────────────────────────────────────
-
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
-  };
-})();
-
-vi.stubGlobal('localStorage', localStorageMock);
-
-// Import store AFTER stubbing localStorage so initial state reads the stub.
-// We use `await import(...)` inside beforeEach via a factory helper because
-// Vitest module registry is shared; we reset the store state manually instead.
-
+import { describe, it, expect, beforeEach } from 'vitest';
+import { persistGet, persistSet, __resetPersist } from '@/lib/persist';
 import { useAppStore } from '@/store/useAppStore';
 
 // Helper: reset store to a clean state between tests
 function resetStore() {
-  localStorageMock.clear();
+  __resetPersist();
   // Reset mutable state slices via actions
   const s = useAppStore.getState();
   s.clearMods();
@@ -54,7 +34,7 @@ function resetStore() {
   s.updateModLoader('fabric');
   s.updateModVersion('1.21.1');
   s.saveProfiles([]);
-  useAppStore.setState({ modDataMap: {} });
+  useAppStore.setState({ modDataMap: {}, pinnedVersions: {} });
 }
 
 beforeEach(resetStore);
@@ -64,22 +44,22 @@ beforeEach(resetStore);
 // ---------------------------------------------------------------------------
 
 describe('settings', () => {
-  it('toggleTheme updates theme and persists to localStorage', () => {
+  it('toggleTheme updates theme and persists', () => {
     useAppStore.getState().toggleTheme('light');
     expect(useAppStore.getState().theme).toBe('light');
-    expect(localStorageMock.getItem('mod_manager_theme')).toBe('light');
+    expect(persistGet('mod_manager_theme')).toBe('light');
   });
 
   it('toggleDebug updates debugMode and persists', () => {
     useAppStore.getState().toggleDebug(true);
     expect(useAppStore.getState().debugMode).toBe(true);
-    expect(localStorageMock.getItem('mod_manager_debug')).toBe('true');
+    expect(persistGet('mod_manager_debug')).toBe('true');
   });
 
   it('toggleFastSearch updates fastSearch and persists', () => {
     useAppStore.getState().toggleFastSearch(true);
     expect(useAppStore.getState().fastSearch).toBe(true);
-    expect(localStorageMock.getItem('mod_manager_fast_search')).toBe('true');
+    expect(persistGet('mod_manager_fast_search')).toBe('true');
   });
 
   it('toggleShowCardDescription updates and persists', () => {
@@ -95,13 +75,13 @@ describe('settings', () => {
   it('updateModLoader updates and persists', () => {
     useAppStore.getState().updateModLoader('forge');
     expect(useAppStore.getState().modLoader).toBe('forge');
-    expect(localStorageMock.getItem('mod_manager_loader')).toBe('forge');
+    expect(persistGet('mod_manager_loader')).toBe('forge');
   });
 
   it('updateModVersion updates and persists', () => {
     useAppStore.getState().updateModVersion('1.20.1');
     expect(useAppStore.getState().modVersion).toBe('1.20.1');
-    expect(localStorageMock.getItem('mod_manager_version')).toBe('1.20.1');
+    expect(persistGet('mod_manager_version')).toBe('1.20.1');
   });
 
   it('toggleLanguage changes language and updates translation object', () => {
@@ -205,17 +185,17 @@ describe('favorites', () => {
     expect(useAppStore.getState().favorites.has('sodium')).toBe(false);
   });
 
-  it('toggleFavorite persists to localStorage', () => {
+  it('toggleFavorite persists', () => {
     useAppStore.getState().toggleFavorite('lithium');
-    const raw = localStorageMock.getItem('mod_manager_favorites');
+    const raw = persistGet('mod_manager_favorites');
     expect(JSON.parse(raw!)).toContain('lithium');
   });
 
-  it('clearFavorites empties the set and removes from localStorage', () => {
+  it('clearFavorites empties the set and removes persisted value', () => {
     useAppStore.getState().toggleFavorite('sodium');
     useAppStore.getState().clearFavorites();
     expect(useAppStore.getState().favorites.size).toBe(0);
-    expect(localStorageMock.getItem('mod_manager_favorites')).toBeNull();
+    expect(persistGet('mod_manager_favorites')).toBeNull();
   });
 });
 
@@ -260,11 +240,11 @@ describe('searchHistory', () => {
     expect(useAppStore.getState().searchHistory).not.toContain('forge');
   });
 
-  it('clearSearchHistory empties the array and removes from localStorage', () => {
+  it('clearSearchHistory empties the array and removes persisted value', () => {
     useAppStore.getState().addSearchHistory('something');
     useAppStore.getState().clearSearchHistory();
     expect(useAppStore.getState().searchHistory).toEqual([]);
-    expect(localStorageMock.getItem('mod_manager_search_history')).toBeNull();
+    expect(persistGet('mod_manager_search_history')).toBeNull();
   });
 });
 
@@ -403,11 +383,11 @@ describe('dialog', () => {
 // ---------------------------------------------------------------------------
 
 describe('profiles', () => {
-  it('saveProfiles persists profiles to localStorage', () => {
+  it('saveProfiles persists profiles', () => {
     const profiles = [{ name: 'My Profile', mods: ['sodium'], date: '2024-01-01' }];
     useAppStore.getState().saveProfiles(profiles);
     expect(useAppStore.getState().profiles).toEqual(profiles);
-    const raw = localStorageMock.getItem('mod_profiles');
+    const raw = persistGet('mod_profiles');
     expect(JSON.parse(raw!)).toEqual(profiles);
   });
 
@@ -420,6 +400,37 @@ describe('profiles', () => {
 // ---------------------------------------------------------------------------
 // modDataMap
 // ---------------------------------------------------------------------------
+
+describe('hydrate', () => {
+  it('restores persisted settings from persist', async () => {
+    persistSet('mod_manager_theme', 'light');
+    persistSet('mod_manager_language', 'ja');
+    persistSet('mod_manager_loader', 'forge');
+    persistSet('mod_manager_version', '1.20.1');
+    persistSet('mod_manager_debug', 'true');
+    persistSet('mod_manager_favorites', JSON.stringify(['sodium']));
+    persistSet('mod_manager_search_history', JSON.stringify(['iris']));
+    persistSet('mod_manager_discover_type', 'shader');
+
+    await useAppStore.getState().hydrate();
+
+    const s = useAppStore.getState();
+    expect(s.theme).toBe('light');
+    expect(s.language).toBe('ja');
+    expect(s.modLoader).toBe('forge');
+    expect(s.modVersion).toBe('1.20.1');
+    expect(s.debugMode).toBe(true);
+    expect(s.favorites.has('sodium')).toBe(true);
+    expect(s.searchHistory).toEqual(['iris']);
+    expect(s.discoverType).toBe('shader');
+  });
+
+  it('falls back when persisted JSON is invalid', async () => {
+    persistSet('mod_profiles', '{not-json');
+    await useAppStore.getState().hydrate();
+    expect(useAppStore.getState().profiles).toEqual([]);
+  });
+});
 
 describe('modDataMap', () => {
   it('updateModDataMap merges new entries', () => {
@@ -529,9 +540,9 @@ describe('contextHistory', () => {
     expect(contextHistory[contextHistory.length - 1].query).toBe('query-54');
   });
 
-  it('addContextHistory persists to localStorage', () => {
+  it('addContextHistory persists', () => {
     useAppStore.getState().addContextHistory(baseEntry);
-    const raw = localStorageMock.getItem('mod_manager_context_history');
+    const raw = persistGet('mod_manager_context_history');
     const parsed = JSON.parse(raw!);
     expect(parsed.length).toBe(1);
     expect(parsed[0].query).toBe('sodium');
@@ -555,11 +566,11 @@ describe('contextHistory', () => {
     expect(contextHistory[0].query).toBe('lithium');
   });
 
-  it('clearContextHistory empties the array and removes from localStorage', () => {
+  it('clearContextHistory empties the array and removes persisted value', () => {
     useAppStore.getState().addContextHistory(baseEntry);
     useAppStore.getState().clearContextHistory();
     expect(useAppStore.getState().contextHistory).toEqual([]);
-    expect(localStorageMock.getItem('mod_manager_context_history')).toBeNull();
+    expect(persistGet('mod_manager_context_history')).toBeNull();
   });
 
   it('deduplication compares projectType', () => {

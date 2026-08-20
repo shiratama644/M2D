@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { cva } from 'class-variance-authority';
 import { formatNum, FALLBACK_ICON } from '@/lib/helpers';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { cn } from '@/lib/utils';
 import Icon from '@/components/ui/Icon';
 import userIconRaw from '@/assets/icons/user.svg';
@@ -33,12 +34,13 @@ interface ModCardProps {
 
 export default function ModCard({ mod, isDesktop }: ModCardProps) {
   const {
-    selectedMods, toggleMod,
-    activeModId, setActiveModId,
-    favorites, toggleFavorite,
+    selectedMods,
+    activeModId,
+    favorites,
     showCardDescription,
     t,
   } = useApp();
+  const engine = useEngine();
 
   const isSelected = selectedMods.has(mod.project_id);
   const isFavorite = favorites.has(mod.project_id);
@@ -46,17 +48,17 @@ export default function ModCard({ mod, isDesktop }: ModCardProps) {
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLInputElement).type === 'checkbox') return;
-    setActiveModId(mod.project_id);
+    void engine.emit('mods.activate', { id: mod.project_id });
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    toggleMod(mod.project_id);
+    void engine.emit('selection.toggle', { id: mod.project_id });
   };
 
   const handleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    toggleFavorite(mod.project_id);
+    void engine.emit('favorites.toggle', { id: mod.project_id });
   };
 
   return (

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import ModCard from '@/components/mods/ModCard';
 import SkeletonCard from '@/components/mods/SkeletonCard';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
 import { useApp } from '@/context/AppContext';
 import { buildFacets } from '@/lib/facets';
 import type { ModHit } from '@/types/modrinth';
@@ -75,7 +75,15 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     }
 
     try {
-      const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index, controller.signal);
+      const data = await getEngine().dispatch('catalog.search', {
+        query: p.query || '',
+        facets,
+        offset,
+        limit: LIMIT,
+        index,
+        signal: controller.signal,
+      });
+      if (!data) throw new Error('Catalog search returned no result');
       setError(null);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;
@@ -84,9 +92,6 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
           addDebugLogRef.current('info', `Search returned no results for "${p.query}"`);
         }
       } else {
-        const modMap: Record<string, unknown> = {};
-        data.hits.forEach((mod) => { modMap[mod.project_id] = mod; });
-        updateModDataMapRef.current(modMap);
         setNoResults(false);
         setMods((prev) => [...prev, ...data.hits]);
         offsetRef.current = offset + data.hits.length;
@@ -121,7 +126,10 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
       const serverMods = initialDataRef.current;
       initialDataRef.current = null;
       const modMap: Record<string, unknown> = {};
-      serverMods.forEach((mod) => { modMap[mod.project_id] = mod; });
+      serverMods.forEach((mod) => {
+        modMap[mod.project_id] = mod;
+        if (mod.slug) modMap[mod.slug] = mod;
+      });
       updateModDataMapRef.current(modMap);
       offsetRef.current = serverMods.length;
       hasMoreRef.current = serverMods.length >= LIMIT;
@@ -173,9 +181,13 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
             <SkeletonCard key={`skeleton-${i}`} />
           ))}
 
+        {!initialLoading && !error && !noResults && !(searchParams.query || '').trim() && mods.length > 0 && (
+          <h2 className="mod-list-heading">{t.modList.popular}</h2>
+        )}
+
         {!initialLoading && noResults && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2.5rem' }}>
-            No mods found.
+            {t.empty.noMods}
           </div>
         )}
 

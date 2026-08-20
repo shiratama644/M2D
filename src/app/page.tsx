@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { API_BASE } from '@/lib/api';
 import HomeClient from '@/app/HomeClient';
 import type { ModHit } from '@/types/modrinth';
@@ -19,5 +20,9 @@ async function fetchInitialMods(): Promise<ModHit[] | null> {
 
 export default async function HomePage() {
   const initialMods = await fetchInitialMods();
-  return <HomeClient initialMods={initialMods} />;
+  return (
+    <Suspense fallback={null}>
+      <HomeClient initialMods={initialMods} />
+    </Suspense>
+  );
 }

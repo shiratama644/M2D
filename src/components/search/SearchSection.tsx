@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import CustomSelect from '@/components/ui/CustomSelect';
 import Icon from '@/components/ui/Icon';
 import FilterModal from '@/components/modals/FilterModal';
@@ -32,7 +33,8 @@ interface SearchSectionProps {
 }
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
-  const { fastSearch, t, modVersion, discoverType, setDiscoverType } = useApp();
+  const { fastSearch, t, modVersion, discoverType } = useApp();
+  const engine = useEngine();
   const isDesktop = useIsDesktop();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('relevance');
@@ -65,7 +67,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
   }, [discoverType]);
 
   const handleDiscoverTypeChange = (type: DiscoverType) => {
-    setDiscoverType(type);
+    void engine.emit('discover.set', { type });
     // The discoverType useEffect will reset filters and trigger a new search.
   };
 
@@ -175,6 +177,8 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           </div>
         </>
       )}
+
+      <p className="search-version-hint">{t.search.versionHint}</p>
 
       {filterOpen && (
         <FilterModal

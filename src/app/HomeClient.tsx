@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import SideMenu from '@/components/layout/SideMenu';
@@ -24,6 +25,7 @@ import { useModDownload } from '@/hooks/useModDownload';
 import { useDependencyCheck } from '@/hooks/useDependencyCheck';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { LOADER_OPTIONS } from '@/lib/helpers';
 import type { ModHit } from '@/types/modrinth';
 import type { DepIssues, SearchParams } from '@/hooks/useDependencyCheck';
@@ -42,30 +44,23 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const {
     theme,
     menuOpen,
-    selectedModalOpen,
     depModalOpen,
-    setDepModalOpen,
-    settingsOpen,
     historyModalOpen,
-    setHistoryModalOpen,
     favoritesModalOpen,
-    setFavoritesModalOpen,
-    dialog,
     addDebugLog,
-    addSearchHistory,
     activeModId,
-    setActiveModId,
     discoverType,
-    setDiscoverType,
-    addContextHistory,
     t,
   } = useApp();
+
+  const engine = useEngine();
+  const urlSearch = useSearchParams();
 
   const isDesktop = useIsDesktop();
   const [searchParams, setSearchParams] = useState<SearchParams>(DEFAULT_SEARCH);
 
   const mobileDetailOpen = !isDesktop && !!activeModId;
-  const closeMobileDetail = () => setActiveModId(null);
+  const closeMobileDetail = () => { void engine.emit('mods.activate', { id: null }); };
 
   const { leftWidth, rightWidth, centerWidth, layoutRef, onColResizeStart } = useColumnResize({
     minLeft: 10, maxLeft: 40,
@@ -78,8 +73,24 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const { handleCheckDeps } = useDependencyCheck(searchParams, resolveDownloadSettings, setDepIssues);
 
   useEffect(() => {
+    const offDownload = engine.bind('download.start', () => handleDownload());
+    const offDeps = engine.bind('dependency.check', () => handleCheckDeps());
+    return () => {
+      offDownload();
+      offDeps();
+    };
+  }, [engine, handleDownload, handleCheckDeps]);
+
+  useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const id = urlSearch.get('mod');
+    if (!id) return;
+    void engine.emit('mods.activate', { id });
+    void engine.emit('selection.add', { id });
+  }, [urlSearch, engine]);
 
   useScrollLock(menuOpen || mobileDetailOpen);
 
@@ -89,23 +100,36 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   ) => {
     setSearchParams({ query, sort, filters });
     addDebugLog('info', `Search: query="${query}" sort=${sort}`);
-    if (options?.recordHistory === false) return;
-    if (query?.trim()) addSearchHistory(query.trim());
-    // Write a committed search context snapshot (dedup handled in store).
-    addContextHistory({ query, sort, filters, projectType: discoverType });
+    void engine.emit('search.commit', {
+      query,
+      sort,
+      filters,
+      projectType: discoverType,
+      recordHistory: options?.recordHistory,
+    });
   };
 
   const handleLeftPanelFilter = (filters: SearchParams['filters']) => {
     const next = { ...searchParams, filters };
     setSearchParams(next);
-    // Filter change is a committed action — record a snapshot.
-    addContextHistory({ query: next.query, sort: next.sort, filters: next.filters, projectType: discoverType });
+    void engine.emit('search.commit', {
+      query: next.query,
+      sort: next.sort,
+      filters: next.filters,
+      projectType: discoverType,
+    });
   };
 
   // Constraint 3: restoring from history is a full overwrite — no partial merges.
   const handleContextRestore = (entry: SearchContextEntry) => {
     setSearchParams({ query: entry.query, sort: entry.sort, filters: entry.filters });
-    setDiscoverType(entry.projectType);
+    void engine.emit('discover.set', { type: entry.projectType });
+    void engine.emit('search.restore', {
+      query: entry.query,
+      sort: entry.sort,
+      filters: entry.filters,
+      projectType: entry.projectType,
+    });
   };
 
   return (
@@ -133,7 +157,10 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
               <ModList searchParams={searchParams} isDesktop initialMods={initialMods} />
             </ErrorBoundary>
             <div className="pc-action-bar">
-              <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+              <ActionBar
+                onCheckDeps={() => { void engine.dispatch('dependency.check'); }}
+                onDownload={() => { void engine.dispatch('download.start'); }}
+              />
             </div>
           </main>
           <div
@@ -159,7 +186,10 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
       )}
 
       {!isDesktop && (
-        <ActionBar onCheckDeps={handleCheckDeps} onDownload={handleDownload} />
+        <ActionBar
+          onCheckDeps={() => { void engine.dispatch('dependency.check'); }}
+          onDownload={() => { void engine.dispatch('download.start'); }}
+        />
       )}
 
       {mobileDetailOpen && activeModId && (
@@ -181,17 +211,17 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
 
       <SettingsModal />
       {depModalOpen && depIssues && (
-        <DependencyModal issues={depIssues} onClose={() => setDepModalOpen(false)} />
+        <DependencyModal issues={depIssues} onClose={() => { void engine.emit('ui.close', { panel: 'deps' }); }} />
       )}
       <SelectedModal />
       {historyModalOpen && (
         <HistoryModal
           onContextRestore={handleContextRestore}
-          onClose={() => setHistoryModalOpen(false)}
+          onClose={() => { void engine.emit('ui.close', { panel: 'history' }); }}
         />
       )}
       {favoritesModalOpen && (
-        <FavoritesModal onClose={() => setFavoritesModalOpen(false)} />
+        <FavoritesModal onClose={() => { void engine.emit('ui.close', { panel: 'favorites' }); }} />
       )}
       <LoadingOverlay />
       {!isDesktop && <DebugPanel />}

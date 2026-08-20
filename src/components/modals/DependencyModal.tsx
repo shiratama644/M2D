@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import Icon from '@/components/ui/Icon';
 import { FALLBACK_ICON } from '@/lib/helpers';
@@ -10,6 +11,8 @@ import xIconRaw from '@/assets/icons/x.svg';
 import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 import infoIconRaw from '@/assets/icons/info.svg';
 import type { DepIssues } from '@/hooks/useDependencyCheck';
+import { displayModTitle, lookupMod } from '@/lib/modDisplay';
+import { useResolveProjects } from '@/hooks/useResolveProjects';
 
 interface DepModalProps {
   issues: DepIssues;
@@ -17,8 +20,15 @@ interface DepModalProps {
 }
 
 export default function DependencyModal({ issues, onClose }: DepModalProps) {
-  const { selectedMods, addMod, removeMod, modDataMap } = useApp();
+  const { selectedMods, modDataMap, t } = useApp();
+  const engine = useEngine();
   const [activeTab, setActiveTab] = useState<'required' | 'optional' | 'conflict'>('required');
+  const targetIds = [
+    ...issues.required,
+    ...issues.optional,
+    ...issues.conflict,
+  ].map((item) => item.targetId);
+  useResolveProjects(targetIds);
   useScrollLock();
 
   if (!issues) return null;
@@ -27,9 +37,9 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
 
   const renderEmptyState = () => {
     const msgs: Record<string, string> = {
-      required: 'All good! 🎉',
-      optional: 'No optional deps.',
-      conflict: 'No conflicts! ✅',
+      required: t.deps.emptyRequired,
+      optional: t.deps.emptyOptional,
+      conflict: t.deps.emptyConflict,
     };
     return (
       <div className="empty-state">
@@ -48,7 +58,7 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--accent-color)' }}>
-            <Icon svg={gitGraphIconRaw} size={20} /> Dependency Report
+            <Icon svg={gitGraphIconRaw} size={20} /> {t.deps.title}
           </h3>
           <button onClick={onClose} className="btn-close-modal">
             <Icon svg={xIconRaw} size={20} />
@@ -61,55 +71,64 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
               onClick={() => setActiveTab(tab)}
               className={`tab-btn ${activeTab === tab ? `active-${tab}` : ''}`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {t.deps[tab]}
             </button>
           ))}
         </div>
         <div className="modal-body">
           {list.length === 0 ? renderEmptyState() : (
             <div className="dep-list">
-              {list.map((item, i) => {
-                const isSelected = selectedMods.has(item.targetId);
-                const targetMod = modDataMap[item.targetId] as { title?: string; icon_url?: string } | undefined;
-                const targetTitle = targetMod?.title || item.targetId;
-                const iconUrl = targetMod?.icon_url || FALLBACK_ICON;
-
-                let actionBtn: React.ReactNode;
-                if (activeTab === 'conflict') {
-                  actionBtn = !isSelected
-                    ? <button className="btn-small disabled" disabled>Removed</button>
-                    : <button onClick={() => removeMod(item.targetId)} className="btn-small red-outline">Remove</button>;
-                } else {
-                  actionBtn = isSelected
-                    ? <button className="btn-small disabled" disabled>Added</button>
-                    : <button onClick={() => addMod(item.targetId)} className="btn-small green">Add</button>;
-                }
-
-                return (
-                  <div key={i} className="dep-item">
-                    <img
-                      src={iconUrl}
-                      className="dep-icon"
-                      alt="icon"
-                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
-                    />
-                    <div className="dep-info">
-                      <p className="dep-source">
-                        {activeTab === 'conflict' ? 'Conflict w/' : 'Source:'}{' '}
-                        <span>{item.source}</span>
-                      </p>
-                      <p className="dep-target">{targetTitle}</p>
-                      {(item.detail ?? item.reason) && <p className="dep-detail">{item.detail ?? item.reason}</p>}
-                    </div>
-                    <div>{actionBtn}</div>
-                  </div>
-                );
-              })}
+              {Array.from(
+                list.reduce((map, item) => {
+                  const group = map.get(item.source) ?? [];
+                  group.push(item);
+                  map.set(item.source, group);
+                  return map;
+                }, new Map<string, typeof list>()),
+              ).map(([source, items]) => (
+                <div key={source} className="dep-group">
+                  <p className="dep-source">
+                    {activeTab === 'conflict' ? t.deps.conflictWith : t.deps.source}{' '}
+                    <span>{source}</span>
+                  </p>
+                  {items.map((item, i) => {
+                    const isSelected = selectedMods.has(item.targetId);
+                    const targetMod = lookupMod(modDataMap, item.targetId);
+                    const targetTitle = displayModTitle(modDataMap, item.targetId, t.mods.unknown);
+                    const iconUrl = targetMod?.icon_url || FALLBACK_ICON;
+                    let actionBtn: React.ReactNode;
+                    if (activeTab === 'conflict') {
+                      actionBtn = !isSelected
+                        ? <button className="btn-small disabled" disabled>{t.deps.removed}</button>
+                        : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">{t.deps.remove}</button>;
+                    } else {
+                      actionBtn = isSelected
+                        ? <button className="btn-small disabled" disabled>{t.deps.added}</button>
+                        : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">{t.deps.add}</button>;
+                    }
+                    return (
+                      <div key={`${item.targetId}-${i}`} className="dep-item">
+                        <img
+                          src={iconUrl}
+                          className="dep-icon"
+                          alt=""
+                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
+                        />
+                        <div className="dep-info">
+                          <p className="dep-target">{targetTitle}</p>
+                          {(item.detail ?? item.reason) && <p className="dep-detail">{item.detail ?? item.reason}</p>}
+                        </div>
+                        <div>{actionBtn}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>
         <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">Close</button>
+          <button onClick={onClose} className="btn-secondary">{t.deps.close}</button>
         </div>
       </div>
     </div>

@@ -2,19 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { API } from '@/lib/api';
 import { FALLBACK_ICON } from '@/lib/helpers';
+import { displayModTitle, lookupMod } from '@/lib/modDisplay';
+import { useResolveProjects } from '@/hooks/useResolveProjects';
 import Icon from '@/components/ui/Icon';
 import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 import xIconRaw from '@/assets/icons/x.svg';
 
 export default function SelectedModal() {
   const {
-    selectedModalOpen, setSelectedModalOpen,
-    selectedMods, removeMod, modDataMap, updateModDataMap,
+    selectedModalOpen,
+    selectedMods, modDataMap, t,
   } = useApp();
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const engine = useEngine();
+  const close = () => { void engine.emit('ui.close', { panel: 'selected' }); };
+  const { loading: loadingDetails } = useResolveProjects(selectedMods);
   const [searchQuery, setSearchQuery] = useState('');
   useScrollLock(selectedModalOpen);
 
@@ -24,36 +28,13 @@ export default function SelectedModal() {
     }
   }, [selectedModalOpen]);
 
-  useEffect(() => {
-    if (!selectedModalOpen) return;
-    const ids = Array.from(selectedMods);
-    const missing = ids.filter((id) => !modDataMap[id]);
-    if (missing.length === 0) return;
-
-    let cancelled = false;
-    setLoadingDetails(true);
-    API.getProjects(missing)
-      .then((data) => {
-        if (cancelled) return;
-        const map: Record<string, unknown> = {};
-        data.forEach((p) => { map[p.id] = p; });
-        updateModDataMap(map);
-      })
-      .catch(console.error)
-      .finally(() => { if (!cancelled) setLoadingDetails(false); });
-
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModalOpen]);
-
   if (!selectedModalOpen) return null;
 
   const ids = Array.from(selectedMods);
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredIds = normalizedQuery
     ? ids.filter((id) => {
-      const mod = modDataMap[id] as { title?: string } | undefined;
-      const title = mod?.title || '';
+      const title = displayModTitle(modDataMap, id);
       return title.toLowerCase().includes(normalizedQuery) || id.toLowerCase().includes(normalizedQuery);
     })
     : ids;
@@ -61,22 +42,22 @@ export default function SelectedModal() {
   return (
     <div
       className="modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && setSelectedModalOpen(false)}
+      onClick={(e) => e.target === e.currentTarget && close()}
     >
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--primary-color)' }}>
-            <Icon svg={checkCircleIconRaw} size={20} /> Selected Mods
+            <Icon svg={checkCircleIconRaw} size={20} /> {t.nav.selected}
           </h3>
-          <button onClick={() => setSelectedModalOpen(false)} className="btn-close-modal">
+          <button onClick={close} className="btn-close-modal">
             <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
         <div className="modal-body">
           {ids.length === 0 ? (
-            <div className="empty-state">No mods selected.</div>
+            <div className="empty-state">{t.empty.noneSelected}</div>
           ) : loadingDetails ? (
-            <div className="empty-state" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
+            <div className="empty-state" style={{ color: 'var(--text-muted)' }}>{t.empty.loading}</div>
           ) : (
             <>
               <div className="selected-search-wrap">
@@ -84,28 +65,28 @@ export default function SelectedModal() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search selected mods..."
+                  placeholder={t.empty.searchSelected}
                   className="input-base"
                 />
               </div>
               {filteredIds.length === 0 ? (
                 <div className="empty-state" style={{ color: 'var(--text-muted)' }}>
-                  No matching mods.
+                  {t.empty.noMatch}
                 </div>
               ) : (
                 <div className="selected-list">
                   {filteredIds.map((id) => {
-                    const mod = modDataMap[id] as { icon_url?: string; title?: string } | undefined;
+                    const mod = lookupMod(modDataMap, id);
                     return (
                       <div key={id} className="selected-item">
                         <img
                           src={mod?.icon_url || FALLBACK_ICON}
                           className="selected-item-icon"
-                          alt="icon"
+                          alt=""
                           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                         />
-                        <span className="selected-item-title">{mod?.title || id}</span>
-                        <button onClick={() => removeMod(id)} className="btn-small red-outline">Remove</button>
+                        <span className="selected-item-title">{displayModTitle(modDataMap, id)}</span>
+                        <button onClick={() => { void engine.emit('selection.remove', { id }); }} className="btn-small red-outline">{t.deps.remove}</button>
                       </div>
                     );
                   })}
@@ -115,7 +96,7 @@ export default function SelectedModal() {
           )}
         </div>
         <div className="modal-footer">
-          <button onClick={() => setSelectedModalOpen(false)} className="btn-secondary">Close</button>
+          <button onClick={close} className="btn-secondary">{t.deps.close}</button>
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack(config, { dev }) {
-    // Termux環境でのファイルシステムキャッシュエラーを抑制
+    // Disable the filesystem cache on Termux to avoid FS cache errors.
     if (dev && process.platform === 'android') {
       config.cache = false;
     }
 
-    // Webpack環境 (スマホ等) 向け: .svg を raw string として扱う
+    // Webpack (phones / Termux): load .svg files as raw strings.
     config.module.rules.forEach((rule) => {
       if (rule.test instanceof RegExp && rule.test.test('.svg')) {
         rule.exclude = /\.svg$/i;
@@ -28,7 +28,7 @@ const nextConfig = {
     return config;
   },
 
-  // Turbopack向けの設定
+  // Turbopack equivalent of the SVG rule above.
   turbopack: {
     rules: {
       '*.svg': {
@@ -42,7 +42,6 @@ const nextConfig = {
     remotePatterns:[
       { protocol: 'https', hostname: 'cdn.modrinth.com' },
       { protocol: 'https', hostname: '*.modrinth.com' },
-      { protocol: 'https', hostname: 'cdn.discordapp.com' },
     ],
   },
 

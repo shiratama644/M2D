@@ -72,4 +72,5 @@ export interface ModVersion {
   game_versions: string[];
   loaders: string[];
   date_published: string;
+  changelog?: string | null;
 }

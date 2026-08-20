@@ -48,6 +48,12 @@
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
 .filter-item label { font-size: 0.75rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 0.25rem; }
 
+.search-version-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
 .search-bar { display: flex; gap: 0.5rem; }
 .search-input { flex: 1; min-width: 0; }
 .search-bar-top { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
@@ -71,6 +77,18 @@
 
 /* Main content area */
 .main-content { padding: 0 1rem 1rem 1rem; min-height: 50vh; }
+.mod-list-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.version-picker { margin-top: 0.75rem; max-width: 22rem; }
+.version-picker-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; }
+.version-changelog { margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+.version-changelog pre { white-space: pre-wrap; font-family: inherit; }
 
 /* Action bar (mobile) */
 .action-bar {
@@ -229,14 +247,17 @@
   /* Mobile action bar: hidden on desktop */
   .mobile-action-bar { display: none !important; }
 
-  /* Keep side-menu accessible via header hamburger */
-  .overlay { display: none !important; }
+  /* Side menu (profiles) can overlay the 3-column layout. */
 
   /* Sort dropdown: fixed width so the search input keeps most of the space */
   .search-bar .sort-control { flex: 0 0 auto; }
   .search-bar .sort-select { width: 11rem; min-width: 0; }
 
-  /* Hide the mobile-only settings button in header */
+  /* Settings live in the right panel on desktop; Profiles via the bookmark button. */
+  .header-profiles-btn { display: inline-flex !important; }
   .header-settings-btn { display: none !important; }
-  .mobile-only-btn { display: none !important; }
+  .hamburger-btn { display: none !important; }
+  .side-menu-nav { display: none; }
+  .pc-action-bar .action-bar:not(.visible) .action-buttons { display: none; }
+  .pc-action-bar .action-bar:not(.visible) { padding-top: 0; }
 }

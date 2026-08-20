@@ -7,12 +7,15 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
+import { isAbortError } from '@/engine/runtime/abort';
+import { engineAlert } from '@/engine/runtime/dialog';
 import Icon from '@/components/ui/Icon';
 import { FALLBACK_ICON } from '@/lib/helpers';
 import { translateChunk, translateBody } from '@/lib/translate';
 import externalLinkIconRaw from '@/assets/icons/arrow-up-right.svg';
 import imageIconRaw from '@/assets/icons/images.svg';
+import VersionPicker from '@/components/mods/VersionPicker';
 import type { ModProject } from '@/types/modrinth';
 
 const MODRINTH_BASE = 'https://modrinth.com/mod/';
@@ -27,7 +30,7 @@ interface TranslatedContent {
 const EMPTY_TRANSLATION: TranslatedContent = { id: null, lang: null, description: null, body: null };
 
 export default function ModDetail() {
-  const { activeModId, modDataMap, showAlert, t } = useApp();
+  const { activeModId, modDataMap, t } = useApp();
   const [state, setState] = useState<{ id: string | null; detail: ModProject | null }>({ id: null, detail: null });
   const [translatedContent, setTranslatedContent] = useState<TranslatedContent>(EMPTY_TRANSLATION);
   const [translating, setTranslating] = useState(false);
@@ -45,10 +48,13 @@ export default function ModDetail() {
 
     if (!activeModId) return;
     const controller = new AbortController();
-    API.getProject(activeModId, controller.signal)
-      .then((data) => setState({ id: activeModId, detail: data }))
+    getEngine()
+      .dispatch('catalog.project', { id: activeModId, signal: controller.signal })
+      .then((data) => {
+        if (data) setState({ id: activeModId, detail: data });
+      })
       .catch((err: unknown) => {
-        if ((err as { name?: string }).name !== 'AbortError') {
+        if (!isAbortError(err)) {
           setState({ id: activeModId, detail: null });
         }
       });
@@ -90,7 +96,7 @@ export default function ModDetail() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         console.error('Translation failed:', err);
-        showAlert(t.rightPanel.translateFailed);
+        void engineAlert(t.rightPanel.translateFailed);
         setTranslating(false);
       });
   };
@@ -102,7 +108,7 @@ export default function ModDetail() {
   if (!activeModId) {
     return (
       <div className="mod-detail-empty">
-        <p>{t.rightPanel.noDescription}</p>
+        <p>{t.empty.selectModHint}</p>
       </div>
     );
   }
@@ -169,9 +175,10 @@ export default function ModDetail() {
                 <Icon svg={imageIconRaw} size={12} /> {t.rightPanel.gallery} ({gallery.length})
               </button>
             )}
+            </div>
+            <VersionPicker projectId={activeModId} />
           </div>
         </div>
-      </div>
 
       <div className="mod-detail-body">
         <div className="mod-detail-translate-bar">

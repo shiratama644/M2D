@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { getLoaderOptions, LOADER_ICON_PATHS, OTHER_FILTER_OPTIONS, getCategoryLabel, getCategoryHeaderLabel } from '@/lib/helpers';
 import { CATEGORY_ICON_MAP } from '@/lib/categoryIcons';
 import { useGameVersions } from '@/hooks/useGameVersions';
@@ -29,7 +30,8 @@ interface FilterModalProps {
 }
 
 export default function FilterModal({ filters, onFiltersChange, onClose, projectType = 'mod', onProjectTypeChange }: FilterModalProps) {
-  const { t, modVersion, updateModVersion } = useApp();
+  const { t, modVersion } = useApp();
+  const engine = useEngine();
   const gameVersions = useGameVersions();
   const [localProjectType, setLocalProjectType] = useState<DiscoverType>(projectType as DiscoverType);
   const categoryGroups = useCategoryGroups(localProjectType);
@@ -56,7 +58,7 @@ export default function FilterModal({ filters, onFiltersChange, onClose, project
 
   const setVersion = (v: string) => {
     const newFilters = { ...localFilters, version: v };
-    if (v && v !== modVersion) updateModVersion(v);
+    if (v && v !== modVersion) void engine.emit('settings.version', { value: v });
     emit(newFilters);
   };
 
