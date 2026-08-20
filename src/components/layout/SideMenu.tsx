@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
 import { useEngine } from '@/engine/react/EngineProvider';
 import { getEngine } from '@/engine/Engine';
+import { engineAlert, engineConfirm } from '@/engine/runtime/dialog';
 import { cn } from '@/lib/utils';
 import { CONCURRENCY_LIMIT, asyncPool } from '@/lib/helpers';
 import JSZip from 'jszip';
@@ -28,7 +29,6 @@ export default function SideMenu() {
     selectedMods,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     addDebugLog,
-    showAlert, showConfirm,
   } = useApp();
   const engine = useEngine();
 
@@ -50,11 +50,11 @@ export default function SideMenu() {
   const saveProfile = async () => {
     const name = profileName.trim();
     if (!name || selectedMods.size === 0) {
-      await showAlert('Invalid name or no mods selected.');
+      await engineAlert('Invalid name or no mods selected.');
       return;
     }
     if (profiles.some((p) => p.name === name)) {
-      await showAlert('A profile with that name already exists.');
+      await engineAlert('A profile with that name already exists.');
       return;
     }
     void engine.emit('profiles.save', { name });
@@ -66,7 +66,7 @@ export default function SideMenu() {
   };
 
   const loadProfile = async (index: number) => {
-    if (!await showConfirm('Load profile? Current selection will be cleared.')) return;
+    if (!await engineConfirm('Load profile? Current selection will be cleared.')) return;
     const profile = profiles[index];
     void engine.emit('profiles.load', { index });
     addDebugLog('info', `Profile loaded: "${profile.name}" (${profile.mods.length} mods)`);
@@ -74,7 +74,7 @@ export default function SideMenu() {
   };
 
   const deleteProfile = async (index: number) => {
-    if (!await showConfirm('Delete this profile?')) return;
+    if (!await engineConfirm('Delete this profile?')) return;
     const profile = profiles[index];
     void engine.emit('profiles.delete', { index });
     addDebugLog('info', `Profile deleted: "${profile.name}"`);
@@ -89,7 +89,7 @@ export default function SideMenu() {
     const newName = renameValue.trim();
     if (!newName) { setRenamingIndex(null); return; }
     if (profiles.some((p, i) => i !== index && p.name === newName)) {
-      await showAlert('A profile with that name already exists.');
+      await engineAlert('A profile with that name already exists.');
       return;
     }
     const oldName = profiles[index].name;
@@ -137,10 +137,10 @@ export default function SideMenu() {
         };
         void engine.emit('profiles.import', { name: profile.name, mods: profile.mods });
         addDebugLog('info', `Profile imported from TXT: "${profile.name}" (${profile.mods.length} mods)`);
-        await showAlert(`Imported "${profile.name}" successfully!`);
+        await engineAlert(`Imported "${profile.name}" successfully!`);
       } catch {
         addDebugLog('error', `Failed to import profile from file: ${file.name}`);
-        await showAlert('Failed to load profile.');
+        await engineAlert('Failed to load profile.');
       }
       e.target.value = '';
     };
@@ -153,13 +153,13 @@ export default function SideMenu() {
 
     const MAX_ZIP_SIZE = 500 * 1024 * 1024; // 500 MB
     if (file.size > MAX_ZIP_SIZE) {
-      await showAlert('File size is too large (max 500 MB).');
+      await engineAlert('File size is too large (max 500 MB).');
       e.target.value = '';
       return;
     }
 
     if (!window.crypto?.subtle) {
-      await showAlert('Cryptography API is not supported in this environment.');
+      await engineAlert('Cryptography API is not supported in this environment.');
       e.target.value = '';
       return;
     }
@@ -175,7 +175,7 @@ export default function SideMenu() {
 
       if (entries.length === 0) {
         addDebugLog('warn', 'No .jar files found in ZIP.');
-        await showAlert('No .jar files found in the ZIP.');
+        await engineAlert('No .jar files found in the ZIP.');
         hideLoading();
         e.target.value = '';
         return;
@@ -231,16 +231,16 @@ export default function SideMenu() {
 
       if (projectIds.size === 0) {
         addDebugLog('warn', 'Could not identify any mods from Modrinth in this ZIP.');
-        await showAlert('Could not identify any mods from Modrinth in this ZIP.');
+        await engineAlert('Could not identify any mods from Modrinth in this ZIP.');
       } else {
         const pName = file.name.replace(/\.[^/.]+$/, '');
         void engine.emit('profiles.import', { name: pName, mods: Array.from(projectIds) });
         addDebugLog('info', `ZIP import: identified ${projectIds.size} mods, saved as "${pName}"`);
-        await showAlert(`Identified ${projectIds.size} mods and saved as profile "${pName}"!`);
+        await engineAlert(`Identified ${projectIds.size} mods and saved as profile "${pName}"!`);
       }
     } catch (err) {
       addDebugLog('error', String(err));
-      await showAlert('Failed to process ZIP file.');
+      await engineAlert('Failed to process ZIP file.');
     } finally {
       hideLoading();
       e.target.value = '';

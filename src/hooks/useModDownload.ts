@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { getEngine } from '@/engine/Engine';
+import { engineAlert, engineConfirm } from '@/engine/runtime/dialog';
 import { asyncPool, CONCURRENCY_LIMIT } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import JSZip from 'jszip';
@@ -21,8 +22,6 @@ export function useModDownload(searchParams: SearchParams | null) {
     updateProgress,
     hideLoading,
     addDebugLog,
-    showAlert,
-    showConfirm,
     t,
   } = useApp();
 
@@ -55,14 +54,14 @@ export function useModDownload(searchParams: SearchParams | null) {
     if (mismatches.length > 0) {
       const msg =
         `${t.settings.title} / ${t.filters.label} mismatch:\n${mismatches.join('\n')}\n\nDownload using filter settings?`;
-      const useFilter = await showConfirm(msg);
+      const useFilter = await engineConfirm(msg);
       if (useFilter) {
         return { proceed: true, loader: effectiveLoader, version: effectiveVersion };
       }
       return { proceed: false, loader: modLoader, version: modVersion };
     }
     return { proceed: true, loader: modLoader, version: modVersion };
-  }, [getEffectiveDownloadSettings, modLoader, modVersion, showConfirm, t]);
+  }, [getEffectiveDownloadSettings, modLoader, modVersion, t]);
 
   const handleDownload = useCallback(async () => {
     if (selectedMods.size === 0) return;
@@ -131,12 +130,12 @@ export function useModDownload(searchParams: SearchParams | null) {
       addDebugLog('info', `Download complete: ${filename}`);
     } else {
       addDebugLog('error', 'Download failed: no compatible versions found.');
-      await showAlert('Download failed. Could not find compatible versions.');
+      await engineAlert('Download failed. Could not find compatible versions.');
     }
     hideLoading();
   }, [
     selectedMods, modDataMap, resolveDownloadSettings,
-    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading, showAlert,
+    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
   ]);
 
   return { handleDownload, resolveDownloadSettings };
