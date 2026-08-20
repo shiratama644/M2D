@@ -21,9 +21,27 @@ export const profilesFeature: Feature = {
       if (!profile) return;
       replaceSelectedMods(profile.mods);
     });
+    const offDelete = engine.on('profiles.delete', ({ index }) => {
+      const { profiles, saveProfiles } = useAppStore.getState();
+      saveProfiles(profiles.filter((_, i) => i !== index));
+    });
+    const offRename = engine.on('profiles.rename', ({ index, name }) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const { profiles, saveProfiles } = useAppStore.getState();
+      if (profiles.some((p, i) => i !== index && p.name === trimmed)) return;
+      saveProfiles(profiles.map((p, i) => (i === index ? { ...p, name: trimmed } : p)));
+    });
+    const offImport = engine.on('profiles.import', ({ name, mods }) => {
+      const { profiles, saveProfiles } = useAppStore.getState();
+      saveProfiles([...profiles, { name, mods, date: new Date().toLocaleDateString() }]);
+    });
     return () => {
       offSave();
       offLoad();
+      offDelete();
+      offRename();
+      offImport();
     };
   },
 };

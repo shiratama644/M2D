@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
@@ -43,7 +43,6 @@ export function useDependencyCheck(
     hideLoading,
     addDebugLog,
     showAlert,
-    setDepModalOpen,
   } = useApp();
 
   const depAbortRef = useRef<AbortController | null>(null);
@@ -80,7 +79,10 @@ export function useDependencyCheck(
       if (sourceIdsToFetch.length > 0) {
         updateLoading('Resolving source names...');
         try {
-          const sourceProjects = await API.getProjects(sourceIdsToFetch, signal);
+          const sourceProjects = await getEngine().dispatch('catalog.projects', {
+            ids: sourceIdsToFetch,
+            signal,
+          }) ?? [];
           sourceProjects.forEach((project) => {
             sourceNameById[project.id] = project.title;
             if (project.slug) sourceNameById[project.slug] = project.title;
@@ -98,7 +100,12 @@ export function useDependencyCheck(
         const mod = modDataMap[pid] as { title?: string } | undefined;
         const modName = mod?.title || pid;
         try {
-          const versions = await API.getVersions(pid, useLoader, useVersion, signal);
+          const versions = await getEngine().dispatch('catalog.versions', {
+            id: pid,
+            loader: useLoader,
+            version: useVersion,
+            signal,
+          }) ?? [];
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
           const selectedVersion = pickPreferredModVersion(versions);
           if (!selectedVersion) {
@@ -155,7 +162,9 @@ export function useDependencyCheck(
       if (versionIdsToResolve.size > 0) {
         updateLoading('Resolving version IDs...');
         try {
-          const vData = await API.getVersionsBulk(Array.from(versionIdsToResolve));
+          const vData = await getEngine().dispatch('catalog.versionsBulk', {
+            ids: Array.from(versionIdsToResolve),
+          });
           if (Array.isArray(vData)) {
             vData.forEach((v) => {
               versionToProjectId[v.id] = v.project_id;
@@ -199,14 +208,13 @@ export function useDependencyCheck(
         const idsToFetch = Array.from(missingModIds).filter((id) => !modDataMap[id]);
         if (idsToFetch.length > 0) {
           addDebugLog('log', `Resolving ${idsToFetch.length} unknown mod names...`);
-          const pData = await API.getProjects(idsToFetch);
-          updateModDataMap(indexProjects(pData));
+          await getEngine().dispatch('catalog.projects', { ids: idsToFetch });
         }
       }
 
       hideLoading();
       onResult(issues);
-      setDepModalOpen(true);
+      getEngine().emit('ui.open', { panel: 'deps' });
     } catch (e) {
       hideLoading();
       addDebugLog('error', `Dependency check failed: ${e}`);
@@ -215,7 +223,7 @@ export function useDependencyCheck(
   }, [
     selectedMods, modDataMap, updateModDataMap, resolveSettings, onResult,
     addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
-    showAlert, setDepModalOpen,
+    showAlert,
   ]);
 
   return { handleCheckDeps };

@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useGameVersions } from '@/hooks/useGameVersions';
 import { useAppStore } from '@/store/useAppStore';
 import { API } from '@/lib/api';
+import { startAppEngine, __resetEngine } from '@/engine';
 
 vi.mock('@/lib/api', () => ({
   API: {
@@ -17,6 +18,8 @@ vi.mock('@/context/AppContext', async () => {
 
 describe('useGameVersions', () => {
   beforeEach(() => {
+    __resetEngine();
+    startAppEngine();
     useAppStore.getState().clearDebugLogs();
     vi.mocked(API.getGameVersions).mockReset();
   });

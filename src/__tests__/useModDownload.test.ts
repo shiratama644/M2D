@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAppStore } from '@/store/useAppStore';
 import { API } from '@/lib/api';
+import { startAppEngine, __resetEngine } from '@/engine';
 import type { SearchParams } from '@/hooks/useDependencyCheck';
 import type { ModVersion } from '@/types/modrinth';
 
@@ -65,6 +66,8 @@ const emptySearch: SearchParams = {
 
 describe('useModDownload', () => {
   beforeEach(() => {
+    __resetEngine();
+    startAppEngine();
     saveAs.mockReset();
     vi.mocked(API.getVersions).mockReset();
     useAppStore.getState().clearMods();

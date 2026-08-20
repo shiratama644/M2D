@@ -43,20 +43,12 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const {
     theme,
     menuOpen,
-    selectedModalOpen,
     depModalOpen,
-    setDepModalOpen,
-    settingsOpen,
     historyModalOpen,
-    setHistoryModalOpen,
     favoritesModalOpen,
-    setFavoritesModalOpen,
-    dialog,
     addDebugLog,
     activeModId,
-    setActiveModId,
     discoverType,
-    setDiscoverType,
     t,
   } = useApp();
 
@@ -66,7 +58,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const [searchParams, setSearchParams] = useState<SearchParams>(DEFAULT_SEARCH);
 
   const mobileDetailOpen = !isDesktop && !!activeModId;
-  const closeMobileDetail = () => setActiveModId(null);
+  const closeMobileDetail = () => { void engine.emit('mods.activate', { id: null }); };
 
   const { leftWidth, rightWidth, centerWidth, layoutRef, onColResizeStart } = useColumnResize({
     minLeft: 10, maxLeft: 40,
@@ -122,7 +114,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   // Constraint 3: restoring from history is a full overwrite — no partial merges.
   const handleContextRestore = (entry: SearchContextEntry) => {
     setSearchParams({ query: entry.query, sort: entry.sort, filters: entry.filters });
-    setDiscoverType(entry.projectType);
+    void engine.emit('discover.set', { type: entry.projectType });
     void engine.emit('search.restore', {
       query: entry.query,
       sort: entry.sort,
@@ -186,8 +178,8 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
 
       {!isDesktop && (
         <ActionBar
-          onCheckDeps={() => { void engine.emit('dependency.check', undefined); }}
-          onDownload={() => { void engine.emit('download.start', undefined); }}
+          onCheckDeps={() => { void engine.dispatch('dependency.check'); }}
+          onDownload={() => { void engine.dispatch('download.start'); }}
         />
       )}
 
@@ -210,17 +202,17 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
 
       <SettingsModal />
       {depModalOpen && depIssues && (
-        <DependencyModal issues={depIssues} onClose={() => setDepModalOpen(false)} />
+        <DependencyModal issues={depIssues} onClose={() => { void engine.emit('ui.close', { panel: 'deps' }); }} />
       )}
       <SelectedModal />
       {historyModalOpen && (
         <HistoryModal
           onContextRestore={handleContextRestore}
-          onClose={() => setHistoryModalOpen(false)}
+          onClose={() => { void engine.emit('ui.close', { panel: 'history' }); }}
         />
       )}
       {favoritesModalOpen && (
-        <FavoritesModal onClose={() => setFavoritesModalOpen(false)} />
+        <FavoritesModal onClose={() => { void engine.emit('ui.close', { panel: 'favorites' }); }} />
       )}
       <LoadingOverlay />
       {!isDesktop && <DebugPanel />}

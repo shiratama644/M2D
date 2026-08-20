@@ -1,6 +1,6 @@
 'use client';
 
-import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import Icon from '@/components/ui/Icon';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,38 +13,32 @@ import starIconRaw from '@/assets/icons/star.svg';
 import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
 
 export default function Header() {
-  const {
-    setMenuOpen,
-    setSettingsOpen,
-    setHistoryModalOpen,
-    setFavoritesModalOpen,
-    setSelectedModalOpen,
-  } = useApp();
+  const engine = useEngine();
   const { data: session } = useSession();
 
   return (
     <header className="header">
-      <button onClick={() => setMenuOpen(true)} className="btn icon-only-btn hamburger-btn">
+      <button onClick={() => { void engine.emit('ui.open', { panel: 'menu' }); }} className="btn icon-only-btn hamburger-btn">
         <Icon svg={hamburgerIconRaw} size={24} />
       </button>
       <h1>Mod Manager</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
         <button
-          onClick={() => setHistoryModalOpen(true)}
+          onClick={() => { void engine.emit('ui.open', { panel: 'history' }); }}
           className="btn icon-only-btn mobile-only-btn"
           aria-label="History"
         >
           <Icon svg={historyIconRaw} size={24} />
         </button>
         <button
-          onClick={() => setFavoritesModalOpen(true)}
+          onClick={() => { void engine.emit('ui.open', { panel: 'favorites' }); }}
           className="btn icon-only-btn mobile-only-btn"
           aria-label="Favorites"
         >
           <Icon svg={starIconRaw} size={24} />
         </button>
         <button
-          onClick={() => setSelectedModalOpen(true)}
+          onClick={() => { void engine.emit('ui.open', { panel: 'selected' }); }}
           className="btn icon-only-btn mobile-only-btn"
           aria-label="Selected Mods"
         >
@@ -64,7 +58,7 @@ export default function Header() {
           )}
         </Link>
         <button
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => { void engine.emit('ui.open', { panel: 'settings' }); }}
           className="btn icon-only-btn header-settings-btn"
           aria-label="Settings"
         >

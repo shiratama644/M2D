@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAppStore } from '@/store/useAppStore';
 import { API } from '@/lib/api';
+import { startAppEngine, __resetEngine } from '@/engine';
 import { useDependencyCheck, type SearchParams } from '@/hooks/useDependencyCheck';
 import type { ModVersion } from '@/types/modrinth';
 
@@ -41,6 +42,8 @@ const search: SearchParams = {
 
 describe('useDependencyCheck', () => {
   beforeEach(() => {
+    __resetEngine();
+    startAppEngine();
     useAppStore.getState().clearMods();
     useAppStore.getState().clearDebugLogs();
     useAppStore.getState().hideLoading();
@@ -128,7 +131,7 @@ describe('useDependencyCheck', () => {
       await result.current.handleCheckDeps();
     });
 
-    expect(API.getVersionsBulk).toHaveBeenCalledWith(['ver-dep']);
+    expect(API.getVersionsBulk).toHaveBeenCalledWith(['ver-dep'], undefined);
     expect(onResult.mock.calls[0][0].optional[0].targetId).toBe('b');
   });
 

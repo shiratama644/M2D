@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
 import { asyncPool, CONCURRENCY_LIMIT } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import JSZip from 'jszip';
@@ -85,7 +85,11 @@ export function useModDownload(searchParams: SearchParams | null) {
       const mod = modDataMap[pid] as { title?: string } | undefined;
       const modName = mod?.title || pid;
       try {
-        const versions = await API.getVersions(pid, useLoader, useVersion);
+        const versions = await getEngine().dispatch('catalog.versions', {
+          id: pid,
+          loader: useLoader,
+          version: useVersion,
+        }) ?? [];
         const selectedVersion = pickPreferredModVersion(versions);
         if (selectedVersion?.files?.length) {
           if (selectedVersion.version_type && selectedVersion.version_type !== 'release') {

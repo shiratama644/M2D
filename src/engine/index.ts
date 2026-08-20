@@ -13,4 +13,5 @@ export type {
   EngineEventName,
   EngineHandler,
   EngineCommandName,
+  EngineCommandMap,
 } from './types';

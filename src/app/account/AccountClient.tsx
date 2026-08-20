@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, signOut } from 'next-auth/react';
 import type { Session } from 'next-auth';
+import { useEngine } from '@/engine/react/EngineProvider';
 import Image from 'next/image';
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
@@ -17,6 +17,7 @@ interface Props {
 export default function AccountClient({ session }: Props) {
   const user = session?.user;
   const [avatarError, setAvatarError] = useState(false);
+  const engine = useEngine();
 
   return (
     <div className="account-page-wrapper">
@@ -66,7 +67,7 @@ export default function AccountClient({ session }: Props) {
 
             <Button
               variant="destructive"
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => { void engine.emit('auth.signOut', undefined); }}
               className="account-signout-btn w-full"
             >
               Sign Out
@@ -79,7 +80,7 @@ export default function AccountClient({ session }: Props) {
             </p>
             <Button
               variant="discord"
-              onClick={() => signIn('discord', { callbackUrl: '/account' })}
+              onClick={() => { void engine.emit('auth.signIn', undefined); }}
             >
               <Icon svg={discordIconRaw as string} size={20} />
               Sign in with Discord

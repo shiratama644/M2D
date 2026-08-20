@@ -7,7 +7,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { useApp } from '@/context/AppContext';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
+import { isAbortError } from '@/engine/runtime/abort';
+import { engineAlert } from '@/engine/runtime/dialog';
 import Icon from '@/components/ui/Icon';
 import { FALLBACK_ICON } from '@/lib/helpers';
 import { translateChunk, translateBody } from '@/lib/translate';
@@ -45,10 +47,13 @@ export default function ModDetail() {
 
     if (!activeModId) return;
     const controller = new AbortController();
-    API.getProject(activeModId, controller.signal)
-      .then((data) => setState({ id: activeModId, detail: data }))
+    getEngine()
+      .dispatch('catalog.project', { id: activeModId, signal: controller.signal })
+      .then((data) => {
+        if (data) setState({ id: activeModId, detail: data });
+      })
       .catch((err: unknown) => {
-        if ((err as { name?: string }).name !== 'AbortError') {
+        if (!isAbortError(err)) {
           setState({ id: activeModId, detail: null });
         }
       });
@@ -90,7 +95,7 @@ export default function ModDetail() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         console.error('Translation failed:', err);
-        showAlert(t.rightPanel.translateFailed);
+        void engineAlert(t.rightPanel.translateFailed);
         setTranslating(false);
       });
   };

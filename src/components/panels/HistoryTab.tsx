@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { countActiveFilters, LOCALE_MAP, formatHistoryTime } from '@/lib/helpers';
 import type { SearchContextEntry } from '@/store/useAppStore';
 
@@ -12,11 +13,10 @@ interface HistoryTabProps {
 export default function HistoryTab({ onContextRestore }: HistoryTabProps) {
   const {
     contextHistory,
-    removeContextEntry,
-    clearContextHistory,
     language,
     t,
   } = useApp();
+  const engine = useEngine();
 
   const locale = LOCALE_MAP[language] ?? 'en-US';
 
@@ -33,7 +33,7 @@ export default function HistoryTab({ onContextRestore }: HistoryTabProps) {
     <div className="rp-history">
       <div className="rp-history-header">
         <span>{t.rightPanel.history}</span>
-        <button onClick={clearContextHistory} className="btn-text-sm">{t.history.clear}</button>
+        <button onClick={() => { void engine.emit('search.history.clear', undefined); }} className="btn-text-sm">{t.history.clear}</button>
       </div>
       {contextHistory.length === 0 ? (
         <div className="rp-empty">{t.history.noHistory}</div>
@@ -64,7 +64,7 @@ export default function HistoryTab({ onContextRestore }: HistoryTabProps) {
                 </button>
                 <button
                   className="rp-history-del"
-                  onClick={() => removeContextEntry(entry.id)}
+                  onClick={() => { void engine.emit('search.history.remove', { id: entry.id }); }}
                   title={t.history.deleteEntry}
                 >
                   ✕

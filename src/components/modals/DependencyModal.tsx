@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import Icon from '@/components/ui/Icon';
 import { FALLBACK_ICON } from '@/lib/helpers';
@@ -19,7 +20,8 @@ interface DepModalProps {
 }
 
 export default function DependencyModal({ issues, onClose }: DepModalProps) {
-  const { selectedMods, addMod, removeMod, modDataMap, t } = useApp();
+  const { selectedMods, modDataMap, t } = useApp();
+  const engine = useEngine();
   const [activeTab, setActiveTab] = useState<'required' | 'optional' | 'conflict'>('required');
   const targetIds = [
     ...issues.required,
@@ -86,11 +88,11 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
                 if (activeTab === 'conflict') {
                   actionBtn = !isSelected
                     ? <button className="btn-small disabled" disabled>Removed</button>
-                    : <button onClick={() => removeMod(item.targetId)} className="btn-small red-outline">Remove</button>;
+                    : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">Remove</button>;
                 } else {
                   actionBtn = isSelected
                     ? <button className="btn-small disabled" disabled>Added</button>
-                    : <button onClick={() => addMod(item.targetId)} className="btn-small green">Add</button>;
+                    : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">Add</button>;
                 }
 
                 return (

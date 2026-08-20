@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
+import { isAbortError } from '@/engine/runtime/abort';
 import { useApp } from '@/context/AppContext';
 import type { ModCategory } from '@/types/modrinth';
 import { groupCategories, sortCategories } from '@/lib/categorySort';
@@ -35,15 +36,16 @@ export function useCategories(projectType: string): ModCategory[] {
   useEffect(() => {
     if (cachedCategories !== null) return;
     const controller = new AbortController();
-    API.getCategories(controller.signal)
+    getEngine()
+      .dispatch('catalog.categories', { signal: controller.signal })
       .then((cats) => {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && cats) {
           cachedCategories = cats;
           setAllCategories(cats);
         }
       })
       .catch((e: unknown) => {
-        if ((e as { name?: string }).name !== 'AbortError') {
+        if (!isAbortError(e)) {
           addDebugLogRef.current('warn', `Failed to load categories: ${e}`);
         }
       });

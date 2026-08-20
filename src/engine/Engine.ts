@@ -8,6 +8,8 @@ import type {
   EngineHandler,
   EngineCommandName,
   EngineCommandHandler,
+  EngineCommandMap,
+  EngineCommandResult,
   SubscribeOptions,
 } from './types';
 
@@ -18,7 +20,7 @@ export class Engine {
   private readonly features = new Map<string, Feature>();
   private readonly enabled = new Map<string, boolean>();
   private readonly cleanups = new Map<string, () => void>();
-  private readonly commands = new Map<EngineCommandName, EngineCommandHandler>();
+  private readonly commands = new Map<string, EngineCommandHandler>();
   private readonly journal: JournalEntry[] = [];
   private started = false;
 
@@ -31,7 +33,7 @@ export class Engine {
       id: feature.id,
       label: feature.label,
       enabled: this.enabled.get(feature.id) !== false,
-      mounted: this.cleanups.has(feature.id) || (this.started && this.enabled.get(feature.id) !== false && !feature.mount.length),
+      mounted: this.cleanups.has(feature.id),
     }));
   }
 
@@ -83,26 +85,36 @@ export class Engine {
     }
   }
 
-  bind(name: EngineCommandName, handler: EngineCommandHandler): () => void {
-    this.commands.set(name, handler);
+  bind<K extends EngineCommandName>(
+    name: K,
+    handler: EngineCommandHandler<K>,
+  ): () => void {
+    this.commands.set(name, handler as EngineCommandHandler);
     return () => {
       if (this.commands.get(name) === handler) this.commands.delete(name);
     };
   }
 
-  async dispatch(name: EngineCommandName): Promise<void> {
-    const handler = this.commands.get(name);
+  async dispatch<K extends EngineCommandName>(
+    name: K,
+    payload?: EngineCommandMap[K],
+  ): Promise<EngineCommandResult[K] | undefined> {
+    const handler = this.commands.get(name) as EngineCommandHandler<K> | undefined;
     if (!handler) {
-      await this.emit(name, undefined);
-      return;
+      if (name === 'download.start' || name === 'dependency.check') {
+        await this.emit(name, undefined);
+      }
+      return undefined;
     }
     try {
-      await handler();
+      const result = await handler((payload ?? undefined) as EngineCommandMap[K]);
       this.pushJournal(name, true);
+      return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.pushJournal(name, false, message);
       await this.bus.emit('engine.error', { source: name, error: message });
+      throw err;
     }
   }
 

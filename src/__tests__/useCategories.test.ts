@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { __resetCategoryCache, useCategories, useCategoryGroups } from '@/hooks/useCategories';
 import { useAppStore } from '@/store/useAppStore';
 import { API } from '@/lib/api';
+import { startAppEngine, __resetEngine } from '@/engine';
 import type { ModCategory } from '@/types/modrinth';
 
 vi.mock('@/lib/api', () => ({
@@ -24,6 +25,8 @@ const sample: ModCategory[] = [
 
 describe('useCategories', () => {
   beforeEach(() => {
+    __resetEngine();
+    startAppEngine();
     __resetCategoryCache();
     useAppStore.getState().clearDebugLogs();
     vi.mocked(API.getCategories).mockReset();
@@ -61,6 +64,8 @@ describe('useCategories', () => {
 
 describe('useCategoryGroups', () => {
   beforeEach(() => {
+    __resetEngine();
+    startAppEngine();
     __resetCategoryCache();
     vi.mocked(API.getCategories).mockResolvedValue(sample);
   });

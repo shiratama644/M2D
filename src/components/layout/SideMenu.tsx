@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
+import { getEngine } from '@/engine/Engine';
 import { cn } from '@/lib/utils';
 import { CONCURRENCY_LIMIT, asyncPool } from '@/lib/helpers';
-import { API } from '@/lib/api';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import Icon from '@/components/ui/Icon';
@@ -22,13 +23,14 @@ import checkIconRaw from '@/assets/icons/check.svg';
 
 export default function SideMenu() {
   const {
-    menuOpen, setMenuOpen,
-    profiles, saveProfiles,
-    selectedMods, replaceSelectedMods,
+    menuOpen,
+    profiles,
+    selectedMods,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     addDebugLog,
     showAlert, showConfirm,
   } = useApp();
+  const engine = useEngine();
 
   const [profileName, setProfileName] = useState('');
   const [profileMsg, setProfileMsg] = useState('');
@@ -43,7 +45,7 @@ export default function SideMenu() {
     if (profileMsgTimerRef.current) clearTimeout(profileMsgTimerRef.current);
   }, []);
 
-  const closeMenu = () => setMenuOpen(false);
+  const closeMenu = () => { void engine.emit('ui.close', { panel: 'menu' }); };
 
   const saveProfile = async () => {
     const name = profileName.trim();
@@ -55,11 +57,7 @@ export default function SideMenu() {
       await showAlert('A profile with that name already exists.');
       return;
     }
-    const newProfiles = [
-      ...profiles,
-      { name, mods: Array.from(selectedMods), date: new Date().toLocaleDateString() },
-    ];
-    saveProfiles(newProfiles);
+    void engine.emit('profiles.save', { name });
     addDebugLog('info', `Profile saved: "${name}" (${selectedMods.size} mods)`);
     setProfileName('');
     setProfileMsg('Saved!');
@@ -70,7 +68,7 @@ export default function SideMenu() {
   const loadProfile = async (index: number) => {
     if (!await showConfirm('Load profile? Current selection will be cleared.')) return;
     const profile = profiles[index];
-    replaceSelectedMods(profile.mods);
+    void engine.emit('profiles.load', { index });
     addDebugLog('info', `Profile loaded: "${profile.name}" (${profile.mods.length} mods)`);
     closeMenu();
   };
@@ -78,9 +76,7 @@ export default function SideMenu() {
   const deleteProfile = async (index: number) => {
     if (!await showConfirm('Delete this profile?')) return;
     const profile = profiles[index];
-    const newProfiles = [...profiles];
-    newProfiles.splice(index, 1);
-    saveProfiles(newProfiles);
+    void engine.emit('profiles.delete', { index });
     addDebugLog('info', `Profile deleted: "${profile.name}"`);
   };
 
@@ -97,8 +93,7 @@ export default function SideMenu() {
       return;
     }
     const oldName = profiles[index].name;
-    const newProfiles = profiles.map((p, i) => (i === index ? { ...p, name: newName } : p));
-    saveProfiles(newProfiles);
+    void engine.emit('profiles.rename', { index, name: newName });
     addDebugLog('info', `Profile renamed: "${oldName}" → "${newName}"`);
     setRenamingIndex(null);
   };
@@ -140,7 +135,7 @@ export default function SideMenu() {
           mods,
           date: new Date().toLocaleDateString(),
         };
-        saveProfiles([...profiles, profile]);
+        void engine.emit('profiles.import', { name: profile.name, mods: profile.mods });
         addDebugLog('info', `Profile imported from TXT: "${profile.name}" (${profile.mods.length} mods)`);
         await showAlert(`Imported "${profile.name}" successfully!`);
       } catch {
@@ -218,7 +213,7 @@ export default function SideMenu() {
 
       await asyncPool(CONCURRENCY_LIMIT, validHashes, async (hash) => {
         try {
-          const version = await API.getVersionFile(hash);
+          const version = await getEngine().dispatch('catalog.versionFile', { hash });
           if (version?.project_id) {
             projectIds.add(version.project_id);
             addDebugLog('log', `Identified mod: ${version.project_id} (hash ${hash.slice(0, 8)}...)`);
@@ -239,12 +234,7 @@ export default function SideMenu() {
         await showAlert('Could not identify any mods from Modrinth in this ZIP.');
       } else {
         const pName = file.name.replace(/\.[^/.]+$/, '');
-        const profile = {
-          name: pName,
-          mods: Array.from(projectIds),
-          date: new Date().toLocaleDateString(),
-        };
-        saveProfiles([...profiles, profile]);
+        void engine.emit('profiles.import', { name: pName, mods: Array.from(projectIds) });
         addDebugLog('info', `ZIP import: identified ${projectIds.size} mods, saved as "${pName}"`);
         await showAlert(`Identified ${projectIds.size} mods and saved as profile "${pName}"!`);
       }

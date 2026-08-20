@@ -59,6 +59,11 @@ describe('Engine', () => {
       'download',
       'dependency',
       'profiles',
+      'favorites',
+      'settings',
+      'ui',
+      'catalog',
+      'auth',
       'diagnostics',
     ]);
   });
@@ -118,6 +123,29 @@ describe('search feature', () => {
     });
     expect(useAppStore.getState().searchHistory[0]).toBe('sodium');
     expect(useAppStore.getState().contextHistory.at(-1)?.query).toBe('sodium');
+  });
+
+  it('clears and removes history entries', async () => {
+    const engine = new Engine().register(searchFeature).start();
+    await engine.emit('search.commit', {
+      query: 'one',
+      sort: 'relevance',
+      filters: { loaders: {} },
+      projectType: 'mod',
+    });
+    const id = useAppStore.getState().contextHistory[0]?.id;
+    expect(id).toBeTruthy();
+    await engine.emit('search.history.remove', { id: id! });
+    expect(useAppStore.getState().contextHistory).toEqual([]);
+    await engine.emit('search.commit', {
+      query: 'two',
+      sort: 'relevance',
+      filters: { loaders: {} },
+      projectType: 'mod',
+    });
+    await engine.emit('search.history.clear', undefined);
+    expect(useAppStore.getState().searchHistory).toEqual([]);
+    expect(useAppStore.getState().contextHistory).toEqual([]);
   });
 
   it('skips history when recordHistory is false', async () => {

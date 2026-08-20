@@ -75,7 +75,15 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
     }
 
     try {
-      const data = await API.searchMods(p.query || '', facets, offset, LIMIT, index, controller.signal);
+      const data = await getEngine().dispatch('catalog.search', {
+        query: p.query || '',
+        facets,
+        offset,
+        limit: LIMIT,
+        index,
+        signal: controller.signal,
+      });
+      if (!data) throw new Error('Catalog search returned no result');
       setError(null);
       if (!data.hits || data.hits.length === 0) {
         hasMoreRef.current = false;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import MobileModal from '@/components/ui/MobileModal';
 import { FALLBACK_ICON } from '@/lib/helpers';
 import { displayModTitle, lookupMod } from '@/lib/modDisplay';
@@ -14,11 +15,12 @@ interface FavoritesModalProps {
 
 export default function FavoritesModal({ onClose }: FavoritesModalProps) {
   const {
-    favorites, toggleFavorite,
-    selectedMods, addMod, removeMod,
+    favorites,
+    selectedMods,
     modDataMap,
     t,
   } = useApp();
+  const engine = useEngine();
 
   const { loading: loadingDetails } = useResolveProjects(favorites);
 
@@ -56,13 +58,13 @@ export default function FavoritesModal({ onClose }: FavoritesModalProps) {
                   <span className="selected-item-title">{displayModTitle(modDataMap, id, t.mods.unknown)}</span>
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     <button
-                      onClick={() => isSelected ? removeMod(id) : addMod(id)}
+                      onClick={() => { void engine.emit(isSelected ? 'selection.remove' : 'selection.add', { id }); }}
                       className={`btn-small ${isSelected ? 'red-outline' : 'green'}`}
                     >
                       {isSelected ? t.favorites.removeFromSelected : t.favorites.addToSelected}
                     </button>
                     <button
-                      onClick={() => toggleFavorite(id)}
+                      onClick={() => { void engine.emit('favorites.toggle', { id }); }}
                       className="btn-small red-outline"
                     >
                       ✕

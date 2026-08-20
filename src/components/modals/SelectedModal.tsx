@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { FALLBACK_ICON } from '@/lib/helpers';
 import { displayModTitle, lookupMod } from '@/lib/modDisplay';
@@ -12,9 +13,11 @@ import xIconRaw from '@/assets/icons/x.svg';
 
 export default function SelectedModal() {
   const {
-    selectedModalOpen, setSelectedModalOpen,
-    selectedMods, removeMod, modDataMap,
+    selectedModalOpen,
+    selectedMods, modDataMap,
   } = useApp();
+  const engine = useEngine();
+  const close = () => { void engine.emit('ui.close', { panel: 'selected' }); };
   const { loading: loadingDetails } = useResolveProjects(selectedMods);
   const [searchQuery, setSearchQuery] = useState('');
   useScrollLock(selectedModalOpen);
@@ -39,14 +42,14 @@ export default function SelectedModal() {
   return (
     <div
       className="modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && setSelectedModalOpen(false)}
+      onClick={(e) => e.target === e.currentTarget && close()}
     >
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--primary-color)' }}>
             <Icon svg={checkCircleIconRaw} size={20} /> Selected Mods
           </h3>
-          <button onClick={() => setSelectedModalOpen(false)} className="btn-close-modal">
+          <button onClick={close} className="btn-close-modal">
             <Icon svg={xIconRaw} size={20} />
           </button>
         </div>
@@ -83,7 +86,7 @@ export default function SelectedModal() {
                           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                         />
                         <span className="selected-item-title">{displayModTitle(modDataMap, id)}</span>
-                        <button onClick={() => removeMod(id)} className="btn-small red-outline">Remove</button>
+                        <button onClick={() => { void engine.emit('selection.remove', { id }); }} className="btn-small red-outline">Remove</button>
                       </div>
                     );
                   })}
@@ -93,7 +96,7 @@ export default function SelectedModal() {
           )}
         </div>
         <div className="modal-footer">
-          <button onClick={() => setSelectedModalOpen(false)} className="btn-secondary">Close</button>
+          <button onClick={close} className="btn-secondary">Close</button>
         </div>
       </div>
     </div>

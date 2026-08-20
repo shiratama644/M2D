@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { API } from '@/lib/api';
+import { getEngine } from '@/engine/Engine';
+import { isAbortError } from '@/engine/runtime/abort';
 import { useApp } from '@/context/AppContext';
 import type { GameVersion } from '@/types/modrinth';
 
@@ -18,14 +19,15 @@ export function useGameVersions(): GameVersion[] {
 
   useEffect(() => {
     const controller = new AbortController();
-    API.getGameVersions(controller.signal)
+    getEngine()
+      .dispatch('catalog.gameVersions', { signal: controller.signal })
       .then((versions) => {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && versions) {
           setGameVersions(versions.filter((v) => v.version_type === 'release'));
         }
       })
       .catch((e: unknown) => {
-        if ((e as { name?: string }).name !== 'AbortError') {
+        if (!isAbortError(e)) {
           addDebugLogRef.current('warn', `Failed to load game versions: ${e}`);
         }
       });

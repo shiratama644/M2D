@@ -1,6 +1,8 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
+import { engineConfirm } from '@/engine/runtime/dialog';
 import CustomSelect from '@/components/ui/CustomSelect';
 import ToggleSwitch from '@/components/ui/ToggleSwitch';
 import Icon from '@/components/ui/Icon';
@@ -13,18 +15,17 @@ interface SettingsContentProps {
 
 export default function SettingsContent({ gameVersions }: SettingsContentProps) {
   const {
-    theme, toggleTheme,
-    debugMode, toggleDebug,
-    advancedConsole, toggleAdvancedConsole,
-    fastSearch, toggleFastSearch,
-    showCardDescription, toggleShowCardDescription,
-    language, toggleLanguage,
-    modLoader, updateModLoader,
-    modVersion, updateModVersion,
-    clearSearchHistory, clearFavorites,
-    showConfirm,
+    theme,
+    debugMode,
+    advancedConsole,
+    fastSearch,
+    showCardDescription,
+    language,
+    modLoader,
+    modVersion,
     t,
   } = useApp();
+  const engine = useEngine();
 
   const themeOptions = [
     { value: 'light', label: t.themes.light },
@@ -47,11 +48,15 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
   ];
 
   const handleClearHistory = async () => {
-    if (await showConfirm(t.settings.clearHistory + '?')) clearSearchHistory();
+    if (await engineConfirm(`${t.settings.clearHistory}?`)) {
+      void engine.emit('search.history.clear', undefined);
+    }
   };
 
   const handleClearFavorites = async () => {
-    if (await showConfirm(t.settings.clearFavorites + '?')) clearFavorites();
+    if (await engineConfirm(`${t.settings.clearFavorites}?`)) {
+      void engine.emit('favorites.clear', undefined);
+    }
   };
 
   return (
@@ -67,7 +72,7 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
             className="settings-select"
             options={loaderOptions}
             value={modLoader}
-            onChange={updateModLoader}
+            onChange={(value) => { void engine.emit('settings.loader', { value }); }}
           />
         </div>
         <div className="settings-row" style={{ marginBottom: 0 }}>
@@ -83,7 +88,7 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
                 : modVersion ? [{ value: modVersion, label: modVersion }] : []),
             ]}
             value={modVersion}
-            onChange={updateModVersion}
+            onChange={(value) => { void engine.emit('settings.version', { value }); }}
           />
         </div>
       </div>
@@ -99,7 +104,7 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
             className="settings-select"
             options={themeOptions}
             value={theme}
-            onChange={toggleTheme}
+            onChange={(value) => { void engine.emit('settings.theme', { value }); }}
           />
         </div>
         <div className="settings-row">
@@ -111,7 +116,7 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
             className="settings-select"
             options={languageOptions}
             value={language}
-            onChange={toggleLanguage}
+            onChange={(value) => { void engine.emit('settings.language', { value }); }}
           />
         </div>
         <div className="settings-row">
@@ -119,14 +124,14 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
             <span className="settings-label">{t.settings.fastSearch.label}</span>
             <span className="settings-description">{t.settings.fastSearch.description}</span>
           </div>
-          <ToggleSwitch checked={fastSearch} onChange={toggleFastSearch} />
+          <ToggleSwitch checked={fastSearch} onChange={(value) => { void engine.emit('settings.flag', { key: 'fastSearch', value }); }} />
         </div>
         <div className="settings-row" style={{ marginBottom: 0 }}>
           <div>
             <span className="settings-label">{t.settings.showCardDescription.label}</span>
             <span className="settings-description">{t.settings.showCardDescription.description}</span>
           </div>
-          <ToggleSwitch checked={showCardDescription} onChange={toggleShowCardDescription} />
+          <ToggleSwitch checked={showCardDescription} onChange={(value) => { void engine.emit('settings.flag', { key: 'showCardDescription', value }); }} />
         </div>
       </div>
 
@@ -155,14 +160,14 @@ export default function SettingsContent({ gameVersions }: SettingsContentProps) 
             <span className="settings-label">{t.settings.debugMode.label}</span>
             <span className="settings-description">{t.settings.debugMode.description}</span>
           </div>
-          <ToggleSwitch checked={debugMode} onChange={toggleDebug} />
+          <ToggleSwitch checked={debugMode} onChange={(value) => { void engine.emit('settings.flag', { key: 'debug', value }); }} />
         </div>
         <div className="settings-row" style={{ marginBottom: 0 }}>
           <div>
             <span className="settings-label">{t.settings.advancedConsole.label}</span>
             <span className="settings-description">{t.settings.advancedConsole.description}</span>
           </div>
-          <ToggleSwitch checked={advancedConsole} onChange={toggleAdvancedConsole} />
+          <ToggleSwitch checked={advancedConsole} onChange={(value) => { void engine.emit('settings.flag', { key: 'advancedConsole', value }); }} />
         </div>
       </div>
     </>
