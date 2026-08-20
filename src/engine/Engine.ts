@@ -8,6 +8,7 @@ import type {
   EngineHandler,
   EngineCommandName,
   EngineCommandHandler,
+  AnyEngineCommandHandler,
   EngineCommandMap,
   EngineCommandResult,
   SubscribeOptions,
@@ -20,7 +21,7 @@ export class Engine {
   private readonly features = new Map<string, Feature>();
   private readonly enabled = new Map<string, boolean>();
   private readonly cleanups = new Map<string, () => void>();
-  private readonly commands = new Map<string, EngineCommandHandler>();
+  private readonly commands = new Map<EngineCommandName, AnyEngineCommandHandler>();
   private readonly journal: JournalEntry[] = [];
   private started = false;
 
@@ -89,7 +90,7 @@ export class Engine {
     name: K,
     handler: EngineCommandHandler<K>,
   ): () => void {
-    this.commands.set(name, handler as EngineCommandHandler);
+    this.commands.set(name, handler as AnyEngineCommandHandler);
     return () => {
       if (this.commands.get(name) === handler) this.commands.delete(name);
     };
@@ -99,7 +100,7 @@ export class Engine {
     name: K,
     payload?: EngineCommandMap[K],
   ): Promise<EngineCommandResult[K] | undefined> {
-    const handler = this.commands.get(name) as EngineCommandHandler<K> | undefined;
+    const handler = this.commands.get(name) as unknown as EngineCommandHandler<K> | undefined;
     if (!handler) {
       if (name === 'download.start' || name === 'dependency.check') {
         await this.emit(name, undefined);
