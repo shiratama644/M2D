@@ -84,4 +84,4 @@ Vercel の環境変数を確認し、デプロイ済みの URL（`https://your-p
 
 Vercel は pnpm 11 を lockfile から自動では選びません。このリポジトリの `vercel.json` は `npx pnpm@11.4.0` で install しています。Dashboard で Install Command を上書きしている場合は、その設定を外すか、同じコマンドにしてください。
 
-別案として、Environment Variables に `ENABLE_EXPERIMENTAL_COREPACK=1` を置くと、Vercel が `package.json` の `packageManager` を使います。
+GitHub Actions の `pnpm/action-setup` は `version: 10` を指定しているため、`package.json` には `packageManager` を書いていません（両方あると CI が落ちます）。

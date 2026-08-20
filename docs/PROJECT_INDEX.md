@@ -5,7 +5,7 @@
 - リポジトリ: `shiratama644/M2D`
 - パッケージ名: `modrinth-mod-manager` (`package.json` version `0.0.0`)
 - ライセンス: `LICENSE`
-- パッケージマネージャ: **pnpm 11.4.0**
+- パッケージマネージャ: **pnpm**（CI は 10、Vercel は 11.4.0）
 - 認証: **なし**（Discord / NextAuth / `/account` は削除済み）
 - 永続化: **IndexedDB** (`m2d` / store `kv`)。旧 localStorage キーは一度だけ移行
 
