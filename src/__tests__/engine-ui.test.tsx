@@ -6,6 +6,7 @@ import { __resetEngine, startAppEngine } from '@/engine';
 import { useAppStore } from '@/store/useAppStore';
 import ActionBar from '@/components/search/ActionBar';
 import Header from '@/components/layout/Header';
+import SideMenu from '@/components/layout/SideMenu';
 import SettingsContent from '@/components/settings/SettingsContent';
 import HistoryTab from '@/components/panels/HistoryTab';
 import FavoritesTab from '@/components/panels/FavoritesTab';
@@ -86,18 +87,23 @@ describe('engine-wired UI', () => {
     await waitFor(() => expect(useAppStore.getState().selectedMods.size).toBe(0));
   });
 
-  it('opens chrome panels from the header', async () => {
-    wrap(<Header />);
-    fireEvent.click(screen.getByLabelText('History'));
-    await waitFor(() => expect(useAppStore.getState().historyModalOpen).toBe(true));
-    fireEvent.click(screen.getByLabelText('Favorites'));
-    await waitFor(() => expect(useAppStore.getState().favoritesModalOpen).toBe(true));
-    fireEvent.click(screen.getByLabelText('Selected mods'));
-    await waitFor(() => expect(useAppStore.getState().selectedModalOpen).toBe(true));
-    fireEvent.click(screen.getByLabelText('Settings'));
-    await waitFor(() => expect(useAppStore.getState().settingsOpen).toBe(true));
+  it('opens chrome panels from the side menu', async () => {
+    wrap(
+      <>
+        <Header />
+        <SideMenu />
+      </>,
+    );
     fireEvent.click(document.querySelector('.hamburger-btn') as HTMLButtonElement);
     await waitFor(() => expect(useAppStore.getState().menuOpen).toBe(true));
+    fireEvent.click(screen.getByRole('button', { name: /History/ }));
+    await waitFor(() => expect(useAppStore.getState().historyModalOpen).toBe(true));
+    fireEvent.click(screen.getByRole('button', { name: /Favorites/ }));
+    await waitFor(() => expect(useAppStore.getState().favoritesModalOpen).toBe(true));
+    fireEvent.click(screen.getByRole('button', { name: /Selected mods/ }));
+    await waitFor(() => expect(useAppStore.getState().selectedModalOpen).toBe(true));
+    fireEvent.click(screen.getByRole('button', { name: /Settings/ }));
+    await waitFor(() => expect(useAppStore.getState().settingsOpen).toBe(true));
   });
 
   it('writes settings flags and theme from SettingsContent', async () => {

@@ -14,6 +14,10 @@ import Icon from '@/components/ui/Icon';
 
 import xIconRaw from '@/assets/icons/x.svg';
 import bookmarkIconRaw from '@/assets/icons/bookmark.svg';
+import historyIconRaw from '@/assets/icons/history.svg';
+import starIconRaw from '@/assets/icons/star.svg';
+import checkCircleIconRaw from '@/assets/icons/check-circle.svg';
+import settingsIconRaw from '@/assets/icons/settings.svg';
 import fileArchiveIconRaw from '@/assets/icons/file-archive.svg';
 import importIconRaw from '@/assets/icons/import.svg';
 import uploadIconRaw from '@/assets/icons/upload.svg';
@@ -47,6 +51,11 @@ export default function SideMenu() {
   }, []);
 
   const closeMenu = () => { void engine.emit('ui.close', { panel: 'menu' }); };
+
+  const openPanel = (panel: 'history' | 'favorites' | 'selected' | 'settings') => {
+    void engine.emit('ui.open', { panel });
+    closeMenu();
+  };
 
   const saveProfile = async () => {
     const name = profileName.trim();
@@ -278,6 +287,20 @@ export default function SideMenu() {
           </button>
         </div>
         <div className="side-menu-content">
+          <nav className="side-menu-nav" aria-label={t.nav.menu}>
+            <button type="button" className="side-menu-nav-btn" onClick={() => openPanel('history')}>
+              <Icon svg={historyIconRaw} size={16} /> {t.nav.history}
+            </button>
+            <button type="button" className="side-menu-nav-btn" onClick={() => openPanel('favorites')}>
+              <Icon svg={starIconRaw} size={16} /> {t.nav.favorites}
+            </button>
+            <button type="button" className="side-menu-nav-btn" onClick={() => openPanel('selected')}>
+              <Icon svg={checkCircleIconRaw} size={16} /> {t.nav.selected}
+            </button>
+            <button type="button" className="side-menu-nav-btn" onClick={() => openPanel('settings')}>
+              <Icon svg={settingsIconRaw} size={16} /> {t.nav.settings}
+            </button>
+          </nav>
           <div className="save-profile-box">
             <label>{t.profiles.saveCurrent}</label>
             <div className="input-group">
@@ -380,7 +403,7 @@ export default function SideMenu() {
                     <button onClick={() => exportProfile(i)} className="btn-icon-small gray" title={t.profiles.export}>
                       <Icon svg={shareIconRaw} size={16} />
                     </button>
-                    <button onClick={() => deleteProfile(i)} className="btn-icon-small red" title="Delete">
+                    <button onClick={() => deleteProfile(i)} className="btn-icon-small red" title={t.profiles.delete}>
                       <Icon svg={trashIconRaw} size={16} />
                     </button>
                   </div>

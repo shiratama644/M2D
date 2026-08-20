@@ -253,10 +253,11 @@
   .search-bar .sort-control { flex: 0 0 auto; }
   .search-bar .sort-select { width: 11rem; min-width: 0; }
 
-  /* Settings live in the right panel on desktop; keep Profiles in the header. */
+  /* Settings live in the right panel on desktop; Profiles via the bookmark button. */
+  .header-profiles-btn { display: inline-flex !important; }
   .header-settings-btn { display: none !important; }
   .hamburger-btn { display: none !important; }
-  .mobile-only-btn { display: none !important; }
+  .side-menu-nav { display: none; }
   .pc-action-bar .action-bar:not(.visible) .action-buttons { display: none; }
   .pc-action-bar .action-bar:not(.visible) { padding-top: 0; }
 }

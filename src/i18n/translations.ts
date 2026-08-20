@@ -153,6 +153,7 @@ const translations = {
       account: 'Account',
       settings: 'Settings',
       profiles: 'Profiles',
+      menu: 'Menu',
     },
     account: {
       back: 'Back',
@@ -444,6 +445,7 @@ const translations = {
       account: 'アカウント',
       settings: '設定',
       profiles: 'プロファイル',
+      menu: 'メニュー',
     },
     account: {
       back: '戻る',
