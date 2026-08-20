@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { getEngine } from '@/engine/Engine';
+import { engineAlert } from '@/engine/runtime/dialog';
 import { asyncPool, CONCURRENCY_LIMIT, type SearchFilters } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import { classifyDependencies, type DepIssues } from '@/lib/dependencyAnalysis';
@@ -40,7 +41,6 @@ export function useDependencyCheck(
     updateProgress,
     hideLoading,
     addDebugLog,
-    showAlert,
   } = useApp();
 
   const depAbortRef = useRef<AbortController | null>(null);
@@ -215,12 +215,11 @@ export function useDependencyCheck(
     } catch (e) {
       hideLoading();
       addDebugLog('error', `Dependency check failed: ${e}`);
-      await showAlert('Error checking dependencies.');
+      await engineAlert('Error checking dependencies.');
     }
   }, [
     selectedMods, modDataMap, resolveSettings, onResult,
     addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
-    showAlert,
   ]);
 
   return { handleCheckDeps };
