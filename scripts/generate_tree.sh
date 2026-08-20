@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ツリーに出力しない（除外する）ディレクトリ
+# Directories omitted from the printed tree.
 IGNORE_DIRS=("node_modules" ".git" ".next" ".turbo")
 
 is_ignored() {
@@ -17,7 +17,7 @@ print_tree() {
   local dir="$1"
   local prefix="$2"
   
-  # ディレクトリ内のアイテムを取得 (隠しファイル・フォルダも含む)
+  # Collect directory entries, including hidden files.
   shopt -s nullglob dotglob
   local files=("$dir"/*)
   shopt -u nullglob dotglob
@@ -56,6 +56,6 @@ print_tree() {
   done
 }
 
-# ルートのフォルダ名を表示
+# Print the root folder name, then the tree.
 echo "${PWD##*/}"
 print_tree "." ""

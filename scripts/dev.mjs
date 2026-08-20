@@ -10,7 +10,7 @@ if (!isTermux) {
 
 console.log(`🚀 Starting Next.js in ${isTermux ? 'Webpack (Termux/No Cache)' : 'Turbopack (PC)'} mode...`);
 
-// 修正点: 'npx' ではなく 'pnpm exec' を使うことで npm の警告を回避します
+// Use `pnpm exec` instead of `npx` to avoid npm's peer-dependency warnings.
 const command = os.platform() === 'win32' ? 'pnpm.cmd' : 'pnpm';
 
 const child = spawn(command, ['exec', 'next', ...args], {
