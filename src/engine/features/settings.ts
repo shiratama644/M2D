@@ -19,6 +19,7 @@ export const settingsFeature: Feature = {
       }),
       engine.on('discover.set', ({ type }) => useAppStore.getState().setDiscoverType(type)),
       engine.on('mods.activate', ({ id }) => useAppStore.getState().setActiveModId(id)),
+      engine.on('mods.pinVersion', ({ id, versionId }) => useAppStore.getState().pinModVersion(id, versionId)),
     ];
     return () => offs.forEach((off) => off());
   },

@@ -24,6 +24,7 @@ export function useModDownload(searchParams: SearchParams | null) {
     hideLoading,
     addDebugLog,
     t,
+    pinnedVersions,
   } = useApp();
 
   const getEffectiveDownloadSettings = useCallback(() => {
@@ -149,7 +150,7 @@ export function useModDownload(searchParams: SearchParams | null) {
       await engineAlert(t.download.failed);
     }
   }, [
-    selectedMods, modDataMap, resolveDownloadSettings, t,
+    selectedMods, modDataMap, resolveDownloadSettings, t, pinnedVersions,
     addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
   ]);
 

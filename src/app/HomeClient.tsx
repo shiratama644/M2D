@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import SideMenu from '@/components/layout/SideMenu';
@@ -53,6 +54,7 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   } = useApp();
 
   const engine = useEngine();
+  const urlSearch = useSearchParams();
 
   const isDesktop = useIsDesktop();
   const [searchParams, setSearchParams] = useState<SearchParams>(DEFAULT_SEARCH);
@@ -82,6 +84,13 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const id = urlSearch.get('mod');
+    if (!id) return;
+    void engine.emit('mods.activate', { id });
+    void engine.emit('selection.add', { id });
+  }, [urlSearch, engine]);
 
   useScrollLock(menuOpen || mobileDetailOpen);
 

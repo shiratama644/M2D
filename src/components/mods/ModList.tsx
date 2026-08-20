@@ -181,6 +181,10 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
             <SkeletonCard key={`skeleton-${i}`} />
           ))}
 
+        {!initialLoading && !error && !noResults && !(searchParams.query || '').trim() && mods.length > 0 && (
+          <h2 className="mod-list-heading">{t.modList.popular}</h2>
+        )}
+
         {!initialLoading && noResults && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2.5rem' }}>
             {t.empty.noMods}

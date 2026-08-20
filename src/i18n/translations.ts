@@ -276,6 +276,18 @@ const translations = {
       fetchError: 'Failed to fetch mods.',
       retry: 'Retry',
       selectMod: 'Select %s',
+      popular: 'Popular right now',
+    },
+    versions: {
+      label: 'Download version',
+      changelog: 'Changelog',
+    },
+    modPage: {
+      openInApp: 'Open in M2D',
+      addToSelection: 'Add to selection',
+      removeFromSelection: 'Remove from selection',
+      favorite: 'Favorite',
+      unfavorite: 'Unfavorite',
     },
   },
   ja: {
@@ -555,6 +567,18 @@ const translations = {
       fetchError: 'Modの取得に失敗しました。',
       retry: '再試行',
       selectMod: '%sを選択',
+      popular: 'いま人気',
+    },
+    versions: {
+      label: 'ダウンロードするバージョン',
+      changelog: '変更履歴',
+    },
+    modPage: {
+      openInApp: 'M2D で開く',
+      addToSelection: '選択に追加',
+      removeFromSelection: '選択から外す',
+      favorite: 'お気に入り',
+      unfavorite: 'お気に入り解除',
     },
   },
 } as const;

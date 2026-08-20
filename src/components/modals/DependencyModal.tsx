@@ -78,43 +78,52 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
         <div className="modal-body">
           {list.length === 0 ? renderEmptyState() : (
             <div className="dep-list">
-              {list.map((item, i) => {
-                const isSelected = selectedMods.has(item.targetId);
-                const targetMod = lookupMod(modDataMap, item.targetId);
-                const targetTitle = displayModTitle(modDataMap, item.targetId, t.mods.unknown);
-                const iconUrl = targetMod?.icon_url || FALLBACK_ICON;
-
-                let actionBtn: React.ReactNode;
-                if (activeTab === 'conflict') {
-                  actionBtn = !isSelected
-                    ? <button className="btn-small disabled" disabled>{t.deps.removed}</button>
-                    : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">{t.deps.remove}</button>;
-                } else {
-                  actionBtn = isSelected
-                    ? <button className="btn-small disabled" disabled>{t.deps.added}</button>
-                    : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">{t.deps.add}</button>;
-                }
-
-                return (
-                  <div key={`${item.source}-${item.targetId}-${i}`} className="dep-item">
-                    <img
-                      src={iconUrl}
-                      className="dep-icon"
-                      alt=""
-                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
-                    />
-                    <div className="dep-info">
-                      <p className="dep-source">
-                        {activeTab === 'conflict' ? t.deps.conflictWith : t.deps.source}{' '}
-                        <span>{item.source}</span>
-                      </p>
-                      <p className="dep-target">{targetTitle}</p>
-                      {(item.detail ?? item.reason) && <p className="dep-detail">{item.detail ?? item.reason}</p>}
-                    </div>
-                    <div>{actionBtn}</div>
-                  </div>
-                );
-              })}
+              {Array.from(
+                list.reduce((map, item) => {
+                  const group = map.get(item.source) ?? [];
+                  group.push(item);
+                  map.set(item.source, group);
+                  return map;
+                }, new Map<string, typeof list>()),
+              ).map(([source, items]) => (
+                <div key={source} className="dep-group">
+                  <p className="dep-source">
+                    {activeTab === 'conflict' ? t.deps.conflictWith : t.deps.source}{' '}
+                    <span>{source}</span>
+                  </p>
+                  {items.map((item, i) => {
+                    const isSelected = selectedMods.has(item.targetId);
+                    const targetMod = lookupMod(modDataMap, item.targetId);
+                    const targetTitle = displayModTitle(modDataMap, item.targetId, t.mods.unknown);
+                    const iconUrl = targetMod?.icon_url || FALLBACK_ICON;
+                    let actionBtn: React.ReactNode;
+                    if (activeTab === 'conflict') {
+                      actionBtn = !isSelected
+                        ? <button className="btn-small disabled" disabled>{t.deps.removed}</button>
+                        : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">{t.deps.remove}</button>;
+                    } else {
+                      actionBtn = isSelected
+                        ? <button className="btn-small disabled" disabled>{t.deps.added}</button>
+                        : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">{t.deps.add}</button>;
+                    }
+                    return (
+                      <div key={`${item.targetId}-${i}`} className="dep-item">
+                        <img
+                          src={iconUrl}
+                          className="dep-icon"
+                          alt=""
+                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
+                        />
+                        <div className="dep-info">
+                          <p className="dep-target">{targetTitle}</p>
+                          {(item.detail ?? item.reason) && <p className="dep-detail">{item.detail ?? item.reason}</p>}
+                        </div>
+                        <div>{actionBtn}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>

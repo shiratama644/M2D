@@ -12,6 +12,7 @@ import {
   ADVANCED_CONSOLE_KEY,
   DISCOVER_TYPE_KEY,
   CONTEXT_HISTORY_KEY,
+  PINNED_VERSIONS_KEY,
 } from '@/lib/helpers';
 
 const DB_NAME = 'm2d';
@@ -32,6 +33,7 @@ const MIGRATION_KEYS = [
   ADVANCED_CONSOLE_KEY,
   DISCOVER_TYPE_KEY,
   CONTEXT_HISTORY_KEY,
+  PINNED_VERSIONS_KEY,
 ];
 
 const memory = new Map<string, string>();

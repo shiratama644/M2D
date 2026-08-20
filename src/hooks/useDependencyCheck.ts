@@ -42,6 +42,7 @@ export function useDependencyCheck(
     hideLoading,
     addDebugLog,
     t,
+    pinnedVersions,
   } = useApp();
 
   const depAbortRef = useRef<AbortController | null>(null);
@@ -105,7 +106,7 @@ export function useDependencyCheck(
             signal,
           }) ?? [];
           addDebugLog('log', `Fetched versions for ${modName} (${versions?.length ?? 0} found)`);
-          const selectedVersion = pickPreferredModVersion(versions);
+          const selectedVersion = pickPreferredModVersion(versions, pinnedVersions[pid]);
           if (!selectedVersion) {
             modsWithoutCompatibleVersion.add(pid);
             addDebugLog('warn', `No compatible version found for ${modName} (${useLoader} ${useVersion})`);
@@ -224,7 +225,7 @@ export function useDependencyCheck(
     }
   }, [
     selectedMods, modDataMap, resolveSettings, onResult,
-    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading, t,
+    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading, t, pinnedVersions,
   ]);
 
   return { handleCheckDeps };

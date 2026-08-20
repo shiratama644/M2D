@@ -27,4 +27,12 @@ describe('pickPreferredModVersion', () => {
     const selected = pickPreferredModVersion(versions);
     expect(selected?.id).toBe('beta1');
   });
+
+  it('uses a pinned version id when it exists', () => {
+    const versions = [
+      { id: 'release1', version_type: 'release' },
+      { id: 'beta1', version_type: 'beta' },
+    ] as ModVersion[];
+    expect(pickPreferredModVersion(versions, 'beta1')?.id).toBe('beta1');
+  });
 });

@@ -7,6 +7,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { FALLBACK_ICON } from '@/lib/helpers';
+import { useApp } from '@/context/AppContext';
+import { useEngine } from '@/engine/react/EngineProvider';
+import VersionPicker from '@/components/mods/VersionPicker';
 import type { ModProject } from '@/types/modrinth';
 
 const MODRINTH_BASE = 'https://modrinth.com/mod/';
@@ -14,6 +17,10 @@ const MODRINTH_BASE = 'https://modrinth.com/mod/';
 export default function ModPageClient({ project }: { project: ModProject }) {
   const [iconError, setIconError] = useState(false);
   const galleryRef = useRef<HTMLDivElement | null>(null);
+  const { selectedMods, favorites, t } = useApp();
+  const engine = useEngine();
+  const selected = selectedMods.has(project.id);
+  const favorited = favorites.has(project.id);
 
   const iconSrc = iconError
     ? FALLBACK_ICON
@@ -63,23 +70,38 @@ export default function ModPageClient({ project }: { project: ModProject }) {
               <h1 className="mod-detail-title">{project.title}</h1>
               <p className="mod-detail-summary">{project.description}</p>
               <div className="mod-detail-actions">
-                <Link href={`/?mod=${project.slug || project.id}`} className="btn-small green">
-                  Open in M2D
+                <Link href={`/?mod=${project.id}`} className="btn-small green">
+                  {t.modPage.openInApp}
                 </Link>
+                <button
+                  type="button"
+                  className="btn-small"
+                  onClick={() => { void engine.emit(selected ? 'selection.remove' : 'selection.add', { id: project.id }); }}
+                >
+                  {selected ? t.modPage.removeFromSelection : t.modPage.addToSelection}
+                </button>
+                <button
+                  type="button"
+                  className="btn-small"
+                  onClick={() => { void engine.emit('favorites.toggle', { id: project.id }); }}
+                >
+                  {favorited ? t.modPage.unfavorite : t.modPage.favorite}
+                </button>
                 <a
                   href={`${MODRINTH_BASE}${project.slug || project.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-small"
                 >
-                  View on Modrinth ↗
+                  {t.rightPanel.openModrinth} ↗
                 </a>
                 {gallery.length > 0 && (
                   <button className="btn-small" onClick={scrollToGallery}>
-                    Gallery ({gallery.length})
+                    {t.rightPanel.gallery} ({gallery.length})
                   </button>
                 )}
               </div>
+              <VersionPicker projectId={project.id} />
             </div>
           </div>
 
@@ -123,15 +145,15 @@ export default function ModPageClient({ project }: { project: ModProject }) {
                 {project.body}
               </ReactMarkdown>
             ) : (
-              <p className="mod-detail-body-empty">No description available.</p>
+              <p className="mod-detail-body-empty">{t.empty.noMods}</p>
             )}
           </div>
 
           {gallery.length > 0 && (
             <div ref={galleryRef} className="mod-detail-gallery">
-              <h2 className="mod-detail-gallery-title">Gallery</h2>
+              <h2 className="mod-detail-gallery-title">{t.rightPanel.gallery}</h2>
               <div className="mod-gallery-grid">
-                {gallery.map((item, i) => (
+                {gallery.map((item) => (
                   <a
                     key={item.url}
                     href={item.url}
@@ -142,7 +164,7 @@ export default function ModPageClient({ project }: { project: ModProject }) {
                     <div className="mod-gallery-img-wrapper">
                       <Image
                         src={item.url}
-                        alt={item.title || `Screenshot ${i + 1}`}
+                        alt={item.title || item.url}
                         fill
                         sizes="(max-width: 768px) 100vw, 33vw"
                         style={{ objectFit: 'cover' }}

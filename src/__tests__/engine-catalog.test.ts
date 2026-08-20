@@ -137,5 +137,9 @@ describe('catalog feature', () => {
     expect(useAppStore.getState().modVersion).toBe('1.20.1');
     await engine.emit('ui.close', { panel: 'deps' });
     expect(useAppStore.getState().depModalOpen).toBe(false);
+    await engine.emit('mods.pinVersion', { id: 'sodium', versionId: 'v-pin' });
+    expect(useAppStore.getState().pinnedVersions.sodium).toBe('v-pin');
+    await engine.emit('mods.pinVersion', { id: 'sodium', versionId: null });
+    expect(useAppStore.getState().pinnedVersions.sodium).toBeUndefined();
   });
 });

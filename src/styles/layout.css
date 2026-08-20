@@ -77,6 +77,18 @@
 
 /* Main content area */
 .main-content { padding: 0 1rem 1rem 1rem; min-height: 50vh; }
+.mod-list-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.version-picker { margin-top: 0.75rem; max-width: 22rem; }
+.version-picker-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; }
+.version-changelog { margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+.version-changelog pre { white-space: pre-wrap; font-family: inherit; }
 
 /* Action bar (mobile) */
 .action-bar {

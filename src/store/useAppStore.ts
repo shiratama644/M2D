@@ -16,6 +16,7 @@ import {
   ADVANCED_CONSOLE_KEY,
   DISCOVER_TYPE_KEY,
   CONTEXT_HISTORY_KEY,
+  PINNED_VERSIONS_KEY,
   MAX_SEARCH_HISTORY,
   MAX_CONTEXT_HISTORY,
   LOCALE_MAP,
@@ -165,6 +166,9 @@ export interface AppState {
   // Mod data map (id -> mod metadata)
   modDataMap: Record<string, unknown>;
   updateModDataMap: (updates: Record<string, unknown>) => void;
+
+  pinnedVersions: Record<string, string>;
+  pinModVersion: (id: string, versionId: string | null) => void;
 
   // Favorites (persisted)
   favorites: Set<string>;
@@ -444,6 +448,18 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── Favorites ─────────────────────────────────────────────────────────────
 
+  pinnedVersions: {},
+
+  pinModVersion: (id, versionId) => {
+    set((state) => {
+      const next = { ...state.pinnedVersions };
+      if (!versionId) delete next[id];
+      else next[id] = versionId;
+      persistSet(PINNED_VERSIONS_KEY, JSON.stringify(next));
+      return { pinnedVersions: next };
+    });
+  },
+
   favorites: new Set<string>(),
 
   toggleFavorite: (id) => {
@@ -576,6 +592,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       favorites: new Set<string>(parseJSON<string[]>(FAVORITES_KEY, [])),
       searchHistory: parseJSON<string[]>(SEARCH_HISTORY_KEY, []),
       contextHistory: parseJSON<SearchContextEntry[]>(CONTEXT_HISTORY_KEY, []),
+      pinnedVersions: parseJSON<Record<string, string>>(PINNED_VERSIONS_KEY, {}),
     });
   },
 }));

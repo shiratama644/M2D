@@ -30,6 +30,7 @@ export type EngineEventMap = {
   'favorites.toggle': { id: string };
   'favorites.clear': undefined;
   'mods.activate': { id: string | null };
+  'mods.pinVersion': { id: string; versionId: string | null };
   'discover.set': { type: DiscoverType };
   'settings.theme': { value: string };
   'settings.language': { value: string };

@@ -61,6 +61,7 @@ export const SHOW_CARD_DESCRIPTION_KEY = 'mod_manager_show_card_description';
 export const ADVANCED_CONSOLE_KEY = 'mod_manager_advanced_console';
 export const DISCOVER_TYPE_KEY = 'mod_manager_discover_type';
 export const CONTEXT_HISTORY_KEY = 'mod_manager_context_history';
+export const PINNED_VERSIONS_KEY = 'mod_manager_pinned_versions';
 
 // ---------------------------------------------------------------------------
 // App-wide constants

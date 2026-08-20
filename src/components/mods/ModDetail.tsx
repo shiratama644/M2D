@@ -15,6 +15,7 @@ import { FALLBACK_ICON } from '@/lib/helpers';
 import { translateChunk, translateBody } from '@/lib/translate';
 import externalLinkIconRaw from '@/assets/icons/arrow-up-right.svg';
 import imageIconRaw from '@/assets/icons/images.svg';
+import VersionPicker from '@/components/mods/VersionPicker';
 import type { ModProject } from '@/types/modrinth';
 
 const MODRINTH_BASE = 'https://modrinth.com/mod/';
@@ -174,9 +175,10 @@ export default function ModDetail() {
                 <Icon svg={imageIconRaw} size={12} /> {t.rightPanel.gallery} ({gallery.length})
               </button>
             )}
+            </div>
+            <VersionPicker projectId={activeModId} />
           </div>
         </div>
-      </div>
 
       <div className="mod-detail-body">
         <div className="mod-detail-translate-bar">

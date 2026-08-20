@@ -34,7 +34,7 @@ function resetStore() {
   s.updateModLoader('fabric');
   s.updateModVersion('1.21.1');
   s.saveProfiles([]);
-  useAppStore.setState({ modDataMap: {} });
+  useAppStore.setState({ modDataMap: {}, pinnedVersions: {} });
 }
 
 beforeEach(resetStore);
