@@ -8,6 +8,7 @@ import { asyncPool, CONCURRENCY_LIMIT } from '@/lib/helpers';
 import { pickPreferredModVersion } from '@/lib/versionSelection';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { interpolate } from '@/lib/utils';
 import type { SearchParams, ResolveSettingsResult } from '@/hooks/useDependencyCheck';
 
 export function useModDownload(searchParams: SearchParams | null) {
@@ -52,8 +53,7 @@ export function useModDownload(searchParams: SearchParams | null) {
       );
     }
     if (mismatches.length > 0) {
-      const msg =
-        `${t.settings.title} / ${t.filters.label} mismatch:\n${mismatches.join('\n')}\n\nDownload using filter settings?`;
+      const msg = `${mismatches.join('\n')}\n\n${t.download.mismatchConfirm}`;
       const useFilter = await engineConfirm(msg);
       if (useFilter) {
         return { proceed: true, loader: effectiveLoader, version: effectiveVersion };
@@ -76,6 +76,7 @@ export function useModDownload(searchParams: SearchParams | null) {
     const zip = new JSZip();
     const ids = Array.from(selectedMods);
     let success = 0;
+    const failed: string[] = [];
     let completed = 0;
     const startTime = Date.now();
     showProgress(ids.length);
@@ -105,12 +106,15 @@ export function useModDownload(searchParams: SearchParams | null) {
             addDebugLog('log', `Downloaded: ${file.filename}`);
           } else {
             addDebugLog('warn', `HTTP ${res.status} for ${modName} (${file.filename})`);
+            failed.push(modName);
           }
         } else {
           addDebugLog('warn', `No compatible version found for ${modName}`);
+          failed.push(modName);
         }
       } catch (e) {
         addDebugLog('error', `Failed to download ${modName}: ${e}`);
+        failed.push(modName);
       } finally {
         completed++;
         updateProgress(completed, ids.length, startTime);
@@ -128,13 +132,24 @@ export function useModDownload(searchParams: SearchParams | null) {
       const filename = `mods-${useLoader}-${useVersion}-${Date.now()}.zip`;
       saveAs(content, filename);
       addDebugLog('info', `Download complete: ${filename}`);
+      hideLoading();
+      if (failed.length > 0) {
+        await engineAlert(interpolate(t.download.partial, {
+          ok: success,
+          total: ids.length,
+          file: filename,
+          list: failed.join(', '),
+        }));
+      } else {
+        await engineAlert(interpolate(t.download.savedZip, { file: filename }));
+      }
     } else {
       addDebugLog('error', 'Download failed: no compatible versions found.');
-      await engineAlert('Download failed. Could not find compatible versions.');
+      hideLoading();
+      await engineAlert(t.download.failed);
     }
-    hideLoading();
   }, [
-    selectedMods, modDataMap, resolveDownloadSettings,
+    selectedMods, modDataMap, resolveDownloadSettings, t,
     addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
   ]);
 

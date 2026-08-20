@@ -14,7 +14,7 @@ import xIconRaw from '@/assets/icons/x.svg';
 export default function SelectedModal() {
   const {
     selectedModalOpen,
-    selectedMods, modDataMap,
+    selectedMods, modDataMap, t,
   } = useApp();
   const engine = useEngine();
   const close = () => { void engine.emit('ui.close', { panel: 'selected' }); };
@@ -47,7 +47,7 @@ export default function SelectedModal() {
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--primary-color)' }}>
-            <Icon svg={checkCircleIconRaw} size={20} /> Selected Mods
+            <Icon svg={checkCircleIconRaw} size={20} /> {t.nav.selected}
           </h3>
           <button onClick={close} className="btn-close-modal">
             <Icon svg={xIconRaw} size={20} />
@@ -55,9 +55,9 @@ export default function SelectedModal() {
         </div>
         <div className="modal-body">
           {ids.length === 0 ? (
-            <div className="empty-state">No mods selected.</div>
+            <div className="empty-state">{t.empty.noneSelected}</div>
           ) : loadingDetails ? (
-            <div className="empty-state" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
+            <div className="empty-state" style={{ color: 'var(--text-muted)' }}>{t.empty.loading}</div>
           ) : (
             <>
               <div className="selected-search-wrap">
@@ -65,13 +65,13 @@ export default function SelectedModal() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search selected mods..."
+                  placeholder={t.empty.searchSelected}
                   className="input-base"
                 />
               </div>
               {filteredIds.length === 0 ? (
                 <div className="empty-state" style={{ color: 'var(--text-muted)' }}>
-                  No matching mods.
+                  {t.empty.noMatch}
                 </div>
               ) : (
                 <div className="selected-list">
@@ -82,11 +82,11 @@ export default function SelectedModal() {
                         <img
                           src={mod?.icon_url || FALLBACK_ICON}
                           className="selected-item-icon"
-                          alt="icon"
+                          alt=""
                           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                         />
                         <span className="selected-item-title">{displayModTitle(modDataMap, id)}</span>
-                        <button onClick={() => { void engine.emit('selection.remove', { id }); }} className="btn-small red-outline">Remove</button>
+                        <button onClick={() => { void engine.emit('selection.remove', { id }); }} className="btn-small red-outline">{t.deps.remove}</button>
                       </div>
                     );
                   })}
@@ -96,7 +96,7 @@ export default function SelectedModal() {
           )}
         </div>
         <div className="modal-footer">
-          <button onClick={close} className="btn-secondary">Close</button>
+          <button onClick={close} className="btn-secondary">{t.deps.close}</button>
         </div>
       </div>
     </div>

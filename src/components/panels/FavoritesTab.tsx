@@ -24,7 +24,7 @@ export default function FavoritesTab() {
       {favorites.size === 0 ? (
         <div className="rp-empty">{t.favorites.noFavorites}</div>
       ) : loading ? (
-        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
+        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>{t.empty.loading}</div>
       ) : (
         <div className="selected-list">
           {Array.from(favorites).map((id) => {

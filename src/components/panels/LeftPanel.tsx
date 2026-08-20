@@ -111,6 +111,13 @@ export default function LeftPanel({ onFilterChange }: LeftPanelProps) {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="lp-profiles-btn"
+          onClick={() => { void engine.emit('ui.open', { panel: 'menu' }); }}
+        >
+          {t.nav.profiles}
+        </button>
       </div>
       <div className="left-panel-filters">
         <CollapsibleSection title={t.filters.version}>

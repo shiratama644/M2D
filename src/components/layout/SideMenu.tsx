@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { useEngine } from '@/engine/react/EngineProvider';
 import { getEngine } from '@/engine/Engine';
 import { engineAlert, engineConfirm } from '@/engine/runtime/dialog';
-import { cn } from '@/lib/utils';
+import { cn, interpolate } from '@/lib/utils';
 import { CONCURRENCY_LIMIT, asyncPool } from '@/lib/helpers';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -29,6 +29,7 @@ export default function SideMenu() {
     selectedMods,
     showLoading, updateLoading, showProgress, updateProgress, hideLoading,
     addDebugLog,
+    t,
   } = useApp();
   const engine = useEngine();
 
@@ -50,23 +51,23 @@ export default function SideMenu() {
   const saveProfile = async () => {
     const name = profileName.trim();
     if (!name || selectedMods.size === 0) {
-      await engineAlert('Invalid name or no mods selected.');
+      await engineAlert(t.profiles.invalidName);
       return;
     }
     if (profiles.some((p) => p.name === name)) {
-      await engineAlert('A profile with that name already exists.');
+      await engineAlert(t.profiles.duplicateName);
       return;
     }
     void engine.emit('profiles.save', { name });
     addDebugLog('info', `Profile saved: "${name}" (${selectedMods.size} mods)`);
     setProfileName('');
-    setProfileMsg('Saved!');
+    setProfileMsg(t.profiles.saved);
     if (profileMsgTimerRef.current) clearTimeout(profileMsgTimerRef.current);
     profileMsgTimerRef.current = setTimeout(() => setProfileMsg(''), 2000);
   };
 
   const loadProfile = async (index: number) => {
-    if (!await engineConfirm('Load profile? Current selection will be cleared.')) return;
+    if (!await engineConfirm(t.profiles.confirmLoad)) return;
     const profile = profiles[index];
     void engine.emit('profiles.load', { index });
     addDebugLog('info', `Profile loaded: "${profile.name}" (${profile.mods.length} mods)`);
@@ -74,7 +75,7 @@ export default function SideMenu() {
   };
 
   const deleteProfile = async (index: number) => {
-    if (!await engineConfirm('Delete this profile?')) return;
+    if (!await engineConfirm(t.profiles.confirmDelete)) return;
     const profile = profiles[index];
     void engine.emit('profiles.delete', { index });
     addDebugLog('info', `Profile deleted: "${profile.name}"`);
@@ -89,7 +90,7 @@ export default function SideMenu() {
     const newName = renameValue.trim();
     if (!newName) { setRenamingIndex(null); return; }
     if (profiles.some((p, i) => i !== index && p.name === newName)) {
-      await engineAlert('A profile with that name already exists.');
+      await engineAlert(t.profiles.duplicateName);
       return;
     }
     const oldName = profiles[index].name;
@@ -137,10 +138,10 @@ export default function SideMenu() {
         };
         void engine.emit('profiles.import', { name: profile.name, mods: profile.mods });
         addDebugLog('info', `Profile imported from TXT: "${profile.name}" (${profile.mods.length} mods)`);
-        await engineAlert(`Imported "${profile.name}" successfully!`);
+        await engineAlert(interpolate(t.profiles.importedOk, { name: profile.name }));
       } catch {
         addDebugLog('error', `Failed to import profile from file: ${file.name}`);
-        await engineAlert('Failed to load profile.');
+        await engineAlert(t.profiles.importFailed);
       }
       e.target.value = '';
     };
@@ -153,13 +154,13 @@ export default function SideMenu() {
 
     const MAX_ZIP_SIZE = 500 * 1024 * 1024; // 500 MB
     if (file.size > MAX_ZIP_SIZE) {
-      await engineAlert('File size is too large (max 500 MB).');
+      await engineAlert(t.profiles.zipTooLarge);
       e.target.value = '';
       return;
     }
 
     if (!window.crypto?.subtle) {
-      await engineAlert('Cryptography API is not supported in this environment.');
+      await engineAlert(t.profiles.noCrypto);
       e.target.value = '';
       return;
     }
@@ -175,7 +176,7 @@ export default function SideMenu() {
 
       if (entries.length === 0) {
         addDebugLog('warn', 'No .jar files found in ZIP.');
-        await engineAlert('No .jar files found in the ZIP.');
+        await engineAlert(t.profiles.noJars);
         hideLoading();
         e.target.value = '';
         return;
@@ -231,16 +232,16 @@ export default function SideMenu() {
 
       if (projectIds.size === 0) {
         addDebugLog('warn', 'Could not identify any mods from Modrinth in this ZIP.');
-        await engineAlert('Could not identify any mods from Modrinth in this ZIP.');
+        await engineAlert(t.profiles.zipNone);
       } else {
         const pName = file.name.replace(/\.[^/.]+$/, '');
         void engine.emit('profiles.import', { name: pName, mods: Array.from(projectIds) });
         addDebugLog('info', `ZIP import: identified ${projectIds.size} mods, saved as "${pName}"`);
-        await engineAlert(`Identified ${projectIds.size} mods and saved as profile "${pName}"!`);
+        await engineAlert(interpolate(t.profiles.zipSaved, { n: projectIds.size, name: pName }));
       }
     } catch (err) {
       addDebugLog('error', String(err));
-      await engineAlert('Failed to process ZIP file.');
+      await engineAlert(t.profiles.zipFailed);
     } finally {
       hideLoading();
       e.target.value = '';
@@ -270,7 +271,7 @@ export default function SideMenu() {
       >
         <div className="side-menu-header">
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Icon svg={bookmarkIconRaw} size={20} /> My Profiles
+            <Icon svg={bookmarkIconRaw} size={20} /> {t.profiles.title}
           </span>
           <button onClick={closeMenu} className="btn icon-only-btn side-menu-close-btn">
             <Icon svg={xIconRaw} size={20} />
@@ -278,35 +279,35 @@ export default function SideMenu() {
         </div>
         <div className="side-menu-content">
           <div className="save-profile-box">
-            <label>Save Current Selection</label>
+            <label>{t.profiles.saveCurrent}</label>
             <div className="input-group">
               <input
                 type="text"
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && saveProfile()}
-                placeholder="Name (ex: RPG Pack)"
+                placeholder={t.profiles.namePlaceholder}
                 className="input-base"
               />
-              <button onClick={saveProfile} className="btn-primary">Save</button>
+              <button onClick={saveProfile} className="btn-primary">{t.profiles.save}</button>
             </div>
             <p className="profile-msg">{profileMsg}</p>
           </div>
 
           <div className="profile-list-header">
-            <h3>Saved Profiles</h3>
+            <h3>{t.profiles.savedList}</h3>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <button
                 onClick={() => importZipInputRef.current?.click()}
                 className="btn-text-icon"
-                title="Scan ZIP for Mods"
+                title={t.profiles.scanZip}
               >
                 <Icon svg={fileArchiveIconRaw} size={12} /> ZIP
               </button>
               <button
                 onClick={() => importInputRef.current?.click()}
                 className="btn-text-icon"
-                title="Import TXT"
+                title={t.profiles.importTxt}
               >
                 <Icon svg={importIconRaw} size={12} /> TXT
               </button>
@@ -337,7 +338,7 @@ export default function SideMenu() {
                   padding: '1rem 0',
                 }}
               >
-                No profiles saved yet.
+                {t.profiles.empty}
               </div>
             ) : (
               profiles.map((p, i) => (
@@ -359,7 +360,7 @@ export default function SideMenu() {
                         <button
                           onClick={() => commitRename(i)}
                           className="btn-icon-small blue"
-                          title="Confirm Rename"
+                          title={t.profiles.confirmRename}
                         >
                           <Icon svg={checkIconRaw} size={14} />
                         </button>
@@ -370,13 +371,13 @@ export default function SideMenu() {
                     <div className="profile-date">{p.mods.length} mods • {p.date}</div>
                   </div>
                   <div className="profile-actions">
-                    <button onClick={() => loadProfile(i)} className="btn-icon-small blue" title="Load">
+                    <button onClick={() => loadProfile(i)} className="btn-icon-small blue" title={t.profiles.load}>
                       <Icon svg={uploadIconRaw} size={16} />
                     </button>
-                    <button onClick={() => startRename(i)} className="btn-icon-small gray" title="Rename">
+                    <button onClick={() => startRename(i)} className="btn-icon-small gray" title={t.profiles.rename}>
                       <Icon svg={pencilIconRaw} size={16} />
                     </button>
-                    <button onClick={() => exportProfile(i)} className="btn-icon-small gray" title="Export">
+                    <button onClick={() => exportProfile(i)} className="btn-icon-small gray" title={t.profiles.export}>
                       <Icon svg={shareIconRaw} size={16} />
                     </button>
                     <button onClick={() => deleteProfile(i)} className="btn-icon-small red" title="Delete">

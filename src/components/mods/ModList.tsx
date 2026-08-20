@@ -183,7 +183,7 @@ export default function ModList({ searchParams, isDesktop, initialMods }: ModLis
 
         {!initialLoading && noResults && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2.5rem' }}>
-            No mods found.
+            {t.empty.noMods}
           </div>
         )}
 

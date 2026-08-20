@@ -107,7 +107,7 @@ export default function ModDetail() {
   if (!activeModId) {
     return (
       <div className="mod-detail-empty">
-        <p>{t.rightPanel.noDescription}</p>
+        <p>{t.empty.selectModHint}</p>
       </div>
     );
   }

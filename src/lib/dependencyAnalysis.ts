@@ -21,6 +21,8 @@ export interface ClassifyDependenciesInput {
   modsWithoutCompatibleVersion: Set<string>;
   useLoader: string;
   useVersion: string;
+  formatNoCompatible?: (loader: string, version: string) => string;
+  formatVersionMismatch?: (required: string, selected: string) => string;
 }
 
 /**
@@ -47,7 +49,9 @@ export function classifyDependencies(input: ClassifyDependenciesInput): {
         issues.conflict.push({
           source: sourceLabel,
           targetId: projectId,
-          detail: `Selected mod has no compatible version for ${input.useLoader} ${input.useVersion}.`,
+          detail: input.formatNoCompatible
+            ? input.formatNoCompatible(input.useLoader, input.useVersion)
+            : `Selected mod has no compatible version for ${input.useLoader} ${input.useVersion}.`,
         });
         missingModIds.add(projectId);
         return;

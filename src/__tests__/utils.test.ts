@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn } from '@/lib/utils';
+import { cn, interpolate } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // cn  (clsx + tailwind-merge)
@@ -54,5 +54,15 @@ describe('cn', () => {
   it('merges conditional object with string arguments', () => {
     const active = true;
     expect(cn('base', { 'text-green-500': active })).toBe('base text-green-500');
+  });
+});
+
+describe('interpolate', () => {
+  it('replaces named percent tokens', () => {
+    expect(interpolate('Saved %ok of %total', { ok: 2, total: 5 })).toBe('Saved 2 of 5');
+  });
+
+  it('leaves unknown tokens in place', () => {
+    expect(interpolate('Hello %name', {})).toBe('Hello %name');
   });
 });

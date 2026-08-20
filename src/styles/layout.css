@@ -229,14 +229,16 @@
   /* Mobile action bar: hidden on desktop */
   .mobile-action-bar { display: none !important; }
 
-  /* Keep side-menu accessible via header hamburger */
-  .overlay { display: none !important; }
+  /* Side menu (profiles) can overlay the 3-column layout. */
 
   /* Sort dropdown: fixed width so the search input keeps most of the space */
   .search-bar .sort-control { flex: 0 0 auto; }
   .search-bar .sort-select { width: 11rem; min-width: 0; }
 
-  /* Hide the mobile-only settings button in header */
+  /* Settings live in the right panel on desktop; keep Profiles in the header. */
   .header-settings-btn { display: none !important; }
+  .hamburger-btn { display: none !important; }
   .mobile-only-btn { display: none !important; }
+  .pc-action-bar .action-bar:not(.visible) .action-buttons { display: none; }
+  .pc-action-bar .action-bar:not(.visible) { padding-top: 0; }
 }

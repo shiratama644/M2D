@@ -104,7 +104,7 @@ describe('engine-wired UI', () => {
     await waitFor(() => expect(useAppStore.getState().historyModalOpen).toBe(true));
     fireEvent.click(screen.getByLabelText('Favorites'));
     await waitFor(() => expect(useAppStore.getState().favoritesModalOpen).toBe(true));
-    fireEvent.click(screen.getByLabelText('Selected Mods'));
+    fireEvent.click(screen.getByLabelText('Selected mods'));
     await waitFor(() => expect(useAppStore.getState().selectedModalOpen).toBe(true));
     fireEvent.click(screen.getByLabelText('Settings'));
     await waitFor(() => expect(useAppStore.getState().settingsOpen).toBe(true));

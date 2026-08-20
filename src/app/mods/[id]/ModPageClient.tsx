@@ -133,7 +133,7 @@ export default function ModPageClient({ project }: { project: ModProject }) {
               <div className="mod-gallery-grid">
                 {gallery.map((item, i) => (
                   <a
-                    key={i}
+                    key={item.url}
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"

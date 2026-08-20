@@ -19,13 +19,13 @@ export default function SelectedTab() {
           onClick={() => { void engine.emit('ui.open', { panel: 'selected' }); }}
           className="btn-text-sm"
         >
-          Manage
+          {t.empty.manage}
         </button>
       </div>
       {selectedMods.size === 0 ? (
-        <div className="rp-empty">None selected.</div>
+        <div className="rp-empty">{t.empty.noneSelected}</div>
       ) : loading ? (
-        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>Loading details...</div>
+        <div className="rp-empty" style={{ color: 'var(--text-muted)' }}>{t.empty.loading}</div>
       ) : (
         <div className="selected-list">
           {Array.from(selectedMods).map((id) => {
@@ -35,7 +35,7 @@ export default function SelectedTab() {
                 <img
                   src={mod?.icon_url || FALLBACK_ICON}
                   className="selected-item-icon"
-                  alt="icon"
+                  alt=""
                   onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                 />
                 <span className="selected-item-title">{displayModTitle(modDataMap, id, t.mods.unknown)}</span>

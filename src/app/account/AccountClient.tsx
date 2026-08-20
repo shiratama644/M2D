@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Session } from 'next-auth';
+import { useApp } from '@/context/AppContext';
 import { useEngine } from '@/engine/react/EngineProvider';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,15 +19,16 @@ export default function AccountClient({ session }: Props) {
   const user = session?.user;
   const [avatarError, setAvatarError] = useState(false);
   const engine = useEngine();
+  const { t } = useApp();
 
   return (
     <div className="account-page-wrapper">
       <div className="account-card">
         <div className="account-header">
           <Link href="/" className="btn-text-icon" style={{ alignSelf: 'flex-start' }}>
-            ← Back
+            ← {t.account.back}
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}>Account</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}>{t.account.title}</h1>
         </div>
 
         {user ? (
@@ -57,11 +59,11 @@ export default function AccountClient({ session }: Props) {
             </div>
 
             <div className="account-section">
-              <h2>Linked Accounts</h2>
+              <h2>{t.account.linked}</h2>
               <div className="account-linked-row">
                 <Icon svg={discordIconRaw as string} size={18} />
                 <span>Discord</span>
-                <span className="account-linked-status connected">Connected</span>
+                <span className="account-linked-status connected">{t.account.connected}</span>
               </div>
             </div>
 
@@ -70,13 +72,13 @@ export default function AccountClient({ session }: Props) {
               onClick={() => { void engine.emit('auth.signOut', undefined); }}
               className="account-signout-btn w-full"
             >
-              Sign Out
+              {t.account.signOut}
             </Button>
           </div>
         ) : (
           <div className="account-signin">
             <p className="account-signin-desc">
-              Sign in with your Discord account to save preferences and sync your mod profiles.
+              {t.account.signInDesc}
             </p>
             <Button
               variant="discord"

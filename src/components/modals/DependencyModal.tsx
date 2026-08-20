@@ -37,9 +37,9 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
 
   const renderEmptyState = () => {
     const msgs: Record<string, string> = {
-      required: 'All good! 🎉',
-      optional: 'No optional deps.',
-      conflict: 'No conflicts! ✅',
+      required: t.deps.emptyRequired,
+      optional: t.deps.emptyOptional,
+      conflict: t.deps.emptyConflict,
     };
     return (
       <div className="empty-state">
@@ -58,7 +58,7 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
       <div className="modal-container large">
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: 'var(--accent-color)' }}>
-            <Icon svg={gitGraphIconRaw} size={20} /> Dependency Report
+            <Icon svg={gitGraphIconRaw} size={20} /> {t.deps.title}
           </h3>
           <button onClick={onClose} className="btn-close-modal">
             <Icon svg={xIconRaw} size={20} />
@@ -71,7 +71,7 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
               onClick={() => setActiveTab(tab)}
               className={`tab-btn ${activeTab === tab ? `active-${tab}` : ''}`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {t.deps[tab]}
             </button>
           ))}
         </div>
@@ -87,25 +87,25 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
                 let actionBtn: React.ReactNode;
                 if (activeTab === 'conflict') {
                   actionBtn = !isSelected
-                    ? <button className="btn-small disabled" disabled>Removed</button>
-                    : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">Remove</button>;
+                    ? <button className="btn-small disabled" disabled>{t.deps.removed}</button>
+                    : <button onClick={() => { void engine.emit('selection.remove', { id: item.targetId }); }} className="btn-small red-outline">{t.deps.remove}</button>;
                 } else {
                   actionBtn = isSelected
-                    ? <button className="btn-small disabled" disabled>Added</button>
-                    : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">Add</button>;
+                    ? <button className="btn-small disabled" disabled>{t.deps.added}</button>
+                    : <button onClick={() => { void engine.emit('selection.add', { id: item.targetId }); }} className="btn-small green">{t.deps.add}</button>;
                 }
 
                 return (
-                  <div key={i} className="dep-item">
+                  <div key={`${item.source}-${item.targetId}-${i}`} className="dep-item">
                     <img
                       src={iconUrl}
                       className="dep-icon"
-                      alt="icon"
+                      alt=""
                       onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_ICON; }}
                     />
                     <div className="dep-info">
                       <p className="dep-source">
-                        {activeTab === 'conflict' ? 'Conflict w/' : 'Source:'}{' '}
+                        {activeTab === 'conflict' ? t.deps.conflictWith : t.deps.source}{' '}
                         <span>{item.source}</span>
                       </p>
                       <p className="dep-target">{targetTitle}</p>
@@ -119,7 +119,7 @@ export default function DependencyModal({ issues, onClose }: DepModalProps) {
           )}
         </div>
         <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">Close</button>
+          <button onClick={onClose} className="btn-secondary">{t.deps.close}</button>
         </div>
       </div>
     </div>

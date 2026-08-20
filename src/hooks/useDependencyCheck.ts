@@ -41,6 +41,7 @@ export function useDependencyCheck(
     updateProgress,
     hideLoading,
     addDebugLog,
+    t,
   } = useApp();
 
   const depAbortRef = useRef<AbortController | null>(null);
@@ -193,6 +194,10 @@ export function useDependencyCheck(
         modsWithoutCompatibleVersion,
         useLoader,
         useVersion,
+        formatNoCompatible: (loader, version) =>
+          t.deps.noCompatible.replace('%loader', loader).replace('%version', version),
+        formatVersionMismatch: (required, selected) =>
+          t.deps.versionMismatch.replace('%required', required).replace('%selected', selected),
       });
 
       addDebugLog(
@@ -215,11 +220,11 @@ export function useDependencyCheck(
     } catch (e) {
       hideLoading();
       addDebugLog('error', `Dependency check failed: ${e}`);
-      await engineAlert('Error checking dependencies.');
+      await engineAlert(t.deps.checkFailed);
     }
   }, [
     selectedMods, modDataMap, resolveSettings, onResult,
-    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading,
+    addDebugLog, showLoading, updateLoading, showProgress, updateProgress, hideLoading, t,
   ]);
 
   return { handleCheckDeps };
