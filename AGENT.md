@@ -14,7 +14,7 @@
 
 ## Confirmations
 
-- Before starting something new (a new feature, a new test campaign, a migration, a refactor, a docs overhaul, etc.), stop and ask first.
-- Whenever you need a decision or confirmation from the user, ask in quiz form: short questions, 2–4 predefined options each, plus room for a custom reply.
-- Do not begin the work until the user has answered (or explicitly said to skip).
-- Do not dump an open-ended “how should I do this?” — turn the fork into options.
+- Do not ask for confirmation before carrying out work that the user has explicitly requested.
+- Before starting a new, unrequested scope of work (e.g. a new feature, migration, refactor, docs overhaul, or separate test campaign), stop and ask for confirmation first.
+- When a user decision or confirmation is genuinely required, ask a short multiple-choice question with 2–4 predefined options and allow a custom response.
+- Do not begin unrequested work that requires confirmation until the user has answered or explicitly told you to proceed without confirmation.
