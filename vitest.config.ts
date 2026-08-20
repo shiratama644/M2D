@@ -19,6 +19,7 @@ export default defineConfig({
         'src/store/useAppStore.ts',
         'src/app/api/v2/[...path]/route.ts',
         'src/app/api/revalidate/route.ts',
+        'src/engine/**/*.{ts,tsx}',
       ],
       // The `[...path]` glob is treated as a character class by v8 include,
       // so the proxy route is not counted. Thresholds match the remaining files.
