@@ -129,5 +129,13 @@ describe('catalog feature', () => {
     expect([...useAppStore.getState().selectedMods]).toEqual(['a', 'b']);
     await engine.emit('discover.set', { type: 'shader' });
     expect(useAppStore.getState().discoverType).toBe('shader');
+    await engine.emit('settings.language', { value: 'ja' });
+    await engine.emit('settings.loader', { value: 'forge' });
+    await engine.emit('settings.version', { value: '1.20.1' });
+    expect(useAppStore.getState().language).toBe('ja');
+    expect(useAppStore.getState().modLoader).toBe('forge');
+    expect(useAppStore.getState().modVersion).toBe('1.20.1');
+    await engine.emit('ui.close', { panel: 'deps' });
+    expect(useAppStore.getState().depModalOpen).toBe(false);
   });
 });
