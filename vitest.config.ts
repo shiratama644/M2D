@@ -2,6 +2,13 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
+  // `tsconfig.json` uses `jsx: "preserve"` because Next.js mandates it and
+  // rewrites the file on every build. Vite/oxc would then leave JSX untouched
+  // and fail to parse `.tsx` test files, so configure the JSX transform here
+  // explicitly instead of inheriting it from tsconfig.
+  oxc: {
+    jsx: { runtime: 'automatic' },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -96,6 +96,13 @@ export type EngineCommandHandler<K extends EngineCommandName = EngineCommandName
   payload: EngineCommandMap[K],
 ) => EngineCommandResult[K] | Promise<EngineCommandResult[K]>;
 
+/**
+ * Storage-friendly, command-agnostic handler shape.
+ * `never` as the parameter type keeps it assignable from every
+ * `EngineCommandHandler<K>` (parameters are contravariant).
+ */
+export type AnyEngineCommandHandler = (payload: never) => unknown;
+
 export interface Feature {
   readonly id: string;
   readonly label: string;
