@@ -24,6 +24,13 @@ const translations = {
     },
     search: {
       placeholder: 'Search mods...',
+      versionHint: 'The version filter also sets the Minecraft version used when downloading a ZIP.',
+    },
+    dialog: {
+      confirm: 'Confirm',
+      notice: 'Notice',
+      cancel: 'Cancel',
+      ok: 'OK',
     },
     sort: {
       label: 'Sort by',
@@ -152,7 +159,7 @@ const translations = {
       title: 'Account',
       signOut: 'Sign Out',
       signInDiscord: 'Sign in with Discord',
-      signInDesc: 'Sign in with Discord to identify your session. Preferences and profiles stay on this device (they are not synced to the cloud).',
+      signInDesc: 'Preferences and profiles stay on this device in IndexedDB.',
       linked: 'Linked Accounts',
       connected: 'Connected',
     },
@@ -296,6 +303,13 @@ const translations = {
     },
     search: {
       placeholder: 'Modを検索...',
+      versionHint: 'バージョンフィルターは、ZIP 保存時に使う Minecraft バージョンにもなります。',
+    },
+    dialog: {
+      confirm: '確認',
+      notice: 'お知らせ',
+      cancel: 'キャンセル',
+      ok: 'OK',
     },
     sort: {
       label: '並び替え',

@@ -9,7 +9,6 @@ import { favoritesFeature } from './favorites';
 import { settingsFeature } from './settings';
 import { uiFeature } from './ui';
 import { catalogFeature } from './catalogApi';
-import { authFeature } from './auth';
 
 export const builtinFeatures: Feature[] = [
   searchFeature,
@@ -21,6 +20,5 @@ export const builtinFeatures: Feature[] = [
   settingsFeature,
   uiFeature,
   catalogFeature,
-  authFeature,
   diagnosticsFeature,
 ];

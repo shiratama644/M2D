@@ -10,17 +10,7 @@ import SettingsContent from '@/components/settings/SettingsContent';
 import HistoryTab from '@/components/panels/HistoryTab';
 import FavoritesTab from '@/components/panels/FavoritesTab';
 import SelectedTab from '@/components/panels/SelectedTab';
-import AccountClient from '@/app/account/AccountClient';
 import { API } from '@/lib/api';
-
-const signIn = vi.fn();
-const signOut = vi.fn();
-
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: null }),
-  signIn: (...args: unknown[]) => signIn(...args),
-  signOut: (...args: unknown[]) => signOut(...args),
-}));
 
 vi.mock('next/image', () => ({
   default: (props: { alt?: string }) => <img alt={props.alt ?? ''} />,
@@ -57,8 +47,6 @@ describe('engine-wired UI', () => {
     Element.prototype.scrollIntoView = vi.fn();
     __resetEngine();
     startAppEngine();
-    signIn.mockReset();
-    signOut.mockReset();
     useAppStore.getState().clearMods();
     useAppStore.getState().clearFavorites();
     useAppStore.getState().clearSearchHistory();
@@ -179,22 +167,5 @@ describe('engine-wired UI', () => {
     await waitFor(() => expect(useAppStore.getState().selectedModalOpen).toBe(true));
     fireEvent.click(screen.getByText('✕'));
     await waitFor(() => expect(useAppStore.getState().selectedMods.size).toBe(0));
-  });
-
-  it('signs in and out through the auth feature', async () => {
-    wrap(<AccountClient session={null} />);
-    fireEvent.click(screen.getByText('Sign in with Discord'));
-    await waitFor(() => expect(signIn).toHaveBeenCalledWith('discord', { callbackUrl: '/account' }));
-
-    wrap(
-      <AccountClient
-        session={{
-          user: { name: 'Ada', email: 'ada@example.com' },
-          expires: '2099-01-01',
-        }}
-      />,
-    );
-    fireEvent.click(screen.getByText('Sign Out'));
-    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' }));
   });
 });

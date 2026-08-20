@@ -48,8 +48,6 @@ export type EngineEventMap = {
   'profiles.delete': { index: number };
   'profiles.rename': { index: number; name: string };
   'profiles.import': { name: string; mods: string[] };
-  'auth.signIn': undefined;
-  'auth.signOut': undefined;
 };
 
 export type EngineEventName = keyof EngineEventMap;

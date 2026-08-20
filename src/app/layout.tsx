@@ -2,7 +2,6 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { AppProvider } from '@/context/AppContext';
 import { EngineProvider } from '@/engine/react/EngineProvider';
-import SessionProvider from '@/components/auth/SessionProvider';
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
   },
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem('mod_manager_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+const themeScript = `(function(){document.documentElement.setAttribute('data-theme','dark');})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,13 +45,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon.png" />
       </head>
       <body>
-        <SessionProvider>
-          <AppProvider>
-            <EngineProvider>
-              {children}
-            </EngineProvider>
-          </AppProvider>
-        </SessionProvider>
+        <AppProvider>
+          <EngineProvider>
+            {children}
+          </EngineProvider>
+        </AppProvider>
         <ServiceWorkerRegistration />
         <SpeedInsights />
       </body>

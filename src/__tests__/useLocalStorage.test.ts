@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { persistGet, persistSet, __resetPersist } from '@/lib/persist';
 
 beforeEach(() => {
-  localStorage.clear();
+  __resetPersist();
 });
 
 describe('useLocalStorage', () => {
@@ -12,14 +13,14 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toBe(false);
   });
 
-  it('reads boolean strings from storage', () => {
-    localStorage.setItem('flag', 'true');
+  it('reads boolean strings from persist', () => {
+    persistSet('flag', 'true');
     const { result } = renderHook(() => useLocalStorage('flag', false));
     expect(result.current[0]).toBe(true);
   });
 
   it('parses JSON objects', () => {
-    localStorage.setItem('obj', JSON.stringify({ a: 1 }));
+    persistSet('obj', JSON.stringify({ a: 1 }));
     const { result } = renderHook(() => useLocalStorage('obj', { a: 0 }));
     expect(result.current[0]).toEqual({ a: 1 });
   });
@@ -28,7 +29,7 @@ describe('useLocalStorage', () => {
     const { result } = renderHook(() => useLocalStorage('n', 1));
     act(() => result.current[1](2));
     expect(result.current[0]).toBe(2);
-    expect(localStorage.getItem('n')).toBe('2');
+    expect(persistGet('n')).toBe('2');
 
     act(() => result.current[1]((prev) => prev + 1));
     expect(result.current[0]).toBe(3);
@@ -37,7 +38,7 @@ describe('useLocalStorage', () => {
   it('setValue JSON-stringifies objects', () => {
     const { result } = renderHook(() => useLocalStorage('obj', { a: 0 }));
     act(() => result.current[1]({ a: 9 }));
-    expect(JSON.parse(localStorage.getItem('obj')!)).toEqual({ a: 9 });
+    expect(JSON.parse(persistGet('obj')!)).toEqual({ a: 9 });
   });
 
   it('removeValue restores the initial value', () => {
@@ -45,6 +46,6 @@ describe('useLocalStorage', () => {
     act(() => result.current[1](5));
     act(() => result.current[2]());
     expect(result.current[0]).toBe(0);
-    expect(localStorage.getItem('n')).toBeNull();
+    expect(persistGet('n')).toBeNull();
   });
 });

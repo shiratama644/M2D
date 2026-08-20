@@ -63,7 +63,6 @@ describe('Engine', () => {
       'settings',
       'ui',
       'catalog',
-      'auth',
       'diagnostics',
     ]);
   });

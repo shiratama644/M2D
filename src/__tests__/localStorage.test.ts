@@ -1,23 +1,23 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ls } from '@/lib/localStorage';
+import { persistGet, persistSet, persistRemove, __resetPersist } from '@/lib/persist';
 
 beforeEach(() => {
-  localStorage.clear();
+  __resetPersist();
 });
 
-describe('ls', () => {
+describe('persist', () => {
   it('returns null for missing keys', () => {
-    expect(ls.get('missing')).toBeNull();
+    expect(persistGet('missing')).toBeNull();
   });
 
-  it('round-trips string values', () => {
-    ls.set('k', 'v');
-    expect(ls.get('k')).toBe('v');
+  it('round-trips string values in memory', () => {
+    persistSet('k', 'v');
+    expect(persistGet('k')).toBe('v');
   });
 
   it('remove deletes the key', () => {
-    ls.set('k', 'v');
-    ls.remove('k');
-    expect(ls.get('k')).toBeNull();
+    persistSet('k', 'v');
+    persistRemove('k');
+    expect(persistGet('k')).toBeNull();
   });
 });

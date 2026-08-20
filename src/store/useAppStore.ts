@@ -21,7 +21,7 @@ import {
   LOCALE_MAP,
   type SearchFilters,
 } from '@/lib/helpers';
-import { ls } from '@/lib/localStorage';
+import { persistGet, persistSet, persistRemove, persistHydrate } from '@/lib/persist';
 
 /** Serialize an object to JSON with keys sorted so key-order differences don't break equality. */
 function stableStringify(value: unknown): string {
@@ -40,7 +40,7 @@ function stableStringify(value: unknown): string {
 /** Safely parse a JSON string from localStorage, returning fallback on failure. */
 function parseJSON<T>(key: string, fallback: T): T {
   try {
-    const raw = ls.get(key);
+    const raw = persistGet(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -188,8 +188,8 @@ export interface AppState {
   addDebugLog: (level: string, msg: string) => void;
   clearDebugLogs: () => void;
 
-  // Hydration — loads all persisted values from localStorage on the client.
-  hydrate: () => void;
+  // Hydration — loads all persisted values from IndexedDB on the client.
+  hydrate: () => Promise<void>;
 }
 
 let dialogResolver: ((result?: boolean) => void) | null = null;
@@ -197,55 +197,55 @@ let dialogResolver: ((result?: boolean) => void) | null = null;
 export const useAppStore = create<AppState>((set, get) => ({
   // ── Settings ──────────────────────────────────────────────────────────────
   // Initial values are SSR-safe defaults. Persisted values are loaded from
-  // localStorage after mount via hydrate() to avoid SSR/client mismatches.
+  // IndexedDB after mount via hydrate() to avoid SSR/client mismatches.
 
   theme: 'dark',
   toggleTheme: (value) => {
     set({ theme: value });
-    ls.set(THEME_KEY, value);
+    persistSet(THEME_KEY, value);
   },
 
   debugMode: false,
   toggleDebug: (enabled) => {
     set({ debugMode: enabled });
-    ls.set(DEBUG_KEY, String(enabled));
+    persistSet(DEBUG_KEY, String(enabled));
   },
 
   fastSearch: false,
   toggleFastSearch: (enabled) => {
     set({ fastSearch: enabled });
-    ls.set(FAST_SEARCH_KEY, String(enabled));
+    persistSet(FAST_SEARCH_KEY, String(enabled));
   },
 
   showCardDescription: false,
   toggleShowCardDescription: (enabled) => {
     set({ showCardDescription: enabled });
-    ls.set(SHOW_CARD_DESCRIPTION_KEY, String(enabled));
+    persistSet(SHOW_CARD_DESCRIPTION_KEY, String(enabled));
   },
 
   advancedConsole: false,
   toggleAdvancedConsole: (enabled) => {
     set({ advancedConsole: enabled });
-    ls.set(ADVANCED_CONSOLE_KEY, String(enabled));
+    persistSet(ADVANCED_CONSOLE_KEY, String(enabled));
   },
 
   language: 'en',
   toggleLanguage: (lang) => {
     const t = translations[lang as keyof typeof translations] ?? translations.en;
     set({ language: lang, t });
-    ls.set(LANGUAGE_KEY, lang);
+    persistSet(LANGUAGE_KEY, lang);
   },
 
   modLoader: 'fabric',
   updateModLoader: (value) => {
     set({ modLoader: value });
-    ls.set(LOADER_KEY, value);
+    persistSet(LOADER_KEY, value);
   },
 
   modVersion: '1.21.1',
   updateModVersion: (value) => {
     set({ modVersion: value });
-    ls.set(VERSION_KEY, value);
+    persistSet(VERSION_KEY, value);
   },
 
   // ── Discover type ─────────────────────────────────────────────────────────
@@ -264,7 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       discoverType: type,
       selectedMods: state.selectedModsByType[type],
     }));
-    ls.set(DISCOVER_TYPE_KEY, type);
+    persistSet(DISCOVER_TYPE_KEY, type);
   },
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -371,7 +371,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   saveProfiles: (newProfiles) => {
     set({ profiles: newProfiles });
-    ls.set(STORAGE_KEY, JSON.stringify(newProfiles));
+    persistSet(STORAGE_KEY, JSON.stringify(newProfiles));
   },
 
   // ── Selected mods ─────────────────────────────────────────────────────────
@@ -451,14 +451,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       const next = new Set(state.favorites);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      ls.set(FAVORITES_KEY, JSON.stringify(Array.from(next)));
+      persistSet(FAVORITES_KEY, JSON.stringify(Array.from(next)));
       return { favorites: next };
     });
   },
 
   clearFavorites: () => {
     set({ favorites: new Set<string>() });
-    ls.remove(FAVORITES_KEY);
+    persistRemove(FAVORITES_KEY);
   },
 
   // ── Search history ────────────────────────────────────────────────────────
@@ -472,7 +472,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const set_ = new Set(state.searchHistory);
       set_.delete(trimmed);
       const next = [trimmed, ...set_].slice(0, MAX_SEARCH_HISTORY);
-      ls.set(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      persistSet(SEARCH_HISTORY_KEY, JSON.stringify(next));
       return { searchHistory: next };
     });
   },
@@ -480,14 +480,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeSearchHistory: (query) => {
     set((state) => {
       const next = state.searchHistory.filter((q) => q !== query);
-      ls.set(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      persistSet(SEARCH_HISTORY_KEY, JSON.stringify(next));
       return { searchHistory: next };
     });
   },
 
   clearSearchHistory: () => {
     set({ searchHistory: [] });
-    ls.remove(SEARCH_HISTORY_KEY);
+    persistRemove(SEARCH_HISTORY_KEY);
   },
 
   // ── Context history ───────────────────────────────────────────────────────
@@ -518,21 +518,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Constraint 2: entry is treated as immutable once stored.
     // Constraint 5: this array is derived from searchContext, never the other way.
     const next = [...contextHistory, newEntry].slice(-MAX_CONTEXT_HISTORY);
-    ls.set(CONTEXT_HISTORY_KEY, JSON.stringify(next));
+    persistSet(CONTEXT_HISTORY_KEY, JSON.stringify(next));
     set({ contextHistory: next });
   },
 
   removeContextEntry: (id) => {
     set((state) => {
       const next = state.contextHistory.filter((e) => e.id !== id);
-      ls.set(CONTEXT_HISTORY_KEY, JSON.stringify(next));
+      persistSet(CONTEXT_HISTORY_KEY, JSON.stringify(next));
       return { contextHistory: next };
     });
   },
 
   clearContextHistory: () => {
     set({ contextHistory: [] });
-    ls.remove(CONTEXT_HISTORY_KEY);
+    persistRemove(CONTEXT_HISTORY_KEY);
   },
 
   // ── Debug logs ────────────────────────────────────────────────────────────
@@ -556,21 +556,22 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── Hydration ─────────────────────────────────────────────────────────────
 
-  hydrate: () => {
+  hydrate: async () => {
     if (typeof window === 'undefined') return;
-    const language = ls.get(LANGUAGE_KEY) || 'en';
+    await persistHydrate();
+    const language = persistGet(LANGUAGE_KEY) || 'en';
     const t = translations[language as keyof typeof translations] ?? translations.en;
     set({
-      theme: ls.get(THEME_KEY) || 'dark',
-      debugMode: ls.get(DEBUG_KEY) === 'true',
-      fastSearch: ls.get(FAST_SEARCH_KEY) === 'true',
-      showCardDescription: ls.get(SHOW_CARD_DESCRIPTION_KEY) === 'true',
-      advancedConsole: ls.get(ADVANCED_CONSOLE_KEY) === 'true',
+      theme: persistGet(THEME_KEY) || 'dark',
+      debugMode: persistGet(DEBUG_KEY) === 'true',
+      fastSearch: persistGet(FAST_SEARCH_KEY) === 'true',
+      showCardDescription: persistGet(SHOW_CARD_DESCRIPTION_KEY) === 'true',
+      advancedConsole: persistGet(ADVANCED_CONSOLE_KEY) === 'true',
       language,
       t,
-      modLoader: ls.get(LOADER_KEY) || 'fabric',
-      modVersion: ls.get(VERSION_KEY) || '1.21.1',
-      discoverType: (ls.get(DISCOVER_TYPE_KEY) as DiscoverType | null) || 'mod',
+      modLoader: persistGet(LOADER_KEY) || 'fabric',
+      modVersion: persistGet(VERSION_KEY) || '1.21.1',
+      discoverType: (persistGet(DISCOVER_TYPE_KEY) as DiscoverType | null) || 'mod',
       profiles: parseJSON<Profile[]>(STORAGE_KEY, []),
       favorites: new Set<string>(parseJSON<string[]>(FAVORITES_KEY, [])),
       searchHistory: parseJSON<string[]>(SEARCH_HISTORY_KEY, []),

@@ -178,6 +178,8 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
         </>
       )}
 
+      <p className="search-version-hint">{t.search.versionHint}</p>
+
       {filterOpen && (
         <FilterModal
           filters={filters}

@@ -18,6 +18,12 @@
 
 ---
 
+- アカウントログイン（Discord / NextAuth）を削除
+- 永続化を localStorage から IndexedDB へ（初回は旧キーを移行）
+- 検索バーに「フィルタのバージョン = ZIP のバージョン」の説明（3-2）
+- CustomDialog の Tab フォーカストラップ（4-2 の一部）
+- Service worker 失敗を debug log に出す（2-8）
+
 ## まだ残っているもの
 
 ### 大きい機能ギャップ（別スコープ）
