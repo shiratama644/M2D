@@ -1,6 +1,7 @@
 # M2D Engine 全面移行 計画書
 
 **状態:** 完了。操作＋取得は Engine 経由。書き込みは Feature のみ。  
+ログインは後で削除した。`auth` Feature と `auth.signIn` / `auth.signOut` は無い。  
 **前提（クイズ回答）**
 
 - 範囲: **ユーザー操作＋データ取得**

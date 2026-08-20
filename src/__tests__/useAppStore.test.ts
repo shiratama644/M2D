@@ -383,7 +383,7 @@ describe('dialog', () => {
 // ---------------------------------------------------------------------------
 
 describe('profiles', () => {
-  it('saveProfiles persists profiles to localStorage', () => {
+  it('saveProfiles persists profiles', () => {
     const profiles = [{ name: 'My Profile', mods: ['sodium'], date: '2024-01-01' }];
     useAppStore.getState().saveProfiles(profiles);
     expect(useAppStore.getState().profiles).toEqual(profiles);

@@ -38,7 +38,7 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(sorted);
 }
 
-/** Safely parse a JSON string from localStorage, returning fallback on failure. */
+/** Safely parse a JSON string from persist, returning fallback on failure. */
 function parseJSON<T>(key: string, fallback: T): T {
   try {
     const raw = persistGet(key);

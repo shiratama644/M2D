@@ -42,7 +42,6 @@ export const myFeature: Feature = {
 | `download.start` | command | ZIP ダウンロード（UI が `bind`） |
 | `dependency.check` | command | 依存解析（UI が `bind`） |
 | `profiles.save` / `load` / `delete` / `rename` / `import` | event | プロファイル |
-| `auth.signIn` / `auth.signOut` | event | 認証 |
 | `catalog.search` / `project` / `projects` / `versions` / `versionsBulk` / `gameVersions` / `categories` / `versionFile` | command | Modrinth 取得（catalog Feature） |
 | `engine.error` | event | ハンドラ例外（他ハンドラは止まらない） |
 

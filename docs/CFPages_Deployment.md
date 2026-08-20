@@ -3,11 +3,12 @@
 Cloudflare Workers は画像配信やファイルダウンロードを多用するサイトに適したホスティングサービスです。
 無料プランでも帯域幅が **無制限**（フェアユースポリシーあり）であり、Vercel と比べて大量のアクセスに対応しやすい利点があります。
 
+ログイン機能はありません。設定・プロファイルは各ブラウザの IndexedDB に保存されます。
+
 ## 必要なもの
 
 - GitHub アカウント（リポジトリをフォーク済み、または自分のリポジトリに push 済み）
 - Cloudflare アカウント（無料）: [cloudflare.com](https://www.cloudflare.com/)
-- Discord OAuth アプリの認証情報（手順は後述）
 
 ---
 
@@ -23,7 +24,7 @@ Cloudflare Workers では **[`@opennextjs/cloudflare`](https://opennext.js.org/c
 
 ## 手順 1 — 依存パッケージを追加する
 
-ローカルで以下を実行してアダプターをインストールします。
+ローカルで以下を実行してアダプターをインストールします（このリポジトリではすでに入っています）。
 
 ```bash
 pnpm add -D @opennextjs/cloudflare wrangler
@@ -33,7 +34,7 @@ pnpm add -D @opennextjs/cloudflare wrangler
 
 ## 手順 2 — wrangler.toml を作成する
 
-プロジェクトルートに `wrangler.toml` を作成します。
+プロジェクトルートに `wrangler.toml` があります。内容の例:
 
 ```toml
 name = "m2d"
@@ -54,7 +55,7 @@ binding = "ASSETS"
 
 ## 手順 3 — package.json にビルドスクリプトを追加する
 
-`package.json` の `scripts` に以下を追加します。
+`package.json` の `scripts` に以下があります。
 
 ```json
 {
@@ -77,43 +78,34 @@ binding = "ASSETS"
 
 ---
 
-## 手順 5 — 環境変数を設定する
+## 手順 5 — 環境変数を設定する（任意）
 
-**"Settings → Variables and Secrets"** セクションで以下の変数をすべて追加します。
+**"Settings → Variables and Secrets"** セクションで必要なら以下を追加します。
 
 | 変数名 | 値 | 備考 |
 |---|---|---|
-| `DISCORD_CLIENT_ID` | Discord アプリのクライアント ID | 手順 7 を参照 |
-| `DISCORD_CLIENT_SECRET` | Discord アプリのクライアントシークレット | 手順 7 を参照 |
-| `AUTH_SECRET` | ランダムな 32 バイトの base64 文字列 | `openssl rand -base64 32` で生成 |
-| `AUTH_TRUST_HOST` | `true` | Cloudflare 経由で NextAuth が正常動作するために必須 |
-| `NEXT_PUBLIC_BASE_URL` | `https://your-worker-name.your-account.workers.dev` | Workers が発行する URL（デプロイ後に確認可能） |
-| `REVALIDATE_SECRET` | ランダムな 32 バイトの base64 文字列 | ISR のオンデマンド再検証を使う場合のみ必要 |
+| `NEXT_PUBLIC_BASE_URL` | `https://your-worker-name.your-account.workers.dev` | メタデータ / OGP の絶対 URL |
+| `REVALIDATE_SECRET` | ランダムな 32 バイトの base64 文字列 | ISR のオンデマンド再検証を使う場合のみ |
 
 > **ヒント**: シークレットの生成コマンド:
 > ```bash
 > openssl rand -base64 32
 > ```
 
-または `wrangler.toml` の `[vars]` セクションに非シークレットな変数を記述し、シークレットは `wrangler secret put` コマンドで設定することもできます。
+または `wrangler.toml` の `[vars]` セクションに非シークレットな変数を記述し、シークレットは `wrangler secret put` で設定できます。
 
 ```toml
 [vars]
-AUTH_TRUST_HOST = "true"
 NEXT_PUBLIC_BASE_URL = "https://your-worker-name.your-account.workers.dev"
 ```
 
 ```bash
-wrangler secret put DISCORD_CLIENT_SECRET
-wrangler secret put AUTH_SECRET
 wrangler secret put REVALIDATE_SECRET
 ```
 
 ---
 
 ## 手順 6 — デプロイを実行する
-
-以下のコマンドでビルドしてデプロイします。
 
 ```bash
 pnpm deploy
@@ -125,49 +117,12 @@ pnpm deploy
 
 ---
 
-## 手順 7 — Discord OAuth の設定
-
-### Discord アプリケーションを作成する
-
-1. [Discord Developer Portal](https://discord.com/developers/applications) を開いてログイン。
-2. **"New Application"** をクリックし、名前（例: `M2D`）を入力して **"Create"**。
-
-### クライアント ID とシークレットを取得する
-
-1. 左サイドバーの **"OAuth2"** を開く。
-2. **"Client information"** の **Client ID** をコピー → `DISCORD_CLIENT_ID` に設定。
-3. **"Reset Secret"** をクリックして **Client Secret** をコピー → `DISCORD_CLIENT_SECRET` に設定。
-
-### リダイレクト URI を追加する
-
-1. **"OAuth2"** セクションの **"Redirects"** までスクロール。
-2. **"Add Redirect"** をクリックして以下の URL を追加:
-   ```
-   https://your-worker-name.your-account.workers.dev/api/auth/callback/discord
-   ```
-   （`your-worker-name.your-account.workers.dev` はデプロイ後に発行された実際の URL に置き換えてください）
-3. **"Save Changes"** をクリック。
-
-### AUTH_SECRET を生成する
-
-```bash
-openssl rand -base64 32
-```
-
-出力された文字列を `AUTH_SECRET` に設定します。
-
----
-
-## 手順 8 — カスタムドメインを設定する（任意）
+## 手順 7 — カスタムドメインを設定する（任意）
 
 1. Cloudflare Workers プロジェクトの **"Settings → Domains & Routes"** タブを開く。
 2. **"Add"** をクリックしてカスタムドメインを入力。
 3. Cloudflare でドメインを管理している場合は DNS が自動設定されます。外部レジストラの場合は表示された CNAME レコードを手動で設定してください。
 4. `NEXT_PUBLIC_BASE_URL` をカスタムドメインの URL に更新。
-5. Discord Developer Portal のリダイレクト URI にもカスタムドメインの URL を追加:
-   ```
-   https://your-domain.com/api/auth/callback/discord
-   ```
 
 ---
 
@@ -196,7 +151,7 @@ pnpm add -D @opennextjs/cloudflare wrangler
 
 また、`wrangler.toml` の `main` と `[assets]` の設定が正しいか確認してください。
 
-### ログインが `http://localhost:3000` にリダイレクトされる
+### OGP の URL が localhost になる
 
 `NEXT_PUBLIC_BASE_URL` が正しく設定されていない可能性があります。
 環境変数を確認し、デプロイ済みの URL（例: `https://your-worker-name.your-account.workers.dev`）が設定されているか確認してください。
@@ -204,8 +159,4 @@ pnpm add -D @opennextjs/cloudflare wrangler
 ### デプロイ後に画像が表示されない
 
 `next.config.mjs` の `images.remotePatterns` に必要なホスト名が含まれているか確認してください。
-現在は `cdn.modrinth.com`、`*.modrinth.com`、`cdn.discordapp.com` が許可されています。
-
-### `AUTH_TRUST_HOST` を設定していないのに認証が失敗する
-
-Cloudflare Workers 経由でリクエストが転送されるため、NextAuth がホストを信頼するよう `AUTH_TRUST_HOST=true` を設定してください。
+現在は `cdn.modrinth.com` と `*.modrinth.com` が許可されています。

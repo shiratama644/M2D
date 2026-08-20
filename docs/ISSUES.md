@@ -9,6 +9,10 @@
 
 コピー、i18n、空状態、Profiles 導線、Discord 削除、IndexedDB、検索バージョン注記、ダイアログ focus trap、SW debug log。
 
+ドキュメント・残骸:
+
+- Discord / NextAuth の記録、`account.css`、未使用 i18n、`.env` の OAuth、デプロイ手順のログイン節を現状に合わせた。
+
 追加:
 
 - **2-2** 詳細 / 共有ページでバージョン選択。changelog 表示。ピンは ZIP / 依存解析で使う
