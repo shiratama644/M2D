@@ -59,7 +59,51 @@ describe('Engine', () => {
       'download',
       'dependency',
       'profiles',
+      'diagnostics',
     ]);
+  });
+
+  it('isolates a throwing handler so later listeners still run', async () => {
+    const engine = new Engine().start();
+    const seen: string[] = [];
+    engine.on('selection.clear', () => {
+      throw new Error('boom');
+    });
+    engine.on('selection.clear', () => {
+      seen.push('ok');
+    });
+    await engine.emit('selection.clear', undefined);
+    expect(seen).toEqual(['ok']);
+    expect(engine.recentJournal().at(-1)?.ok).toBe(false);
+  });
+
+  it('runs higher-priority handlers first', async () => {
+    const engine = new Engine().start();
+    const seen: number[] = [];
+    engine.on('selection.clear', () => { seen.push(1); }, { priority: 1 });
+    engine.on('selection.clear', () => { seen.push(10); }, { priority: 10 });
+    await engine.emit('selection.clear', undefined);
+    expect(seen).toEqual([10, 1]);
+  });
+
+  it('can disable a feature so its handlers stop', async () => {
+    const engine = createEngine().start();
+    useAppStore.getState().addMod('sodium');
+    engine.setEnabled('selection', false);
+    await engine.emit('selection.clear', undefined);
+    expect(useAppStore.getState().selectedMods.has('sodium')).toBe(true);
+    engine.setEnabled('selection', true);
+    await engine.emit('selection.clear', undefined);
+    expect(useAppStore.getState().selectedMods.size).toBe(0);
+  });
+
+  it('dispatches bound commands', async () => {
+    const engine = new Engine().start();
+    let ran = 0;
+    engine.bind('download.start', () => { ran += 1; });
+    await engine.dispatch('download.start');
+    expect(ran).toBe(1);
+    expect(engine.recentJournal().some((e) => e.event === 'download.start' && e.ok)).toBe(true);
   });
 });
 

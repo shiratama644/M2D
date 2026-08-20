@@ -5,6 +5,7 @@ import type { Feature } from '../types';
 export const searchFeature: Feature = {
   id: 'search',
   label: 'Search',
+  dependsOn: [],
   mount(engine: Engine) {
     return engine.on('search.commit', (payload) => {
       if (payload.recordHistory === false) return;

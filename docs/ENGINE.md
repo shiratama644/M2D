@@ -1,38 +1,42 @@
 # M2D Engine
 
-M2D 専用の機能バスです。検索・選択・ダウンロード・依存解析・プロファイルをイベントで一括管理し、新機能は `src/engine/features/` に足します。
+M2D 専用の機能バスです。検索・選択・ダウンロード・依存解析・プロファイルをイベントとコマンドで一括管理します。
 
 ## 追加の手順
 
-1. `src/engine/features/<id>.ts` を作る。
-2. `Feature` を export する。
-3. `src/engine/features/catalog.ts` の配列に 1 行追加する。
+1. `src/engine/features/<id>.ts` に `Feature` を書く。
+2. `src/engine/features/catalog.ts` の配列に 1 行追加する。
+3. 新しい事件が要れば `src/engine/types.ts` の `EngineEventMap` にキーを足す。
 
 ```ts
-import type { Feature } from '../types';
-
 export const myFeature: Feature = {
   id: 'my-feature',
   label: 'My feature',
+  dependsOn: ['search'],
   mount(engine) {
     return engine.on('search.commit', (payload) => {
       // ...
-    });
+    }, { priority: 10 });
   },
 };
 ```
 
-新しいイベントが必要なら `src/engine/types.ts` の `EngineEventMap` にキーを足します。
+`dependsOn` がある Feature は依存先のあとで mount されます。`engine.setEnabled(id, false)` で一時停止できます。
 
-## 既存イベント
+## イベントとコマンド
 
-| イベント | 役割 |
-|---|---|
-| `search.commit` | 検索確定。履歴スナップショットを書く |
-| `search.restore` | 履歴から復元したことを通知 |
-| `selection.clear` | 選択を空にする |
-| `download.start` | UI が ZIP ダウンロードを開始 |
-| `dependency.check` | UI が依存解析を開始 |
-| `profiles.save` / `profiles.load` | プロファイル保存・読込 |
+| 名前 | 種類 | 役割 |
+|---|---|---|
+| `search.commit` | event | 検索確定。履歴を書く |
+| `search.restore` | event | 履歴復元の通知 |
+| `selection.clear` / `selection.toggle` | event | 選択操作 |
+| `download.start` | command | ZIP ダウンロード（UI が `bind`） |
+| `dependency.check` | command | 依存解析（UI が `bind`） |
+| `profiles.save` / `profiles.load` | event | プロファイル |
+| `engine.error` | event | ハンドラ例外（他ハンドラは止まらない） |
 
-ダウンロードと依存解析の実処理は React フック側に残しています。`HomeClient` がマウント時にこれらのイベントへハンドラを接続します。
+コマンドは `engine.dispatch('download.start')`。`HomeClient` がフックを `engine.bind` します。
+
+## 診断
+
+`engine.status()` で Feature の有効/マウント状態、`engine.recentJournal()` で直近の事件ログを取れます。

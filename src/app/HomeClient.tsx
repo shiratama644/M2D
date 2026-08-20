@@ -79,8 +79,8 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
   const { handleCheckDeps } = useDependencyCheck(searchParams, resolveDownloadSettings, setDepIssues);
 
   useEffect(() => {
-    const offDownload = engine.on('download.start', () => handleDownload());
-    const offDeps = engine.on('dependency.check', () => handleCheckDeps());
+    const offDownload = engine.bind('download.start', () => handleDownload());
+    const offDeps = engine.bind('dependency.check', () => handleCheckDeps());
     return () => {
       offDownload();
       offDeps();
@@ -157,8 +157,8 @@ export default function HomeClient({ initialMods }: { initialMods: ModHit[] | nu
             </ErrorBoundary>
             <div className="pc-action-bar">
               <ActionBar
-                onCheckDeps={() => { void engine.emit('dependency.check', undefined); }}
-                onDownload={() => { void engine.emit('download.start', undefined); }}
+                onCheckDeps={() => { void engine.dispatch('dependency.check'); }}
+                onDownload={() => { void engine.dispatch('download.start'); }}
               />
             </div>
           </main>

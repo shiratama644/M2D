@@ -5,8 +5,15 @@ export const selectionFeature: Feature = {
   id: 'selection',
   label: 'Selection',
   mount(engine) {
-    return engine.on('selection.clear', () => {
+    const offClear = engine.on('selection.clear', () => {
       useAppStore.getState().clearMods();
     });
+    const offToggle = engine.on('selection.toggle', ({ id }) => {
+      useAppStore.getState().toggleMod(id);
+    });
+    return () => {
+      offClear();
+      offToggle();
+    };
   },
 };

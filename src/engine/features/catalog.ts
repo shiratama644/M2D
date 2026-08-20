@@ -5,6 +5,8 @@ import { downloadFeature } from './download';
 import { dependencyFeature } from './dependency';
 import { profilesFeature } from './profiles';
 
+import { diagnosticsFeature } from './diagnostics';
+
 /**
  * Built-in features. To add one:
  * 1. Create `src/engine/features/<id>.ts` exporting a `Feature`.
@@ -16,4 +18,5 @@ export const builtinFeatures: Feature[] = [
   downloadFeature,
   dependencyFeature,
   profilesFeature,
+  diagnosticsFeature,
 ];
